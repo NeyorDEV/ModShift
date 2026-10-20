@@ -49,7 +49,7 @@ dependencies and can write a migrated `.mrpack`.
 
 ## Installation
 
-ModShift needs **Node.js 20 or newer**.
+ModShift needs **Node.js 20.17+ or 22.13+**.
 
 ```bash
 # From npm (once published)
