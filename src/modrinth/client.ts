@@ -1,6 +1,7 @@
 import { MODSHIFT_VERSION } from '../version.js';
 import { DEFAULT_CACHE_TTL_MS, type ResponseCache } from './cache.js';
 import {
+  describeRequest,
   ModrinthApiError,
   ModrinthNetworkError,
   OfflineCacheMissError,
@@ -228,7 +229,9 @@ export class ModrinthClient {
         return cached.body as T | null;
       }
     }
-    if (this.offline) throw new OfflineCacheMissError(url);
+    if (this.offline) {
+      throw new OfflineCacheMissError(url, describeRequest(method, url, options.body));
+    }
 
     const body = await this.fetchWithRetries(method, url, bodyText, options.allowNotFound);
     if (this.cache) await this.cache.set(cacheKey, body);

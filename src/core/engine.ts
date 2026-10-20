@@ -1,3 +1,4 @@
+import { OfflineCacheMissError } from '../modrinth/errors.js';
 import type { ModrinthProject, ModrinthVersion } from '../modrinth/types.js';
 import type { MigrationTarget, ModEntry, ModPack } from '../types.js';
 import { findAlternatives } from './alternatives.js';
@@ -192,10 +193,19 @@ export async function analyzePack(
     }
 
     progress(`Searching alternatives for ${project.title}…`);
-    const alternatives = await findAlternatives(api, project, target, {
-      max: maxAlternatives,
-      excludeProjectIds: packProjectIds,
-    });
+    let alternatives: Alternative[] = [];
+    try {
+      alternatives = await findAlternatives(api, project, target, {
+        max: maxAlternatives,
+        excludeProjectIds: packProjectIds,
+      });
+    } catch (error) {
+      // Hors-ligne, une recherche absente du cache ne doit pas bloquer toute l'analyse.
+      if (!(error instanceof OfflineCacheMissError)) throw error;
+      warnings.push(
+        `${project.title}: alternatives not available offline (${error.what} is not cached).`,
+      );
+    }
     const noVersion = `${idNote}No version for Minecraft ${target.minecraftVersion} / ${target.loader}.`;
     const adopted = options.adoptAlternatives
       ? await adoptAlternative(api, alternatives, target, selected)

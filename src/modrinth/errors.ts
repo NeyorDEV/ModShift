@@ -39,8 +39,35 @@ export class RateLimitError extends Error {
 
 // Requête impossible en mode hors-ligne : la réponse n'est pas dans le cache.
 export class OfflineCacheMissError extends Error {
-  constructor(readonly url: string) {
-    super(`Offline mode: no cached response for ${url}`);
+  constructor(
+    readonly url: string,
+    // Description lisible de la requête manquante (ex. « versions of project AANobbMI »).
+    readonly what: string = url,
+  ) {
+    super(`Offline mode: the cache has no entry for the ${what} (${url})`);
     this.name = 'OfflineCacheMissError';
   }
+}
+
+// Décrit une requête Modrinth en termes compréhensibles par l'utilisateur.
+export function describeRequest(method: string, url: string, body?: unknown): string {
+  const { pathname, searchParams } = new URL(url);
+  const path = pathname.replace(/^\/v2/, '');
+  if (method === 'POST' && path === '/version_files') {
+    const count = Array.isArray((body as { hashes?: unknown[] } | undefined)?.hashes)
+      ? (body as { hashes: unknown[] }).hashes.length
+      : 0;
+    return `hash lookup of ${count} file(s)`;
+  }
+  const versions = /^\/project\/([^/]+)\/version$/.exec(path);
+  if (versions?.[1]) return `versions of project ${decodeURIComponent(versions[1])}`;
+  const project = /^\/project\/([^/]+)$/.exec(path);
+  if (project?.[1]) return `project ${decodeURIComponent(project[1])}`;
+  if (path === '/projects') return 'project details';
+  if (path === '/versions') return 'version details';
+  if (path === '/search') {
+    const query = searchParams.get('query');
+    return query ? `search "${query}"` : 'category search';
+  }
+  return `request ${method} ${path}`;
 }
