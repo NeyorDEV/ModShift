@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { isLoader, LOADERS, type Loader } from '../types.js';
 
@@ -14,6 +14,8 @@ export interface ModShiftConfig {
   };
   // Mods à ignorer : nom de fichier (joker « * » accepté), slug ou id de projet Modrinth.
   ignore?: string[];
+  // Mods analysés mais retirés des packs migrés (même syntaxe que `ignore`).
+  exclude?: string[];
   // Correspondances manuelles : mod d'origine (fichier, slug ou id) → projet Modrinth (slug ou id).
   mappings?: Record<string, string>;
 }
@@ -34,7 +36,7 @@ export class ConfigError extends Error {
   }
 }
 
-const KNOWN_KEYS = new Set(['$schema', 'target', 'ignore', 'mappings']);
+const KNOWN_KEYS = new Set(['$schema', 'target', 'ignore', 'exclude', 'mappings']);
 const TARGET_KEYS = new Set(['minecraftVersion', 'loader', 'loaderVersion']);
 // Un fichier de configuration raisonnable fait quelques kilo-octets.
 const MAX_CONFIG_BYTES = 1024 * 1024;
@@ -50,7 +52,10 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
   if (!isObject(raw)) throw new ConfigError(path, 'the configuration must be a JSON object');
   for (const key of Object.keys(raw)) {
     if (!KNOWN_KEYS.has(key)) {
-      throw new ConfigError(path, `unknown key "${key}" (expected: target, ignore, mappings)`);
+      throw new ConfigError(
+        path,
+        `unknown key "${key}" (expected: target, ignore, exclude, mappings)`,
+      );
     }
   }
   const config: ModShiftConfig = {};
@@ -82,6 +87,13 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
       throw new ConfigError(path, '"ignore" must be an array of non-empty strings');
     }
     config.ignore = raw.ignore.map((s) => s.trim());
+  }
+
+  if (raw.exclude !== undefined) {
+    if (!Array.isArray(raw.exclude) || !raw.exclude.every(nonEmptyString)) {
+      throw new ConfigError(path, '"exclude" must be an array of non-empty strings');
+    }
+    config.exclude = raw.exclude.map((s) => s.trim());
   }
 
   if (raw.mappings !== undefined) {
@@ -135,6 +147,21 @@ export async function loadConfig(
     throw new ConfigError(path, `invalid JSON (${(error as Error).message})`);
   }
   return { config: validateConfig(raw, path), path };
+}
+
+export const CONFIG_SCHEMA_REF = './schemas/modshift.config.schema.json';
+
+// Écrit la configuration (JSON lisible, clés dans un ordre stable). Les listes vides sont omises.
+export async function writeConfig(path: string, config: ModShiftConfig): Promise<void> {
+  const ordered: Record<string, unknown> = { $schema: CONFIG_SCHEMA_REF };
+  if (config.target && Object.keys(config.target).length > 0) ordered.target = config.target;
+  if (config.ignore?.length) ordered.ignore = config.ignore;
+  if (config.exclude?.length) ordered.exclude = config.exclude;
+  if (config.mappings && Object.keys(config.mappings).length > 0)
+    ordered.mappings = config.mappings;
+  // Validation avant écriture : on n'écrit jamais un fichier que loadConfig refuserait.
+  validateConfig(ordered, path);
+  await writeFile(path, `${JSON.stringify(ordered, null, 2)}\n`);
 }
 
 // Une entrée d'ignore/mapping correspond-elle à ce mod ? Nom de fichier (joker « * » possible,

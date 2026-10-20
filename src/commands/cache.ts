@@ -25,8 +25,8 @@ export async function runCacheStats(
   io: CliIo,
   now: () => number = Date.now,
 ): Promise<void> {
-  const ttlMs = resolveCacheTtl(options.cacheTtl);
-  const cache = new FileCache(options.cacheDir ?? defaultCacheDir(), now);
+  const ttlMs = resolveCacheTtl(options.cacheTtl, io.env);
+  const cache = new FileCache(options.cacheDir ?? defaultCacheDir(io.env), now);
   const stats = await cache.stats(ttlMs);
   if (options.json) {
     io.stdout(`${JSON.stringify({ ...stats, ttlMs }, null, 2)}\n`);
@@ -54,8 +54,8 @@ export async function runCacheClear(options: CacheCommandOptions, io: CliIo): Pr
   if (options.cacheTtl !== undefined && !options.expired) {
     throw new UsageError('--cache-ttl only applies with --expired');
   }
-  const cache = new FileCache(options.cacheDir ?? defaultCacheDir());
-  const ttlMs = resolveCacheTtl(options.cacheTtl);
+  const cache = new FileCache(options.cacheDir ?? defaultCacheDir(io.env));
+  const ttlMs = resolveCacheTtl(options.cacheTtl, io.env);
   const removed = await cache.clear(options.expired ? { olderThanMs: ttlMs } : {});
   const what = options.expired
     ? `expired entr${removed === 1 ? 'y' : 'ies'}`

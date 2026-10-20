@@ -22,6 +22,11 @@
       "items": { "type": "string", "minLength": 1 },
       "examples": [["optifine*.jar", "old-minimap"]]
     },
+    "exclude": {
+      "description": "Mods that are analysed and reported but left out of migrated packs: file name (\"*\" wildcard allowed), Modrinth slug or project id.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
     "mappings": {
       "description": "Manual replacements: source mod (file name, Modrinth slug or project id) → Modrinth project (slug or id) to use for the target.",
       "type": "object",

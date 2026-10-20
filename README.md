@@ -49,7 +49,7 @@ dependencies and can write a migrated `.mrpack`.
 
 ## Installation
 
-ModShift needs **Node.js 20 or newer**.
+ModShift needs **Node.js 20.17+ or 22.13+**.
 
 ```bash
 # From npm (once published)
@@ -84,11 +84,36 @@ modshift migrate my-pack.mrpack --mc 1.21.1 --loader neoforge --loader-version 2
 | ----------------------------------------------- | ------------------------------------------------------------------- |
 | `modshift analyze <pack> --mc <v> --loader <l>` | Reports, mod by mod, what is available for the target.              |
 | `modshift migrate <pack> … --out <file>`        | Writes a migrated `.mrpack` and a `MIGRATION_REPORT.md` next to it. |
+| `modshift interactive [pack]` (or `-i`)         | Guided mode: review each mod, save your choices, build the pack.    |
 | `modshift cache stats [--json]`                 | Shows the size and age of the local cache.                          |
 | `modshift cache clear [--expired]`              | Deletes cached API responses (all, or only expired ones).           |
 
 `<pack>` is a `.mrpack`, a CurseForge export `.zip`, or a folder of `.jar` files. The format is
 detected from the archive's content, not its extension.
+
+## Interactive mode
+
+```bash
+modshift interactive my-pack.mrpack     # or simply: modshift -i
+```
+
+The assistant asks for the target Minecraft version and loader, shows the report, then lets you
+decide, mod by mod (by default only the ones that need attention):
+
+- **accept** the update (or keep the compatible version);
+- **use one of the alternatives** (each still marked "suggestion, to verify");
+- **exclude** the mod from migrated packs (it stays in reports);
+- **ignore** it (no longer analysed).
+
+Your choices are saved in `modshift.config.json` (as `mappings`, `exclude` and `ignore`, next to
+the target), so they can be replayed by the non-interactive commands, for example in CI:
+
+```bash
+modshift migrate my-pack.mrpack --out my-pack-1.21.1.mrpack   # uses modshift.config.json
+```
+
+The interactive mode needs a terminal. In scripts it refuses to start; use `analyze` and `migrate`
+instead. Press Ctrl+C at any time to quit without saving (exit code 130).
 
 ## Options
 
@@ -149,7 +174,8 @@ network failure, offline cache miss…). Every error comes with a `hint:` line t
 {
   "$schema": "./schemas/modshift.config.schema.json",
   "target": { "minecraftVersion": "1.21.1", "loader": "neoforge", "loaderVersion": "21.1.77" },
-  "ignore": ["optifine*.jar", "old-minimap"],
+  "ignore": ["optifine*.jar"],
+  "exclude": ["old-minimap"],
   "mappings": { "rubidium": "embeddium", "my-local-mod.jar": "sodium" }
 }
 ```
@@ -157,6 +183,8 @@ network failure, offline cache miss…). Every error comes with a `hint:` line t
 - `target`: defaults for `--mc`, `--loader` and `--loader-version`. Command-line options win.
 - `ignore`: mods left out entirely. Entries are file names (`*` wildcard), Modrinth slugs or
   project ids.
+- `exclude`: mods that are analysed and reported, but left out of migrated packs (with the
+  dependencies only they needed).
 - `mappings`: "this mod → that Modrinth project". A mapping is your explicit choice, so it is
   reported as a replacement, not a suggestion. It also works for files Modrinth does not know.
 

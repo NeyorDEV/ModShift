@@ -470,6 +470,48 @@ Decisions and verification:
 - `plugin.yml` declares `bukkit` (the most general platform); Paper and Purpur accept it through
   their documented fallbacks.
 
+## Phase 14 — Interactive mode ✅
+
+Done:
+
+- `modshift interactive [pack]` (alias `i`, or `modshift -i`), in `src/commands/interactive.ts`:
+  1. pack (argument or prompt), target Minecraft version and loader (from the registry; defaults
+     come from the config, else the source pack);
+  2. analysis with the saved `mappings`, then the table report;
+  3. review scope: mods that need attention (`needsReview`: not a safe update, a fallback, or a
+     mod-id match), all mods, or none;
+  4. per-mod choice: accept / use one of the alternatives / exclude / ignore;
+  5. save to `modshift.config.json` (`writeConfig`, validated), then optionally build the pack
+     (`runMigrate`, loader version asked and saved in `target.loaderVersion`). Plugin platforms
+     skip that step.
+- Pure decision logic in `src/interactive/decisions.ts`: `optionsFor`, `defaultOption` (saved
+  decision, else accept, else exclude, never an alternative nobody chose), `applyDecision`
+  (returns a copy; replaces earlier choices for the same key), `decisionKey` (original slug, else
+  file name), `needsReview`, `summarizeDecisions`.
+- Config: new **`exclude`** list. Excluded mods are analysed and reported, but left out of the
+  pack, together with the added dependencies that only they required. `ignore` still means "not
+  analysed".
+- `Prompter` interface (`src/interactive/prompter.ts`): the real implementation uses
+  **`@inquirer/prompts` 8.7.3** (pinned exactly; MIT; active, latest release 2026-10-19; `npm audit`
+  clean). It is imported on demand, so the other commands do not load it. Ctrl+C →
+  `PromptCancelledError` → exit code 130, nothing saved.
+- Non-interactive mode unchanged: without a TTY on stdin, `interactive` refuses and points to
+  `analyze`/`migrate`.
+- Node engines changed to `^20.17.0 || >=22.13.0` (required by Inquirer).
+- Fix: the default cache directory and TTL come from the injected environment (`CliIo.env`).
+  `test/setup.ts` redirects `MODSHIFT_CACHE_DIR` to a temp folder (one run had written to
+  `~/.cache/modshift`).
+- Tests: decision logic, and the full flow with a scripted prompter
+  (`test/helpers/scriptedPrompter.ts`): saving, replay through `analyze`, defaults from the config,
+  plugin platform, cancel, missing TTY, `--no-config`.
+
+Decisions:
+
+- Choices are stored with the existing config keys (`mappings` / `exclude` / `ignore`), not a new
+  "decisions" format: they replay with every command, without a second format.
+- A version published more than two weeks ago (8.7.3) was preferred over the release from the day
+  before (8.7.4).
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -505,23 +547,24 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phases 14 → 16, then phases 17 → 22, in order. One branch and one
+Work plan agreed with the user: phases 15 → 16, then phases 17 → 22, in order. One branch and one
 draft PR per phase; push after every commit group. Never change GitHub settings or publish
 anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 14, interactive mode** (branch `feat/interactive-mode`):
-  - `modshift interactive` (alias `-i`): choose the pack, target and loader, show the report,
-    then decide mod by mod (accept update, pick one of the alternatives, ignore, exclude);
-  - decisions saved in `modshift.config.json` (new `decisions` key, or reuse `mappings` for a
-    chosen alternative and `ignore` for ignored or excluded mods, which is simpler, already
-    validated and replayable). Remember to extend `validateConfig` and the JSON Schema if a key is
-    added;
-  - prompt library: check it is maintained and `npm audit` is clean (`@inquirer/prompts` is the
-    likely choice). Keep the decision logic in a pure module tested without a TTY;
-  - non-interactive commands unchanged.
-- **Phases 15–16:**
-  - `modshift ui` on 127.0.0.1;
-  - final docs.
+- **Phase 15, web UI** (branch `feat/web-ui`):
+  - `modshift ui`: `node:http` server bound to **127.0.0.1 only** (never 0.0.0.0), random port by
+    default, opens the browser;
+  - static page (HTML/CSS/vanilla JS, no framework): pack drag-and-drop, target, results table
+    sortable and filterable by status, per-mod detail, `.mrpack` + report downloads, light/dark
+    theme;
+  - security: upload size limit, bounded `readZip` (zip-slip / zip-bomb), writes only in a
+    per-session temp folder, CSP / `X-Content-Type-Options` / `X-Frame-Options` headers, random
+    session token, and a `Host` header check against DNS rebinding;
+  - tests: HTTP API against the fake Modrinth, plus a minimal end-to-end test (Playwright and
+    Chromium are pre-installed in the cloud environment; otherwise test with `fetch` only);
+  - write the UI section of SECURITY.md.
+- **Phase 16:** final docs (README with loaders, interactive mode and UI examples; CHANGELOG;
+  options), and the known limits and ideas in PROGRESS.md.
 - **Phases 17–22:**
   - cross-loader migration and Sinytra Connector hints (experimental, never auto-included);
   - `--side client|server`;
@@ -543,6 +586,9 @@ Pitfalls:
 - Not verified against the live Modrinth API (network blocked here): do a manual run.
 - `SECURITY.md` refers to the local web UI's own security section, which comes in phase 15:
   write it then.
+- In tests, `createIo({ prompter })` simulates a TTY; without `prompter`, `interactive` refuses.
+  Commander calls `process.exit` on unknown options: in tests, call `runInteractive` directly to
+  test those cases.
 
 ## Known issues
 

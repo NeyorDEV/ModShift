@@ -27,6 +27,7 @@ export interface MigrateCommandOptions {
   offline: boolean;
   cache: boolean;
   cacheDir?: string;
+  cacheTtl?: string;
   maxAlternatives: string;
   quiet: boolean;
   verbose?: boolean;
@@ -111,6 +112,7 @@ export async function runMigrate(
   const plan = buildMigrationPlan(pack, analysis, {
     loaderVersion: explicitLoaderVersion,
     loaderVersionSource,
+    exclude: config.exclude,
   });
 
   const isArchive = pack.source !== 'folder';

@@ -1,6 +1,7 @@
 import { buildProgram } from '../../src/cli.js';
 import type { CliIo } from '../../src/commands/analyze.js';
 import { CurseForgeClient } from '../../src/curseforge/client.js';
+import type { Prompter } from '../../src/interactive/prompter.js';
 import { ModrinthClient } from '../../src/modrinth/client.js';
 import { fakeCurseForgeHandler } from './fakeCurseForge.js';
 import { type Catalog, fakeModrinthHandler, loadCatalog } from './fakeModrinth.js';
@@ -24,6 +25,8 @@ export interface TestIoOptions {
   env?: NodeJS.ProcessEnv;
   // Dossier courant vu par la CLI (recherche de modshift.config.json).
   cwd?: string;
+  // Mode interactif : réponses scriptées (simule aussi un terminal sur l'entrée standard).
+  prompter?: Prompter;
 }
 
 // IO de test : sorties capturées, client Modrinth branché sur le faux serveur.
@@ -56,6 +59,8 @@ export function createIo(options: TestIoOptions = {}): TestIo {
     env: options.env ?? {},
     // Par défaut un dossier inexistant : aucun modshift.config.json local ne fuit dans les tests.
     cwd: options.cwd ?? '/nonexistent-modshift-test-cwd',
+    stdinIsTTY: options.prompter !== undefined,
+    createPrompter: options.prompter ? async () => options.prompter as Prompter : undefined,
     // Faux serveur CurseForge : n'est utilisé que si env.CURSEFORGE_API_KEY est défini.
     createCurseForgeApi: (cfOptions) =>
       new CurseForgeClient({
