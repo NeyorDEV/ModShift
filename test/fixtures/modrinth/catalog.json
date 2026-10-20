@@ -368,6 +368,45 @@
         "1.21.1"
       ],
       "downloads": 60000
+    },
+    {
+      "id": "CREATFAB",
+      "slug": "create-fabric",
+      "title": "Create Fabric",
+      "description": "Create Fabric (fixture)",
+      "categories": [
+        "technology",
+        "decoration"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "downloads": 2000000
+    },
+    {
+      "id": "STORTWK1",
+      "slug": "storage-tweaks",
+      "title": "Storage Tweaks",
+      "description": "Storage Tweaks (fixture)",
+      "categories": [
+        "storage"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge"
+      ],
+      "game_versions": [
+        "1.20.1"
+      ],
+      "downloads": 40000
     }
   ],
   "versions": [
@@ -1171,6 +1210,90 @@
           "filename": "v1pchat.jar",
           "primary": true,
           "size": 3000
+        }
+      ]
+    },
+    {
+      "id": "v1jeifabric",
+      "project_id": "JEIJEIJE",
+      "name": "19.8.0-fabric",
+      "version_number": "19.8.0-fabric",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5",
+            "sha512": "e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1jeifabric.jar",
+          "filename": "v1jeifabric.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1createfab",
+      "project_id": "CREATFAB",
+      "name": "0.5.1-fabric",
+      "version_number": "0.5.1-fabric",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6",
+            "sha512": "e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6e6"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1createfab.jar",
+          "filename": "v1createfab.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1stortwk",
+      "project_id": "STORTWK1",
+      "name": "1.0.0",
+      "version_number": "1.0.0",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7",
+            "sha512": "e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1stortwk.jar",
+          "filename": "v1stortwk.jar",
+          "primary": true,
+          "size": 1000
         }
       ]
     }

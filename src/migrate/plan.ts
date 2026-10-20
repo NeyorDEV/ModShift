@@ -1,4 +1,4 @@
-import type { AnalysisResult, ModAnalysis, VersionRef } from '../core/types.js';
+import type { AnalysisResult, LoaderChange, ModAnalysis, VersionRef } from '../core/types.js';
 import type { MigrationTarget, ModPack, PackIndexFile } from '../types.js';
 import {
   type EnvValue,
@@ -29,6 +29,8 @@ export interface PlannedMod {
   unverified?: boolean;
   // Version retenue pour un loader de repli (« fallback compatibility, to test »).
   fallbackLoader?: string;
+  // Même projet, version d'un autre loader (mod multi-loader), ex. { from: 'forge', to: 'fabric' }.
+  loaderChange?: LoaderChange;
 }
 
 export type LoaderVersionSource = 'option' | 'config' | 'source-pack';
@@ -199,6 +201,7 @@ export function buildMigrationPlan(
           replaces: mod.fileName,
           ...(mod.identification === 'mod-id' ? { unverified: true } : {}),
           ...(mod.fallback ? { fallbackLoader: mod.fallback.loader } : {}),
+          ...(mod.loaderChange ? { loaderChange: mod.loaderChange } : {}),
         },
         env,
       );

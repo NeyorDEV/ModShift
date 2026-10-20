@@ -7,6 +7,8 @@ import {
   STATUS_ICONS,
   STATUS_LABELS,
   versionLabel,
+  alternativeWhy,
+  compatLayerSection,
 } from './labels.js';
 
 // Échappe les caractères qui casseraient un tableau Markdown.
@@ -70,15 +72,16 @@ export function renderMarkdown(result: AnalysisResult): string {
     for (const mod of withAlternatives) {
       lines.push(`### ${modDisplayName(mod)}`, '');
       for (const alt of mod.alternatives) {
-        const why = alt.reason === 'similar-name' ? 'similar name' : 'same category';
         lines.push(
-          `- [${alt.project.title}](https://modrinth.com/mod/${alt.project.slug}) — ${why}, ${alt.downloads.toLocaleString('en-US')} downloads`,
+          `- [${alt.project.title}](https://modrinth.com/mod/${alt.project.slug}) — ${alternativeWhy(alt)}`,
         );
       }
       lines.push('');
     }
     lines.pop();
   }
+
+  lines.push(...compatLayerSection(result.mods));
 
   const { added, missing } = result.dependencies;
   if (added.length > 0 || missing.length > 0) {

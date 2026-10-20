@@ -1,13 +1,17 @@
 import { matchesModRef } from '../config/config.js';
+import { COMPAT_LAYER_NOTE, compatLayersFor } from '../loaders/compatLayers.js';
+import { getLoader } from '../loaders/registry.js';
 import { OfflineCacheMissError } from '../modrinth/errors.js';
 import type { ModrinthProject, ModrinthVersion } from '../modrinth/types.js';
-import type { MigrationTarget, ModEntry, ModPack } from '../types.js';
+import type { Loader, MigrationTarget, ModEntry, ModPack } from '../types.js';
 import { findAlternatives } from './alternatives.js';
 import { resolveDependencies, type SelectedVersion } from './dependencies.js';
 import {
   acceptedLoaders,
   fallbackCompatibility,
   fallbackReason,
+  loaderChange,
+  loaderChangeReason,
   pickBestVersion,
   versionSupportsTarget,
 } from './loaders.js';
@@ -17,6 +21,7 @@ import {
   ALTERNATIVE_NOTE,
   type Alternative,
   type AnalysisResult,
+  type CompatLayerHint,
   type Conflict,
   type IgnoredMod,
   type ModAnalysis,
@@ -37,6 +42,8 @@ export interface AnalyzeOptions {
   // Règles de modshift.config.json.
   ignore?: string[];
   mappings?: Record<string, string>;
+  // Signale les mods qu'une couche de compatibilité pourrait charger (vrai par défaut).
+  compatLayers?: boolean;
 }
 
 interface Identified {
@@ -273,12 +280,18 @@ export async function analyzePack(
     const best = bestByProject.get(project.id);
     if (best) {
       const fallback = fallbackCompatibility(best, target);
+      const change = loaderChange(pack.loader, best, target);
       mods.push({
         ...common,
         status: 'update-found',
         targetVersion: toVersionRef(best),
         fallback,
-        reason: joinReasons(idNote, fallback && fallbackReason(fallback, target)),
+        loaderChange: change,
+        reason: joinReasons(
+          idNote,
+          change && loaderChangeReason(change),
+          fallback && fallbackReason(fallback, target),
+        ),
       });
       selected.set(project.id, { project, version: best });
       continue;
@@ -290,6 +303,7 @@ export async function analyzePack(
       alternatives = await findAlternatives(api, project, target, {
         max: maxAlternatives,
         excludeProjectIds: packProjectIds,
+        description: id.project.description,
       });
     } catch (error) {
       // Hors-ligne, une recherche absente du cache ne doit pas bloquer toute l'analyse.
@@ -297,6 +311,17 @@ export async function analyzePack(
       warnings.push(
         `${project.title}: alternatives not available offline (${error.what} is not cached).`,
       );
+    }
+    let compatLayer: CompatLayerHint | undefined;
+    if (options.compatLayers !== false) {
+      try {
+        compatLayer = await findCompatLayer(api, project, target);
+      } catch (error) {
+        if (!(error instanceof OfflineCacheMissError)) throw error;
+        warnings.push(
+          `${project.title}: compatibility layers not checked offline (${error.what} is not cached).`,
+        );
+      }
     }
     const noVersion = `${idNote}No version for Minecraft ${target.minecraftVersion} / ${target.loader}.`;
     const adopted = options.adoptAlternatives
@@ -307,10 +332,13 @@ export async function analyzePack(
       status: alternatives.length > 0 ? 'alternative-suggested' : 'not-found',
       alternatives,
       adoptedAlternative: adopted,
-      reason:
+      compatLayer,
+      reason: joinReasons(
         alternatives.length > 0
           ? `${noVersion} Alternatives are suggestions, to verify.`
           : noVersion,
+        compatLayer && compatLayerReason(compatLayer),
+      ),
     });
   }
 
@@ -392,6 +420,39 @@ async function adoptAlternative(
       version: toVersionRef(best),
       reason: alternative.reason,
       note: ALTERNATIVE_NOTE,
+    };
+  }
+  return undefined;
+}
+
+function compatLayerReason(hint: CompatLayerHint): string {
+  return `Its ${getLoader(hint.runs as Loader).name} version could run through ${hint.name} (${COMPAT_LAYER_NOTE}; not added to the pack).`;
+}
+
+// Cherche une version d'un autre loader que la cible pourrait charger via une couche de
+// compatibilité documentée (src/loaders/compatLayers.ts). Une requête par couche applicable.
+async function findCompatLayer(
+  api: ModrinthApi,
+  project: ProjectRef,
+  target: MigrationTarget,
+): Promise<CompatLayerHint | undefined> {
+  for (const layer of compatLayersFor(target)) {
+    if (layer.replaces?.includes(project.slug)) continue;
+    const versions = await api.getProjectVersions(project.id, {
+      loaders: [layer.runs],
+      gameVersions: [target.minecraftVersion],
+    });
+    const best = pickBestVersion(versions, { ...target, loader: layer.runs });
+    if (!best) continue;
+    return {
+      layer: layer.id,
+      name: layer.name,
+      runs: layer.runs,
+      version: toVersionRef(best),
+      requires: layer.requires,
+      caveat: layer.caveat,
+      source: layer.source,
+      note: COMPAT_LAYER_NOTE,
     };
   }
   return undefined;

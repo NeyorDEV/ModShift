@@ -1,0 +1,73 @@
+{
+  "formatVersion": 1,
+  "game": "minecraft",
+  "versionId": "1.0.0",
+  "name": "Fixture Forge to Fabric Pack",
+  "summary": "Test fixture for a Forge to Fabric migration: fake hashes and fake IDs, not real Modrinth data.",
+  "files": [
+    {
+      "path": "mods/jei-1.20.1-forge-15.2.0.27.jar",
+      "hashes": {
+        "sha1": "7777777777777777777777777777777777777777",
+        "sha512": "77777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "downloads": [
+        "https://cdn.modrinth.com/data/JEIJEIJE/versions/v0jeiforge/jei.jar"
+      ],
+      "fileSize": 2000
+    },
+    {
+      "path": "mods/create-1.20.1-0.5.1.f.jar",
+      "hashes": {
+        "sha1": "8888888888888888888888888888888888888888",
+        "sha512": "88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888"
+      },
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "downloads": [
+        "https://cdn.modrinth.com/data/CREATE01/versions/v1create/create.jar"
+      ],
+      "fileSize": 2000
+    },
+    {
+      "path": "mods/rubidium-0.7.1.jar",
+      "hashes": {
+        "sha1": "9999999999999999999999999999999999999999",
+        "sha512": "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+      },
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "downloads": [
+        "https://cdn.modrinth.com/data/RUBIDIUM/versions/v1rubidium/rubidium.jar"
+      ],
+      "fileSize": 2000
+    },
+    {
+      "path": "mods/storage-tweaks-1.0.0.jar",
+      "hashes": {
+        "sha1": "e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7",
+        "sha512": "e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7"
+      },
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "downloads": [
+        "https://cdn.modrinth.com/data/STORTWK1/versions/v1stortwk/storage-tweaks.jar"
+      ],
+      "fileSize": 2000
+    }
+  ],
+  "dependencies": {
+    "minecraft": "1.20.1",
+    "forge": "47.3.0"
+  }
+}

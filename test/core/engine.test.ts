@@ -45,8 +45,9 @@ describe('analyzePack — 1.20.1 Fabric → 1.21.1 Fabric', () => {
     expect(mod?.reason).toContain('to verify');
     expect(mod?.alternatives.map((a) => [a.project.title, a.reason])).toEqual([
       ["Xaero's Minimap", 'similar-name'],
-      ['Just Enough Items', 'same-category'],
+      // Même thème (carte) avant un mod plus populaire mais d'un autre thème.
       ['JourneyMap', 'same-category'],
+      ['Just Enough Items', 'same-category'],
     ]);
     expect(mod?.alternatives.every((a) => a.note === 'suggestion, to verify')).toBe(true);
     // Les projets déjà présents dans le pack ne sont pas proposés.

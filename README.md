@@ -26,7 +26,8 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
 - [Commands](#commands) · [Interactive mode](#interactive-mode) · [Web interface](#web-interface)
 - [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)
 - [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
-- [Example output](#example-output) · [How it works](#how-it-works) · [FAQ](#faq)
+- [Changing loader](#changing-loader-eg-forge--fabric) · [Example output](#example-output)
+- [How it works](#how-it-works) · [FAQ](#faq)
 - [Limitations](#limitations) · [Programmatic API](#programmatic-api)
 - [Contributing](#contributing) · [Security](#security) · [License](#license)
 
@@ -46,6 +47,9 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
   - `alternative suggested`: no version, but similar mods exist. These are **suggestions, to
     verify**;
   - `not found`: nothing usable, with the reason.
+- **Changing loader** (e.g. Forge → Fabric): multi-loader mods keep the same project; other mods
+  get alternatives ranked by relevance, each with an explanation. Mods a compatibility layer could
+  load are flagged as **experimental, not guaranteed**, never added automatically.
 - **Dependencies:** missing required dependencies are added. Missing dependencies,
   incompatibilities, pinned versions and duplicates are explained.
 - **Migration:** `modshift migrate` writes a new `.mrpack` that follows Modrinth's own validation
@@ -254,6 +258,40 @@ In `--offline` mode, any cached entry is used whatever its age. A missing entry 
 (for example "the hash lookup of 42 file(s)"). Uncached alternative searches are skipped with a
 warning instead of failing the whole run.
 
+## Changing loader (e.g. Forge → Fabric)
+
+> **ModShift does not convert mod code.** A Forge mod cannot become a Fabric mod. ModShift looks
+> for **equivalents**: the same mod published for the other loader, or a different mod that does
+> a similar job.
+
+For each mod, in this order:
+
+1. **Same project, other loader.** Many mods are multi-loader: the same Modrinth project publishes
+   Forge, NeoForge and Fabric versions. ModShift switches to the target loader's version and says
+   so (`Same project: its Fabric version replaces the Forge one`). This is the safest outcome.
+2. **Alternatives**, when the project has no version for the target. Candidates come from two
+   Modrinth searches (similar name, same categories) filtered on the target, then are **ranked by
+   relevance** (shared categories 40 %, similar name 30 %, popularity 20 %, keywords from the
+   description 10 %). Each suggestion comes with its score and why it was chosen, for example
+   `relevance 79/100 — similar name (minimap) · same categories (adventure, utility) · 1.0M downloads`.
+   Alternatives are **suggestions, to verify**: a different mod is never a drop-in replacement
+   (worlds, configs and recipes can differ).
+3. **Compatibility layers.** Some third-party mods load mods made for another loader. ModShift
+   knows only the combinations documented by their authors:
+
+   | Layer                                                         | Loads       | On       | Minecraft | Also install                               |
+   | ------------------------------------------------------------- | ----------- | -------- | --------- | ------------------------------------------ |
+   | [Sinytra Connector](https://modrinth.com/mod/connector)       | Fabric mods | NeoForge | 1.21.1    | Forgified Fabric API (replaces Fabric API) |
+   | [Sinytra Connector](https://modrinth.com/mod/connector) (LTS) | Fabric mods | Forge    | 1.20.1    | Forgified Fabric API (replaces Fabric API) |
+   | [Kilt](https://modrinth.com/mod/kilt)                         | Forge mods  | Fabric   | 1.20.1    | Fabric API, Fabric Language Kotlin         |
+
+   Mods that could run this way are listed in a **"Compatibility layers (experimental, not
+   guaranteed)"** section of the reports. They are **never added to the migrated pack**: test them
+   yourself, in a copy of your world. Kilt's authors describe it as very experimental and able to
+   break worlds. Sources: [`docs/loaders.md`](docs/loaders.md#compatibility-layers).
+
+4. Otherwise the mod is **not found** and excluded, with the reason in `MIGRATION_REPORT.md`.
+
 ## Example output
 
 The output below is **real ModShift output on the test fixtures** (`test/fixtures/packs/mrpack-forge`,
@@ -311,8 +349,9 @@ hint: Check your internet connection, proxy or firewall (api.modrinth.com must b
 3. **Look up** each project's versions for the target loader and Minecraft version
    (`GET /v2/project/{id}/version`). Preference order: native loader, then release > beta > alpha,
    then newest.
-4. **Suggest** alternatives for mods without a version: a Modrinth search by similar name, then by
-   the same categories, both filtered on the target.
+4. **Suggest** alternatives for mods without a version: Modrinth searches by similar name and by
+   the same categories, filtered on the target, ranked by relevance. Mods that a documented
+   compatibility layer could load are flagged (never adopted).
 5. **Resolve** required dependencies recursively, and detect conflicts.
 6. **Migrate** (optional): build and validate the new `.mrpack`, and copy overrides.
 
@@ -346,7 +385,8 @@ The file may come from another site (CurseForge, GitHub) or have been modified, 
 unknown to Modrinth. Use `mappings` in the config to point it at the right project.
 
 **Are suggested alternatives equivalent to the original mod?**
-No. They are search results in the same category or with a similar name: check them before use.
+No. They are search results ranked by shared categories, similar name, keywords and popularity;
+the report says why each one was suggested. Check them before use.
 `--include-alternatives` adds the best one to the pack, still flagged as a suggestion.
 
 **Does ModShift support resource packs and shaders?**
@@ -357,7 +397,10 @@ Yes, with `--offline`, once the cache has been filled by a previous run.
 
 ## Limitations
 
-- ModShift finds versions and equivalents; it never converts or patches mod code.
+- ModShift finds versions and equivalents; it never converts or patches mod code. Changing loader
+  only works for mods that exist for the target loader (or have an acceptable alternative).
+- Compatibility layers are only reported, never installed, and only for the combinations listed in
+  [`docs/loaders.md`](docs/loaders.md#compatibility-layers).
 - Only `mods/*.jar` are analysed; resource packs, shaders and configs are copied unchanged.
 - CurseForge references need a `CURSEFORGE_API_KEY`.
 - Alternatives and mod-id matches are heuristics: they can be wrong.
