@@ -3,3 +3,5 @@ dist/
 coverage/
 *.log
 .modshift-cache/
+docs/.vitepress/cache
+docs/.vitepress/dist
