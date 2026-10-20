@@ -14,10 +14,17 @@ describe('loader version format', () => {
     (version) => expect(isValidLoaderVersion(version)).toBe(true),
   );
 
-  it.each(['<version>', '', ' 0.16.5', '0.16 .5', '-0.16.5', 'x'.repeat(65), '0.16.5;rm'])(
-    'rejects %j',
-    (version) => expect(isValidLoaderVersion(version)).toBe(false),
-  );
+  it.each([
+    '<version>',
+    'X.Y.Z',
+    'latest',
+    '',
+    ' 0.16.5',
+    '0.16 .5',
+    '-0.16.5',
+    'x'.repeat(65),
+    '0.16.5;rm',
+  ])('rejects %j', (version) => expect(isValidLoaderVersion(version)).toBe(false));
 
   it('rejects an invalid target.loaderVersion in the config', () => {
     expect(() => validateConfig({ target: { loaderVersion: '<version>' } }, 'c.json')).toThrow(
