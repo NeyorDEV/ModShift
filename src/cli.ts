@@ -88,6 +88,10 @@ function withCommonOptions(command: Command): Command {
     .option('--offline', 'use only cached API responses (no network)', false)
     .option('--no-cache', 'do not read or write the local API cache')
     .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
+    .option(
+      '--cache-ttl <duration>',
+      'how long cached responses stay valid, e.g. 30m, 12h, 7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)',
+    )
     .option('--max-alternatives <n>', 'alternatives suggested per missing mod (0 to disable)', '3')
     .option('-q, --quiet', 'no progress messages on stderr', false)
     .option('-v, --verbose', 'log every API request, cache hit and retry on stderr', false);
