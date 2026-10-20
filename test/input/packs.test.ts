@@ -105,7 +105,6 @@ describe('parseCurseForgeZip', () => {
     expect(pack.otherFiles).toEqual(['overrides/config/jei-client.toml']);
     expect(pack.warnings).toEqual([
       'fixture.zip: ignoring a manifest file entry without projectID/fileID',
-      'fixture.zip: 2 CurseForge file reference(s) cannot be identified without the CurseForge API (out of scope)',
     ]);
   });
 

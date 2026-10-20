@@ -71,7 +71,13 @@ async function identifyByModId(
   api: ModrinthApi,
   entry: ModEntry,
 ): Promise<ModrinthProject | undefined> {
-  const modIds = [...new Set(entry.metadata.map((m) => m.modId))];
+  // Mod ids des métadonnées, puis slug CurseForge (souvent identique au slug Modrinth).
+  const modIds = [
+    ...new Set([
+      ...entry.metadata.map((m) => m.modId),
+      ...(entry.curseforge?.slug ? [entry.curseforge.slug] : []),
+    ]),
+  ];
   for (const modId of modIds) {
     const candidates = [...new Set([modId, modId.replace(/_/g, '-')])];
     for (const slug of candidates) {
@@ -111,7 +117,7 @@ export async function analyzePack(
     const project = version ? projects.get(version.project_id) : undefined;
     if (version && project) {
       identified.set(entry, { project, currentVersion: version, by: 'hash' });
-    } else if (!entry.curseforge && entry.metadata.length > 0) {
+    } else if (entry.metadata.length > 0 || entry.curseforge?.slug) {
       const guessed = await identifyByModId(api, entry);
       if (guessed) identified.set(entry, { project: guessed, by: 'mod-id' });
     }
@@ -296,8 +302,12 @@ async function adoptAlternative(
 }
 
 function unidentifiedReason(entry: ModEntry): string {
-  if (entry.curseforge) {
-    return `CurseForge file (project ${entry.curseforge.projectId}, file ${entry.curseforge.fileId}) cannot be resolved without the CurseForge API.`;
+  const cf = entry.curseforge;
+  if (cf && !cf.resolved) {
+    return `CurseForge file (project ${cf.projectId}, file ${cf.fileId}) cannot be identified without a CurseForge API key (set CURSEFORGE_API_KEY).`;
+  }
+  if (cf) {
+    return `CurseForge mod "${cf.name ?? entry.fileName}": this file is not on Modrinth and no Modrinth project matches the slug "${cf.slug ?? '?'}".`;
   }
   const modIds = [...new Set(entry.metadata.map((m) => m.modId))];
   // Piste concrète : le fichier vient souvent d'un autre site, ou a été modifié/recompilé.

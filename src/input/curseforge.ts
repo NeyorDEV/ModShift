@@ -25,6 +25,11 @@ export function parseCurseForgeZip(data: Uint8Array, label = 'curseforge zip'): 
   }
 
   const warnings: string[] = [];
+  if (manifest.manifestVersion !== undefined && manifest.manifestVersion !== 1) {
+    warnings.push(
+      `${label}: unsupported manifestVersion ${String(manifest.manifestVersion)} (expected 1), reading it anyway`,
+    );
+  }
   const overridesDir = `${asString(manifest.overrides) ?? 'overrides'}/`;
   const otherFiles: string[] = [];
   const overrideJars = readZip(data, label, (name) => {
@@ -54,11 +59,8 @@ export function parseCurseForgeZip(data: Uint8Array, label = 'curseforge zip'): 
       curseforge: { projectId, fileId, required: file?.required !== false },
     });
   }
-  if (mods.length > 0) {
-    warnings.push(
-      `${label}: ${mods.length} CurseForge file reference(s) cannot be identified without the CurseForge API (out of scope)`,
-    );
-  }
+  // Les références CurseForge sont résolues plus tard via l'API (clé CURSEFORGE_API_KEY), voir
+  // src/curseforge/resolve.ts ; sans clé, la commande l'indique par un avertissement.
 
   for (const [name, content] of Object.entries(overrideJars)) {
     const { entry, warnings: jarWarnings } = modEntryFromJar(
@@ -88,6 +90,7 @@ export function parseCurseForgeZip(data: Uint8Array, label = 'curseforge zip'): 
     overridesDir: overridesDir.slice(0, -1),
     name: asString(manifest.name),
     version: asString(manifest.version),
+    author: asString(manifest.author),
     minecraftVersion: asString(minecraft.version),
     loader,
     loaderVersion: parsedLoader?.version,

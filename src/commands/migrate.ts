@@ -81,6 +81,7 @@ export async function runMigrate(
   const session = createSession(options, io);
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
+  await session.prepare(pack);
 
   // Vérifié avant toute requête : sans version de loader, le pack généré serait inutilisable.
   const loaderVersion = resolveLoaderVersion(pack, target, options.loaderVersion);
