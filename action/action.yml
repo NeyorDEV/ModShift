@@ -1,0 +1,94 @@
+name: ModShift Check
+description: Check whether a Minecraft modpack can move to a target Minecraft version and loader, and report it on the pull request.
+author: NeyorDEV
+branding:
+  icon: package
+  color: green
+
+inputs:
+  pack:
+    description: Path to the pack (.mrpack, CurseForge export .zip, or a folder of .jar files).
+    required: true
+  mc:
+    description: Target Minecraft version, e.g. 1.21.1 (or "target" in modshift.config.json).
+    required: false
+  loader:
+    description: Target loader, e.g. neoforge or fabric (or "target" in modshift.config.json).
+    required: false
+  side:
+    description: Installation the pack is for, client, server or both.
+    required: false
+  config:
+    description: Path to modshift.config.json (default, ./modshift.config.json if present).
+    required: false
+  fail-on:
+    description: Comma-separated statuses that fail the job, e.g. not-found,alternative-suggested. Empty, never fail.
+    required: false
+    default: ''
+  comment:
+    description: Post (and then update) one comment with the report on the pull request.
+    required: false
+    default: 'true'
+  token:
+    description: Token used to comment. Needs "pull-requests write" permission.
+    required: false
+    default: ${{ github.token }}
+  curseforge-api-key:
+    description: Optional CurseForge API key (pass a secret) to resolve CurseForge export references.
+    required: false
+  node-version:
+    description: Node.js version used to run ModShift.
+    required: false
+    default: '22'
+
+outputs:
+  report:
+    description: Path of the Markdown report.
+    value: ${{ steps.check.outputs.report }}
+  json:
+    description: Path of the JSON report.
+    value: ${{ steps.check.outputs.json }}
+  compatible:
+    description: Number of compatible mods.
+    value: ${{ steps.check.outputs.compatible }}
+  update-found:
+    description: Number of mods with an update.
+    value: ${{ steps.check.outputs.update-found }}
+  alternative-suggested:
+    description: Number of mods with suggested alternatives only.
+    value: ${{ steps.check.outputs.alternative-suggested }}
+  not-found:
+    description: Number of mods without any compatible version.
+    value: ${{ steps.check.outputs.not-found }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # ModShift n'est pas publié sur npm : il est construit depuis le dépôt de l'action.
+    - name: Build ModShift
+      shell: bash
+      working-directory: ${{ github.action_path }}/..
+      run: |
+        npm ci --no-audit --no-fund
+        npm run build
+
+    # Entrées passées par variables d'environnement (pas d'interpolation dans le script).
+    - name: Check the pack
+      id: check
+      shell: bash
+      env:
+        MODSHIFT_ROOT: ${{ github.action_path }}/..
+        MODSHIFT_PACK: ${{ inputs.pack }}
+        MODSHIFT_MC: ${{ inputs.mc }}
+        MODSHIFT_LOADER: ${{ inputs.loader }}
+        MODSHIFT_SIDE: ${{ inputs.side }}
+        MODSHIFT_CONFIG: ${{ inputs.config }}
+        MODSHIFT_FAIL_ON: ${{ inputs.fail-on }}
+        MODSHIFT_COMMENT: ${{ inputs.comment }}
+        MODSHIFT_TOKEN: ${{ inputs.token }}
+        CURSEFORGE_API_KEY: ${{ inputs.curseforge-api-key }}
+      run: node "$GITHUB_ACTION_PATH/run.mjs"
