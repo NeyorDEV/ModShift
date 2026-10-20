@@ -9,7 +9,8 @@ All notable changes to ModShift are documented here. The format follows
 ### Fixed
 
 - `migrate` (and the config and web UI) now reject a loader version that is not a version, such
-  as a `<version>` placeholder copied from an example, instead of writing an invalid pack.
+  as a `<version>` or `X.Y.Z` placeholder copied from an example (a version must contain a
+  digit), instead of writing an invalid pack.
 - Unrelated alternatives: a popular mod sharing only a broad category (e.g. Xaero's Minimap for
   CIT Resewn) is no longer suggested; a candidate needs a similar name or two shared keywords
   (one generic word such as "screen" is not enough).
