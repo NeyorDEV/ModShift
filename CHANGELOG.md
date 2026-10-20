@@ -8,6 +8,8 @@ All notable changes to ModShift are documented here. The format follows
 
 ### Fixed
 
+- `migrate` (and the config and web UI) now reject a loader version that is not a version, such
+  as a `<version>` placeholder copied from an example, instead of writing an invalid pack.
 - Unrelated alternatives: a popular mod sharing only a broad category (e.g. Xaero's Minimap for
   CIT Resewn) is no longer suggested; a candidate needs a similar name or a shared keyword.
 - A dependency published only for another loader (e.g. KotlinLangForge, NeoForge only, declared
