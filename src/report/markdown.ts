@@ -8,6 +8,7 @@ import {
   STATUS_LABELS,
   versionLabel,
   alternativeWhy,
+  compatLayerSection,
 } from './labels.js';
 
 // Échappe les caractères qui casseraient un tableau Markdown.
@@ -79,6 +80,8 @@ export function renderMarkdown(result: AnalysisResult): string {
     }
     lines.pop();
   }
+
+  lines.push(...compatLayerSection(result.mods));
 
   const { added, missing } = result.dependencies;
   if (added.length > 0 || missing.length > 0) {

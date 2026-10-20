@@ -2,6 +2,7 @@ import type { AnalysisResult } from '../core/types.js';
 import {
   alternativesLabel,
   alternativeWhy,
+  compatLayerSection,
   CONFLICT_LABELS,
   versionLabel,
 } from '../report/labels.js';
@@ -117,6 +118,8 @@ export function renderMigrationReport(
       }
     }
   }
+
+  lines.push(...compatLayerSection(plan.excluded));
 
   const { missing } = analysis.dependencies;
   if (missing.length > 0) {

@@ -1,3 +1,4 @@
+import type { COMPAT_LAYER_NOTE } from '../loaders/compatLayers.js';
 import type { VersionType } from '../modrinth/types.js';
 import type { Loader, MigrationTarget, ModOrigin, PackSource } from '../types.js';
 
@@ -54,6 +55,20 @@ export interface FallbackCompatibility {
   note: typeof FALLBACK_NOTE;
 }
 
+// Mod qui pourrait tourner sur la cible via une couche de compatibilité (ex. Sinytra Connector).
+// Simple signalement : jamais inclus automatiquement dans le pack migré.
+export interface CompatLayerHint {
+  layer: string;
+  name: string;
+  // Loader de la version qui serait chargée par la couche.
+  runs: string;
+  version: VersionRef;
+  requires: { slug: string; title: string }[];
+  caveat?: string;
+  source: string;
+  note: typeof COMPAT_LAYER_NOTE;
+}
+
 // Changement de loader pour un même projet (mod multi-loader), ex. { from: 'forge', to: 'fabric' }.
 export interface LoaderChange {
   from: string;
@@ -96,6 +111,9 @@ export interface ModAnalysis {
   fallback?: FallbackCompatibility;
   // Présent quand le pack change de loader et que le même projet a une version pour la cible.
   loaderChange?: LoaderChange;
+  // Présent quand aucune version native n'existe mais qu'une couche de compatibilité pourrait
+  // charger la version d'un autre loader (« experimental, not guaranteed »).
+  compatLayer?: CompatLayerHint;
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }
