@@ -421,6 +421,55 @@ Decisions:
   checked by a test.
 - The `modshift` name was free on npm on 2026-10-20 (`npm view modshift` → 404), which may change.
 
+## Phase 13 — Loader registry & fallback compatibility ✅
+
+Done:
+
+- `src/loaders/registry.ts`: a single **registry** (`LOADER_DEFINITIONS`) replaces the hard-coded
+  lists. Each entry has an id, name, kind (`mod-loader` / `server-plugin` / `proxy-plugin`), the
+  `.mrpack` key (only `forge`, `neoforge`, `fabric-loader`, `quilt-loader`), the folder
+  (`mods` / `plugins`), an optional website, and its **fallbacks** with their official source.
+  `Loader`, `LOADERS`, `acceptedLoaders`, `MRPACK_LOADER_KEYS` and the loader-version hint all come
+  from it.
+- Loaders added: `liteloader`, `modloader`, `rift`, `babric`, `bta-babric`, `legacy-fabric`,
+  `ornithe`; `bukkit`, `spigot`, `paper`, `purpur`, `sponge`; `bungeecord`, `waterfall`,
+  `velocity`.
+- Documented fallbacks only:
+  - Quilt ← Fabric (QuiltMC/quilt-loader README);
+  - Paper ← Spigot, Bukkit (PaperMC docs, `getting-started.mdx`: "drop-in replacement for both
+    CraftBukkit and Spigot");
+  - Purpur ← Paper, Spigot, Bukkit (Purpur README);
+  - Waterfall ← BungeeCord (Waterfall README).
+- A version picked through a fallback carries `fallback {loader, source, note: "fallback
+compatibility, to test"}` (`ModAnalysis` and `AddedDependency`). It is explained in the reason and
+  labelled in every report (table, Markdown, `MIGRATION_REPORT.md`, console plan). A native version
+  is always preferred.
+- `migrate` refuses targets that `.mrpack` cannot declare (Paper, Velocity…), before any request,
+  and suggests `analyze`.
+- Plugin metadata (`src/input/plugin.ts`): `plugin.yml`, `paper-plugin.yml`, `bungee.yml`
+  (minimal YAML reader, top-level keys only), `velocity-plugin.json`. A folder with `plugins/` is
+  read like an instance with `mods/`.
+- Docs: `docs/loaders.md` (table, sources, rules left out); README "Loaders" section.
+- Tests:
+  - registry consistency;
+  - plugin metadata;
+  - server folders on Paper, Spigot, Purpur, Waterfall and Velocity targets (native, fallback and
+    strict cases);
+  - Fabric → Quilt fallback in every report;
+  - a native-version check for **each** registered loader (synthetic catalog).
+
+Decisions and verification:
+
+- Loader names: the Modrinth API (`/v2/tag/loader`) and docs are blocked here. The names were
+  cross-checked in packwiz (`modrinth/modrinth.go`) and Prism Launcher
+  (`launcher/modplatform/ModIndex.cpp`). Names confirmed by neither (e.g. `folia`) were left out.
+- **Not applied, for lack of a reachable official source:** NeoForge ← Forge (1.20.1), and
+  Spigot ← Bukkit (SpigotMC's site is blocked). Velocity is not BungeeCord-compatible.
+- Shader/resource-pack "loaders" (`iris`, `optifine`, `canvas`, `vanilla`, `minecraft`,
+  `datapack`) are not targets.
+- `plugin.yml` declares `bukkit` (the most general platform); Paper and Purpur accept it through
+  their documented fallbacks.
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -456,22 +505,21 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phases 13 → 16, then phases 17 → 22, in order. One branch and one
+Work plan agreed with the user: phases 14 → 16, then phases 17 → 22, in order. One branch and one
 draft PR per phase; push after every commit group. Never change GitHub settings or publish
 anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 13, loaders** (branch `feat/loader-registry`):
-  - check the loaders and project types in Modrinth's official data (`GET /v2/tag/loader`; the
-    OpenAPI spec and `apps/labrinth` source on raw.githubusercontent.com are readable from here);
-  - replace the hard-coded `LOADERS` / `acceptedLoaders` / `LOADER_DEPENDENCY_KEY` /
-    `MRPACK_LOADER_KEYS` by an extensible registry (`src/loaders/registry.ts`);
-  - fallback loaders only where a loader's own docs/source confirm compatibility (Quilt → Fabric
-    is already assumed; verify it), reported as "fallback compatibility, to test";
-  - new loaders (e.g. server plugins: Paper/Spigot/Purpur) need care: a `.mrpack` can only declare
-    forge/neoforge/fabric-loader/quilt-loader, so they can be analysed but not migrated to a
-    `.mrpack`.
-- **Phases 14–16:**
-  - interactive mode (maintained prompt library, decision logic kept testable);
+- **Phase 14, interactive mode** (branch `feat/interactive-mode`):
+  - `modshift interactive` (alias `-i`): choose the pack, target and loader, show the report,
+    then decide mod by mod (accept update, pick one of the alternatives, ignore, exclude);
+  - decisions saved in `modshift.config.json` (new `decisions` key, or reuse `mappings` for a
+    chosen alternative and `ignore` for ignored or excluded mods, which is simpler, already
+    validated and replayable). Remember to extend `validateConfig` and the JSON Schema if a key is
+    added;
+  - prompt library: check it is maintained and `npm audit` is clean (`@inquirer/prompts` is the
+    likely choice). Keep the decision logic in a pure module tested without a TTY;
+  - non-interactive commands unchanged.
+- **Phases 15–16:**
   - `modshift ui` on 127.0.0.1;
   - final docs.
 - **Phases 17–22:**
