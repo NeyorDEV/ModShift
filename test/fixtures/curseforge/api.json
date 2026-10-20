@@ -1,0 +1,42 @@
+{
+  "_comment": "Test fixture: fake CurseForge API data (IDs, names and hashes are not real). Never put an API key here.",
+  "files": [
+    {
+      "id": 4712866,
+      "modId": 238222,
+      "displayName": "jei-1.20.1-forge-15.2.0.27.jar",
+      "fileName": "jei-1.20.1-forge-15.2.0.27.jar",
+      "fileLength": 2000,
+      "downloadUrl": "https://edge.forgecdn.net/files/4712/866/jei-1.20.1-forge-15.2.0.27.jar",
+      "gameVersions": ["1.20.1", "Forge"],
+      "hashes": [
+        { "value": "7777777777777777777777777777777777777777", "algo": 1 },
+        { "value": "00000000000000000000000000000007", "algo": 2 }
+      ]
+    },
+    {
+      "id": 4712867,
+      "modId": 419699,
+      "displayName": "Architectury 9.2.14",
+      "fileName": "architectury-9.2.14-forge.jar",
+      "fileLength": 1500,
+      "downloadUrl": null,
+      "gameVersions": ["1.20.1", "Forge"],
+      "hashes": [{ "value": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3", "algo": 1 }]
+    }
+  ],
+  "mods": [
+    {
+      "id": 238222,
+      "name": "Just Enough Items (JEI)",
+      "slug": "jei",
+      "links": { "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/jei" }
+    },
+    {
+      "id": 419699,
+      "name": "Architectury API",
+      "slug": "architectury-api",
+      "links": { "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/architectury-api" }
+    }
+  ]
+}

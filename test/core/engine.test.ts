@@ -163,8 +163,9 @@ describe('analyzePack — other targets', () => {
       { minecraftVersion: '1.21.1', loader: 'neoforge' },
       client,
     );
-    expect(result.mods[0]?.reason).toContain('without the CurseForge API');
-    expect(result.warnings.some((w) => w.includes('CurseForge API'))).toBe(true);
+    expect(result.mods[0]?.reason).toBe(
+      'CurseForge file (project 238222, file 4712866) cannot be identified without a CurseForge API key (set CURSEFORGE_API_KEY).',
+    );
   });
 
   it('caches API responses: a second analysis sends no new request', async () => {

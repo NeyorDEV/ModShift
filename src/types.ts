@@ -36,7 +36,12 @@ export type ModOrigin = 'index' | 'override' | 'folder';
 export interface CurseForgeFileRef {
   projectId: number;
   fileId: number;
+  // `required: false` dans le manifest : fichier optionnel (désactivé par défaut dans CurseForge).
   required: boolean;
+  // Renseignés par la résolution via l'API CurseForge (src/curseforge/resolve.ts).
+  resolved?: boolean;
+  name?: string;
+  slug?: string;
 }
 
 export interface ModEntry {
@@ -68,6 +73,7 @@ export interface ModPack {
   source: PackSource;
   name?: string;
   version?: string;
+  author?: string;
   minecraftVersion?: string;
   loader?: Loader;
   loaderVersion?: string;

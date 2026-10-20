@@ -316,6 +316,42 @@ Decisions:
   age (unchanged since Phase 3).
 - Durations without a unit are rejected (except `0`) to avoid ambiguity (seconds vs. hours).
 
+## Phase 10 — CurseForge support ✅
+
+Done:
+
+- `src/curseforge/client.ts`: `CurseForgeClient` with `POST /v1/mods/files` and `POST /v1/mods`
+  (batched ids), the `x-api-key` header, retries on 429/5xx (`Retry-After`), the shared response
+  cache (TTL, `--offline`) and errors with hints (`CurseForgeApiError` 401/403 → "check the key",
+  `CurseForgeNetworkError`).
+- The key comes **only** from `CURSEFORGE_API_KEY` (`curseForgeApiKey()`). It never reaches cache
+  keys, logs or error messages (tested). There is no key in code, tests or fixtures: tests use
+  `FAKE_CF_KEY = 'test-key-not-a-real-curseforge-key'` against a fake server
+  (`test/helpers/fakeCurseForge.ts`, data in `test/fixtures/curseforge/api.json`).
+- `src/curseforge/resolve.ts`: `resolveCurseForgeRefs()` fills the file name, path, **SHA-1** and
+  size, plus the project name and slug. The engine then identifies the same jar on Modrinth by
+  hash, and falls back to the CurseForge slug as a Modrinth slug (unverified).
+- `Session.prepare(pack)` (`src/commands/analyze.ts`) runs the resolution for `analyze` and
+  `migrate`. Without a key it adds the warning
+  "N CurseForge file reference(s) not identified: set CURSEFORGE_API_KEY…". The feature is
+  disabled, not an error.
+- Fuller manifest reading: `author`, and a warning for an unknown `manifestVersion`. `required:
+false` is kept on the reference.
+- `CliIo.env` and `CliIo.createCurseForgeApi` make the environment and client injectable (tests
+  never read `process.env`).
+- Docs: `docs/curseforge-api.md`.
+
+Decisions:
+
+- **Verification:** `docs.curseforge.com` and `api.curseforge.com` are blocked here. Endpoints,
+  header, `data` wrapper, fields and enums (`hashes[].algo` 1 = SHA-1) were cross-checked in packwiz
+  (`curseforge/request.go`) and Prism Launcher (`launcher/modplatform/flame/*.cpp`), which agree.
+  Not run against the live API.
+- **Terms of use:** metadata only; never download from CurseForge, never write CurseForge URLs (the
+  `.mrpack` format forbids them anyway). Mods are matched on Modrinth, which is also Prism
+  Launcher's approach for mods whose distribution is disabled.
+- `allowModDistribution` is not used (not confirmed by the reference clients).
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -340,23 +376,20 @@ the previous one, with its own draft PR whose base is the previous branch:
 - **Delete the remote branch `claude/great-galileo-gi0422`** (GitHub → Branches). The session's git
   proxy refuses to delete it, and its PR #1 is already closed.
 - Run ModShift once against the real Modrinth API (blocked from the cloud environment).
+- Optional: try CurseForge resolution with a real key (`CURSEFORGE_API_KEY=… modshift analyze
+export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phases 10 → 16, then phases 17 → 22, in order. One branch and one
+Work plan agreed with the user: phases 11 → 16, then phases 17 → 22, in order. One branch and one
 draft PR per phase; push after every commit group. Never change GitHub settings or publish
 anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 10, CurseForge API** (branch `feat/curseforge-api`):
-  - `CURSEFORGE_API_KEY` from the environment only; without it, the feature is disabled with a
-    clear message;
-  - check the official docs (docs.curseforge.com, probably blocked here: document what was
-    verified and how);
-  - resolve `manifest.json` `files[]` (projectID/fileID) to mod names, then try to find them on
-    Modrinth (by name/slug, marked unverified);
-  - fixtures and mocks only, never a key in code, tests or fixtures.
-- **Phase 11:** `modshift.config.json` (loader preferences, ignore list, manual mappings) and a
-  security review (zip-slip, archive size limits, jars never executed).
+- **Phase 11, config and quality** (branch `feat/config-and-security`):
+  - optional `modshift.config.json` with loader preferences, an ignore list, and manual mappings
+    from an old mod to a new one;
+  - security review: input validation, zip-slip, archive and entry size limits (zip bombs), jars
+    only read as zip data and never executed.
 - **Phase 12:** npm packaging (no publish), tag-triggered release workflow, full README,
   CONTRIBUTING.md, issue templates.
 - **Phases 13–16:**

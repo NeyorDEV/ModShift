@@ -8,7 +8,13 @@ import { formatDuration, parseDuration } from '../duration.js';
 import type { ModrinthClientOptions } from '../modrinth/client.js';
 import { REPORT_FORMATS, renderReport, type ReportFormat } from '../report/index.js';
 import { createLogger, type Logger } from './logger.js';
-import { isLoader, LOADERS, type MigrationTarget } from '../types.js';
+import {
+  CurseForgeClient,
+  type CurseForgeClientOptions,
+  curseForgeApiKey,
+} from '../curseforge/client.js';
+import { missingKeyWarning, resolveCurseForgeRefs } from '../curseforge/resolve.js';
+import { isLoader, LOADERS, type MigrationTarget, type ModPack } from '../types.js';
 
 export interface AnalyzeCommandOptions {
   mc: string;
@@ -34,6 +40,10 @@ export interface CliIo {
   stderrIsTTY: boolean;
   columns?: number;
   createApi: (options: ModrinthClientOptions) => ModrinthApi;
+  // Client CurseForge (optionnel : les tests injectent un faux serveur).
+  createCurseForgeApi?: (options: CurseForgeClientOptions) => CurseForgeClient;
+  // Variables d'environnement (CURSEFORGE_API_KEY, MODSHIFT_CACHE_TTL) ; process.env par défaut.
+  env?: NodeJS.ProcessEnv;
   setExitCode: (code: number) => void;
 }
 
@@ -91,6 +101,7 @@ export async function runAnalyze(
   const session = createSession(options, io);
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
+  await session.prepare(pack);
 
   const result = await analyzePack(pack, target, session.api, {
     maxAlternatives,
@@ -125,6 +136,8 @@ export interface Session {
   api: ModrinthApi;
   // Rappels de progression à passer à analyzePack.
   progress: { onProgress: (message: string) => void; onProgressTick: Logger['progress'] };
+  // Étapes à appliquer au pack chargé avant l'analyse (résolution CurseForge).
+  prepare: (pack: ModPack) => Promise<void>;
 }
 
 // Durée de validité du cache : option, puis variable d'environnement, puis 24 h par défaut.
@@ -159,7 +172,8 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
     width: io.columns,
   });
   const cacheDir = options.cacheDir ?? defaultCacheDir();
-  const cacheTtlMs = resolveCacheTtl(options.cacheTtl);
+  const env = io.env ?? process.env;
+  const cacheTtlMs = resolveCacheTtl(options.cacheTtl, env);
   if (options.cache) {
     logger.debug(`cache directory: ${cacheDir} (entries valid for ${formatDuration(cacheTtlMs)})`);
   }
@@ -169,9 +183,34 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
     offline: options.offline,
     onEvent: (event) => logger.clientEvent(event),
   });
+  const cache = options.cache ? new FileCache(cacheDir) : undefined;
+  const prepare = async (pack: ModPack): Promise<void> => {
+    if (!pack.mods.some((m) => m.curseforge)) return;
+    const apiKey = curseForgeApiKey(env);
+    if (!apiKey) {
+      // Sans clé, la résolution CurseForge est simplement désactivée (pas une erreur).
+      const warning = missingKeyWarning(pack);
+      if (warning) pack.warnings.push(warning);
+      return;
+    }
+    const count = pack.mods.filter((m) => m.curseforge).length;
+    logger.info(`Resolving ${count} CurseForge file reference(s)…`);
+    const clientOptions: CurseForgeClientOptions = {
+      apiKey,
+      cache,
+      cacheTtlMs,
+      offline: options.offline,
+    };
+    const client = io.createCurseForgeApi
+      ? io.createCurseForgeApi(clientOptions)
+      : new CurseForgeClient(clientOptions);
+    const result = await resolveCurseForgeRefs(pack, client);
+    logger.debug(`CurseForge: ${result.resolved} resolved, ${result.unresolved} unresolved`);
+  };
   return {
     logger,
     api,
+    prepare,
     progress: {
       onProgress: (message) => logger.info(message),
       onProgressTick: (done, total, label) => logger.progress(done, total, label),

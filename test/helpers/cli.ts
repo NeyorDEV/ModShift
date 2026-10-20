@@ -1,6 +1,8 @@
 import { buildProgram } from '../../src/cli.js';
 import type { CliIo } from '../../src/commands/analyze.js';
+import { CurseForgeClient } from '../../src/curseforge/client.js';
 import { ModrinthClient } from '../../src/modrinth/client.js';
+import { fakeCurseForgeHandler } from './fakeCurseForge.js';
 import { type Catalog, fakeModrinthHandler, loadCatalog } from './fakeModrinth.js';
 import { createFakeClock, createMockFetch, type MockHandler } from './mockFetch.js';
 
@@ -18,6 +20,8 @@ export interface TestIoOptions {
   handler?: MockHandler;
   isTTY?: boolean;
   stderrIsTTY?: boolean;
+  // Variables d'environnement vues par la CLI (jamais process.env en test).
+  env?: NodeJS.ProcessEnv;
 }
 
 // IO de test : sorties capturées, client Modrinth branché sur le faux serveur.
@@ -28,6 +32,7 @@ export function createIo(options: TestIoOptions = {}): TestIo {
     return fake(req);
   });
   const clock = createFakeClock();
+  const cfMock = createMockFetch(fakeCurseForgeHandler());
   const io: TestIo = {
     out: '',
     err: '',
@@ -46,6 +51,16 @@ export function createIo(options: TestIoOptions = {}): TestIo {
     setExitCode: (code) => {
       io.exitCode = code;
     },
+    env: options.env ?? {},
+    // Faux serveur CurseForge : n'est utilisé que si env.CURSEFORGE_API_KEY est défini.
+    createCurseForgeApi: (cfOptions) =>
+      new CurseForgeClient({
+        ...cfOptions,
+        fetch: cfMock.fetch,
+        now: clock.now,
+        sleep: clock.sleep,
+        maxRetries: 1,
+      }),
     createApi: (clientOptions) =>
       new ModrinthClient({
         ...clientOptions,
