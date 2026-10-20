@@ -3,7 +3,14 @@ import { basename } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import type { JarDependency, JarMetadata, ModEntry, ModOrigin } from '../types.js';
 import { computeHashes } from './hash.js';
-import { asRecord, asString, parseLenientJson, readZip, zipText } from './zip.js';
+import {
+  asRecord,
+  asString,
+  METADATA_ZIP_LIMITS,
+  parseLenientJson,
+  readZip,
+  zipText,
+} from './zip.js';
 
 const FABRIC_FILE = 'fabric.mod.json';
 const QUILT_FILE = 'quilt.mod.json';
@@ -31,7 +38,7 @@ export interface JarReadResult {
 // Lit les métadonnées d'un .jar (fabric.mod.json, quilt.mod.json, mods.toml, neoforge.mods.toml).
 // Un jar sans métadonnées reconnues renvoie une liste vide (pas d'erreur).
 export function readJarMetadata(data: Uint8Array, label: string): JarReadResult {
-  const entries = readZip(data, label, (name) => METADATA_FILES.has(name));
+  const entries = readZip(data, label, (name) => METADATA_FILES.has(name), METADATA_ZIP_LIMITS);
   const warnings: string[] = [];
   const metadata: JarMetadata[] = [];
   const manifestVersion = parseManifestVersion(zipText(entries, MANIFEST_FILE));

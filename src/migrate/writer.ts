@@ -1,7 +1,7 @@
-import { strToU8, unzipSync, zipSync } from 'fflate';
+import { strToU8, zipSync } from 'fflate';
 import type { ModPack } from '../types.js';
-import { InputError } from '../input/errors.js';
 import { isModJarPath } from '../input/mrpack.js';
+import { readZip } from '../input/zip.js';
 import {
   isSpecSafePath,
   MRPACK_INDEX_FILE,
@@ -30,18 +30,15 @@ export function collectOverrides(
   const result: CollectedOverrides = { files: {}, skipped: [] };
   if (!archive || pack.source === 'folder') return result;
 
-  let entries: Record<string, Uint8Array>;
-  try {
-    entries = unzipSync(archive);
-  } catch (error) {
-    throw new InputError('Cannot re-read the source pack archive', { cause: error });
-  }
-
   const mappings: [string, string][] =
     pack.source === 'mrpack'
       ? OVERRIDE_FOLDERS.map((f) => [f, f])
       : [[`${curseForgeOverridesDir.replace(/\/+$/, '')}/`, 'overrides/']];
 
+  // Même lecture bornée que pour l'analyse (protection contre les zip bombs).
+  const entries = readZip(archive, 'source pack', (name) =>
+    mappings.some(([from]) => name.startsWith(from)),
+  );
   for (const [name, content] of Object.entries(entries)) {
     if (name.endsWith('/')) continue;
     const mapping = mappings.find(([from]) => name.startsWith(from));
