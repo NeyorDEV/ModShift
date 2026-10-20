@@ -1,0 +1,958 @@
+{
+  "_comment": "Test fixture: fake Modrinth projects and versions (IDs and hashes are not real).",
+  "projects": [
+    {
+      "id": "AANobbMI",
+      "slug": "sodium",
+      "title": "Sodium",
+      "description": "Sodium (fixture)",
+      "categories": [
+        "optimization"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 9000000
+    },
+    {
+      "id": "P7dR8mSH",
+      "slug": "fabric-api",
+      "title": "Fabric API",
+      "description": "Fabric API (fixture)",
+      "categories": [
+        "library"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 9500000
+    },
+    {
+      "id": "mOgUt4GM",
+      "slug": "modmenu",
+      "title": "Mod Menu",
+      "description": "Mod Menu (fixture)",
+      "categories": [
+        "utility"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric",
+        "quilt"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21",
+        "1.21.1"
+      ],
+      "downloads": 8000000
+    },
+    {
+      "id": "OLDMAP01",
+      "slug": "old-minimap",
+      "title": "Old Minimap",
+      "description": "Old Minimap (fixture)",
+      "categories": [
+        "adventure",
+        "utility"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric"
+      ],
+      "game_versions": [
+        "1.20.1"
+      ],
+      "downloads": 1000
+    },
+    {
+      "id": "XAEROMAP",
+      "slug": "xaeros-minimap",
+      "title": "Xaero's Minimap",
+      "description": "Xaero's Minimap (fixture)",
+      "categories": [
+        "adventure",
+        "utility"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "downloads": 1000000
+    },
+    {
+      "id": "JOURNEYM",
+      "slug": "journeymap",
+      "title": "JourneyMap",
+      "description": "JourneyMap (fixture)",
+      "categories": [
+        "adventure",
+        "utility"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "downloads": 500000
+    },
+    {
+      "id": "CLOTHCFG",
+      "slug": "cloth-config",
+      "title": "Cloth Config API",
+      "description": "Cloth Config API (fixture)",
+      "categories": [
+        "library"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 7000000
+    },
+    {
+      "id": "TEXTLIB1",
+      "slug": "text-lib",
+      "title": "Text Lib",
+      "description": "Text Lib (fixture)",
+      "categories": [
+        "library"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "fabric"
+      ],
+      "game_versions": [
+        "1.20.1"
+      ],
+      "downloads": 2000
+    },
+    {
+      "id": "FFAPI001",
+      "slug": "forgified-fabric-api",
+      "title": "Forgified Fabric API",
+      "description": "Forgified Fabric API (fixture)",
+      "categories": [
+        "library"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "downloads": 300000
+    },
+    {
+      "id": "JEIJEIJE",
+      "slug": "jei",
+      "title": "Just Enough Items",
+      "description": "Just Enough Items (fixture)",
+      "categories": [
+        "utility"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge",
+        "fabric"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 9000000
+    },
+    {
+      "id": "CREATE01",
+      "slug": "create",
+      "title": "Create",
+      "description": "Create (fixture)",
+      "categories": [
+        "technology",
+        "decoration"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 6000000
+    },
+    {
+      "id": "FLYWHEL1",
+      "slug": "flywheel",
+      "title": "Flywheel",
+      "description": "Flywheel (fixture)",
+      "categories": [
+        "library"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 5000000
+    },
+    {
+      "id": "RUBIDIUM",
+      "slug": "rubidium",
+      "title": "Rubidium",
+      "description": "Rubidium (fixture)",
+      "categories": [
+        "optimization"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge"
+      ],
+      "game_versions": [
+        "1.20.1"
+      ],
+      "downloads": 3000000
+    },
+    {
+      "id": "EMBEDIUM",
+      "slug": "embeddium",
+      "title": "Embeddium",
+      "description": "Embeddium (fixture)",
+      "categories": [
+        "optimization"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 2000000
+    }
+  ],
+  "versions": [
+    {
+      "id": "v1sodium",
+      "project_id": "AANobbMI",
+      "name": "0.5.8",
+      "version_number": "0.5.8",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2024-03-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "1111111111111111111111111111111111111111",
+            "sha512": "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1sodium.jar",
+          "filename": "v1sodium.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v2sodium",
+      "project_id": "AANobbMI",
+      "name": "0.6.0",
+      "version_number": "0.6.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [
+        {
+          "version_id": "v2cloth",
+          "project_id": null,
+          "file_name": null,
+          "dependency_type": "required"
+        },
+        {
+          "version_id": null,
+          "project_id": "OPTIFAB1",
+          "file_name": null,
+          "dependency_type": "incompatible"
+        }
+      ],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+            "sha512": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2sodium.jar",
+          "filename": "v2sodium.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v3sodium",
+      "project_id": "AANobbMI",
+      "name": "0.6.1-beta.1",
+      "version_number": "0.6.1-beta.1",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "beta",
+      "date_published": "2024-10-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+            "sha512": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v3sodium.jar",
+          "filename": "v3sodium.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v2sodiumneo",
+      "project_id": "AANobbMI",
+      "name": "0.6.0-neoforge",
+      "version_number": "0.6.0-neoforge",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
+            "sha512": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2sodiumneo.jar",
+          "filename": "v2sodiumneo.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1fapi",
+      "project_id": "P7dR8mSH",
+      "name": "0.92.0",
+      "version_number": "0.92.0",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2024-01-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "2222222222222222222222222222222222222222",
+            "sha512": "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1fapi.jar",
+          "filename": "v1fapi.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v2fapi",
+      "project_id": "P7dR8mSH",
+      "name": "0.104.0",
+      "version_number": "0.104.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-15T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1",
+            "sha512": "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2fapi.jar",
+          "filename": "v2fapi.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1menu",
+      "project_id": "mOgUt4GM",
+      "name": "7.2.2",
+      "version_number": "7.2.2",
+      "game_versions": [
+        "1.20.1",
+        "1.21",
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric",
+        "quilt"
+      ],
+      "version_type": "release",
+      "date_published": "2024-06-01T00:00:00Z",
+      "dependencies": [
+        {
+          "version_id": null,
+          "project_id": "P7dR8mSH",
+          "file_name": null,
+          "dependency_type": "required"
+        },
+        {
+          "version_id": null,
+          "project_id": "TEXTLIB1",
+          "file_name": null,
+          "dependency_type": "required"
+        }
+      ],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "3333333333333333333333333333333333333333",
+            "sha512": "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1menu.jar",
+          "filename": "v1menu.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1omap",
+      "project_id": "OLDMAP01",
+      "name": "1.0",
+      "version_number": "1.0",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2023-07-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "4444444444444444444444444444444444444444",
+            "sha512": "44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1omap.jar",
+          "filename": "v1omap.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1xaero",
+      "project_id": "XAEROMAP",
+      "name": "24.5.0",
+      "version_number": "24.5.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1",
+            "sha512": "c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1xaero.jar",
+          "filename": "v1xaero.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1jmap",
+      "project_id": "JOURNEYM",
+      "name": "6.0.0",
+      "version_number": "6.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2",
+            "sha512": "c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1jmap.jar",
+          "filename": "v1jmap.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1cloth",
+      "project_id": "CLOTHCFG",
+      "name": "11.1.0",
+      "version_number": "11.1.0",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2023-06-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0",
+            "sha512": "d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1cloth.jar",
+          "filename": "v1cloth.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v2cloth",
+      "project_id": "CLOTHCFG",
+      "name": "15.0.0",
+      "version_number": "15.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "fabric",
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-08-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1",
+            "sha512": "d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2cloth.jar",
+          "filename": "v2cloth.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1text",
+      "project_id": "TEXTLIB1",
+      "name": "1.0.0",
+      "version_number": "1.0.0",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "fabric"
+      ],
+      "version_type": "release",
+      "date_published": "2023-01-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
+            "sha512": "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1text.jar",
+          "filename": "v1text.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1ffapi",
+      "project_id": "FFAPI001",
+      "name": "0.104.0+2.0.0",
+      "version_number": "0.104.0+2.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-20T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
+            "sha512": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1ffapi.jar",
+          "filename": "v1ffapi.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v1jei",
+      "project_id": "JEIJEIJE",
+      "name": "19.8.0",
+      "version_number": "19.8.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2",
+            "sha512": "f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1jei.jar",
+          "filename": "v1jei.jar",
+          "primary": true,
+          "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v0jeiforge",
+      "project_id": "JEIJEIJE",
+      "name": "15.2.0.27",
+      "version_number": "15.2.0.27",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-02-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "7777777777777777777777777777777777777777",
+            "sha512": "77777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v0jeiforge.jar",
+          "filename": "v0jeiforge.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1create",
+      "project_id": "CREATE01",
+      "name": "0.5.1.f",
+      "version_number": "0.5.1.f",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-01-01T00:00:00Z",
+      "dependencies": [
+        {
+          "version_id": null,
+          "project_id": "FLYWHEL1",
+          "file_name": null,
+          "dependency_type": "required"
+        }
+      ],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "8888888888888888888888888888888888888888",
+            "sha512": "88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1create.jar",
+          "filename": "v1create.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v2create",
+      "project_id": "CREATE01",
+      "name": "6.0.0",
+      "version_number": "6.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2025-02-01T00:00:00Z",
+      "dependencies": [
+        {
+          "version_id": null,
+          "project_id": "FLYWHEL1",
+          "file_name": null,
+          "dependency_type": "required"
+        }
+      ],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+            "sha512": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2create.jar",
+          "filename": "v2create.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1fly",
+      "project_id": "FLYWHEL1",
+      "name": "0.6.10",
+      "version_number": "0.6.10",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-01-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3",
+            "sha512": "b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1fly.jar",
+          "filename": "v1fly.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v2fly",
+      "project_id": "FLYWHEL1",
+      "name": "1.0.0",
+      "version_number": "1.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2025-01-15T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4",
+            "sha512": "b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2fly.jar",
+          "filename": "v2fly.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1rubidium",
+      "project_id": "RUBIDIUM",
+      "name": "0.7.1",
+      "version_number": "0.7.1",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2023-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "9999999999999999999999999999999999999999",
+            "sha512": "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1rubidium.jar",
+          "filename": "v1rubidium.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1embed",
+      "project_id": "EMBEDIUM",
+      "name": "1.0.11",
+      "version_number": "1.0.11",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-10-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5",
+            "sha512": "b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1embed.jar",
+          "filename": "v1embed.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "minecraft": {
+    "version": "1.20.1",
+    "modLoaders": [
+      { "id": "forge-47.2.0", "primary": true }
+    ]
+  },
+  "manifestType": "minecraftModpack",
+  "manifestVersion": 1,
+  "name": "Fixture Forge Pack",
+  "version": "2.3.0",
+  "author": "ModShift tests",
+  "files": [
+    { "projectID": 238222, "fileID": 4712866, "required": true },
+    { "projectID": 419699, "fileID": 4712867, "required": false },
+    { "projectID": "broken" }
+  ],
+  "overrides": "overrides"
+}

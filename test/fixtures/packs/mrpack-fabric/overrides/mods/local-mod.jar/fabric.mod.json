@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "localmod",
+  "version": "1.0.0",
+  "name": "Local Mod",
+  "depends": { "fabric-api": "*" }
+}
