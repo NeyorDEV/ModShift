@@ -25,6 +25,8 @@ All notable changes to ModShift are documented here. The format follows
   GitHub Releases), a `sources` config key, a reusable contract test suite and
   `docs/plugins.md`. Files found on other sources are reported "to verify" and never added to
   migrated packs.
+- "ModShift Check" GitHub Action in `action/` (job summary, one updated pull request comment,
+  outputs per status, `fail-on`). Not published on the Marketplace.
 - `bench/`: reproducible benchmarks on synthetic 200 and 500 mod packs against an in-memory fake
   Modrinth (`npm run bench`).
 
