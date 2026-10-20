@@ -334,6 +334,11 @@ function showDetail(mod) {
   if (mod.targetVersion) rows.push(['Target loaders', mod.targetVersion.loaders.join(', ')]);
   if (mod.fallback)
     rows.push(['Fallback', `${mod.fallback.loader} version: fallback compatibility, to test`]);
+  if (mod.side)
+    rows.push([
+      'Side',
+      `client ${mod.side.client}, server ${mod.side.server} (Modrinth ${mod.side.source === 'version' ? 'version environment' : mod.side.source === 'project' ? 'project fields' : 'metadata missing'})`,
+    ]);
   if (mod.loaderChange)
     rows.push([
       'Loader',
