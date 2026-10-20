@@ -559,6 +559,59 @@ Decisions:
 - Folders of jars cannot be uploaded (only archives); use the CLI for folders.
 - The 1 h sessions live in memory: restarting `modshift ui` loses them, by design.
 
+## Phase 16 — Polish ✅
+
+Done:
+
+- README: Node badge (`20.17+ | 22.13+`), two real UI screenshots (light and dark, taken with
+  headless Chromium from the fixture pack and labelled as fake data, in `docs/images/`), features
+  of phases 13–15, a link to the CLI reference, updated limitations.
+- `docs/cli.md`: complete option reference **generated** from each command's `--help`
+  (`npm run docs:cli`, script `scripts/gen-cli-docs.mjs`). CI regenerates it and fails if the
+  committed file is stale.
+- `CHANGELOG.md`: loaders, fallbacks, interactive mode, web UI and the engines change added to
+  `[0.1.0]` (not published yet).
+- **UI fix found on the screenshots:** class rules (`.downloads { display: flex }`) overrode the
+  `hidden` attribute, so the download buttons showed before any build. A global `[hidden]` rule
+  fixes it, and the browser test checks it (reproduced: it fails without the fix).
+- CI: `actions/checkout@v5` and `actions/setup-node@v5` (v4 runs on Node 20, deprecated on
+  GitHub). The browser E2E test **runs in CI** (GitHub's Chrome), confirmed in the job logs.
+
+## Known limitations
+
+- **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
+  loader metadata services are blocked from the development environment. Contracts were checked
+  against Modrinth's OpenAPI spec and source code, and against packwiz and Prism Launcher. A
+  manual run with real packs is needed before a release.
+- `migrate` needs a loader version (`--loader-version` or `target.loaderVersion`), except when the
+  source pack already uses the same loader and Minecraft version.
+- Only `mods/*.jar` and plugins are analysed. Resource packs and shaders are copied unchanged
+  (when they still satisfy the `.mrpack` format) but not checked.
+- Alternatives (name or category search) and mod-id/slug matches are heuristics: always check
+  them.
+- Unapplied fallbacks for lack of an official source: NeoForge ← Forge (1.20.1), Spigot ← Bukkit.
+- No compatibility layer (Sinytra Connector…) is taken into account yet (phase 17).
+- Client/server environments are not distinguished: `env` is copied from the source pack, and
+  added mods have none (phase 18).
+- Requests are sequential (phase 19 adds concurrency): a big pack takes a while the first time.
+- Conflicts (incompatible, pinned versions, duplicates) are reported, never resolved
+  automatically.
+- A dependency that only an excluded mod needed is dropped, but not its own transitive
+  dependencies.
+- Web UI: archives only (no folder upload), sessions in memory (lost on restart), English only.
+- `plugin.yml` is read with a minimal YAML reader (top-level keys only).
+- npm publishing, GitHub Pages and the Marketplace are manual steps (see "Manual actions").
+
+## Ideas for later
+
+- Optional automatic loader versions through the official meta services (Fabric/Quilt meta,
+  NeoForge/Forge maven), behind an option, once they can be verified.
+- Resource pack and shader analysis (Modrinth loaders `minecraft`, `iris`, `optifine`).
+- `--upgrade-all` to also update mods that are already compatible; `--fail-on <status>` for CI.
+- "Explain" mode per mod (full decision log), and a report diff between two analyses.
+- UI translations; drag and drop of a whole instance folder (zipped in the browser).
+- Export to other formats (packwiz, CurseForge manifest) for users of other launchers.
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -594,23 +647,33 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phase 16, then phases 17 → 22, in order. One branch and one
-draft PR per phase; push after every commit group. Never change GitHub settings or publish
-anything (npm, Marketplace, Pages): list manual actions above instead.
+Phases 1–16 are done. Then come phases 17 → 22 (the user's third message), in order, with one
+branch and one draft PR per phase. At the end, take every PR out of draft with a summary.
 
-- **Phase 16, polish** (branch `docs/finishing-touches`):
-  - README: check that every section matches the code (loaders, interactive mode, UI, options;
-    the Node badge still says `>=20`, but the engines are now `^20.17 || >=22.13`);
-  - capture real UI output or a screenshot (Playwright is available: `page.screenshot`);
-  - CHANGELOG `Unreleased` → entries for phases 13–15; a full options doc (`docs/cli.md`);
-  - in PROGRESS.md, a "Known limitations" section and ideas for later.
-- **Phases 17–22:**
-  - cross-loader migration and Sinytra Connector hints (experimental, never auto-included);
-  - `--side client|server`;
-  - concurrency and benchmarks;
-  - source plugin system with a GitHub Releases source;
-  - reusable GitHub Action;
-  - VitePress docs site with a Pages deploy workflow (not enabled).
+- **Phase 17, cross-loader migration** (branch `feat/cross-loader-migration`):
+  - the engine already looks first for the same project with a version for the target loader
+    (`getProjectVersions` with `acceptedLoaders`); make this explicit in the report ("same
+    project, now available for X");
+  - rank alternatives by relevance (categories in common, popularity, keywords) and explain each
+    one (score, reasons). Today: name search, then category search by downloads;
+  - Sinytra Connector (runs Fabric mods on NeoForge/Forge): verify its official docs/README on
+    raw.githubusercontent.com (`Sinytra/Connector`). If relevant, report Fabric-only mods that
+    _could_ run on NeoForge through it, marked "experimental, not guaranteed", **never** added
+    to the pack automatically;
+  - README: ModShift does not convert mod code;
+  - fixtures: Forge → Fabric pack with multi-loader mods, mods without an equivalent, and
+    alternatives.
+- **Phase 18:** client/server detection (`client_side` / `server_side` from Modrinth),
+  `--side server|client|both`, ambiguous cases reported.
+- **Phase 19:** configurable concurrency within the rate limit; `bench/` with 200–500-mod
+  synthetic packs and a mock API (the README must say it measures local processing only).
+- **Phase 20:** source plugin system (Modrinth, CurseForge, GitHub Releases with an optional
+  `GITHUB_TOKEN`), docs and contract tests.
+- **Phase 21:** reusable GitHub Action in `action/` (check plus a PR comment or job summary),
+  README example, not published to the Marketplace.
+- **Phase 22:** VitePress docs site in `docs/` and a GitHub Pages deploy workflow (Pages **not**
+  enabled: manual action). Careful: `docs/` already holds `mrpack-format.md`,
+  `curseforge-api.md`, `loaders.md`, `cli.md` and `images/`; reuse them as pages.
 
 Pitfalls:
 
