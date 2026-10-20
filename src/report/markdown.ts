@@ -88,7 +88,11 @@ export function renderMarkdown(result: AnalysisResult): string {
       lines.push(
         ...table(
           ['Dependency', 'Version', 'Required by'],
-          added.map((d) => [d.project.title, versionLabel(d.version), d.requiredBy.join(', ')]),
+          added.map((d) => [
+            d.project.title,
+            `${versionLabel(d.version)}${d.fallback ? ` (${d.fallback.loader} version: fallback compatibility, to test)` : ''}`,
+            d.requiredBy.join(', '),
+          ]),
         ),
       );
     }

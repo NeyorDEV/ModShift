@@ -26,6 +26,8 @@ export interface PlannedMod {
   requiredBy?: string[];
   // Mod identifié seulement par son mod id (le fichier d'origine n'est pas connu de Modrinth).
   unverified?: boolean;
+  // Version retenue pour un loader de repli (« fallback compatibility, to test »).
+  fallbackLoader?: string;
 }
 
 export type LoaderVersionSource = 'option' | 'config' | 'source-pack';
@@ -171,6 +173,7 @@ export function buildMigrationPlan(
           version: mod.targetVersion,
           replaces: mod.fileName,
           ...(mod.identification === 'mod-id' ? { unverified: true } : {}),
+          ...(mod.fallback ? { fallbackLoader: mod.fallback.loader } : {}),
         },
         env,
       );
@@ -203,6 +206,7 @@ export function buildMigrationPlan(
         projectId: dep.project.id,
         version: dep.version,
         requiredBy: dep.requiredBy,
+        ...(dep.fallback ? { fallbackLoader: dep.fallback.loader } : {}),
       },
       undefined,
     );

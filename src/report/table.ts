@@ -94,7 +94,7 @@ export function renderTable(result: AnalysisResult, options: TableOptions = {}):
     out.push('', c(ANSI.bold, 'Dependencies added:'));
     for (const d of added) {
       out.push(
-        `  + ${d.project.title} ${versionLabel(d.version)} (required by ${d.requiredBy.join(', ')})`,
+        `  + ${d.project.title} ${versionLabel(d.version)} (required by ${d.requiredBy.join(', ')})${d.fallback ? ` [${d.fallback.loader} version: fallback compatibility, to test]` : ''}`,
       );
     }
   }

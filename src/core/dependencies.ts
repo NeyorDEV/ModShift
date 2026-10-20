@@ -1,6 +1,6 @@
 import type { ModrinthDependency, ModrinthVersion } from '../modrinth/types.js';
 import type { MigrationTarget } from '../types.js';
-import { acceptedLoaders, pickBestVersion } from './loaders.js';
+import { acceptedLoaders, fallbackCompatibility, pickBestVersion } from './loaders.js';
 import { type ModrinthApi, toProjectRef, toVersionRef } from './refs.js';
 import type { AddedDependency, Conflict, MissingDependency, ProjectRef } from './types.js';
 
@@ -111,7 +111,13 @@ export async function resolveDependencies(
       }
       const selection = { project, version: best };
       present.set(projectId, selection);
-      added.set(projectId, { project, version: toVersionRef(best), requiredBy });
+      const fallback = fallbackCompatibility(best, target);
+      added.set(projectId, {
+        project,
+        version: toVersionRef(best),
+        requiredBy,
+        ...(fallback ? { fallback } : {}),
+      });
       queue.push(selection);
     }
   }
