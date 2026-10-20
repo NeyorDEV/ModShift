@@ -43,6 +43,16 @@ export interface VersionRef {
 }
 
 export const ALTERNATIVE_NOTE = 'suggestion, to verify';
+export const FALLBACK_NOTE = 'fallback compatibility, to test';
+
+// Version retenue pour un loader de repli (ex. version Fabric sur une cible Quilt).
+export interface FallbackCompatibility {
+  // Loader de la version retenue.
+  loader: string;
+  // Source officielle de la règle de repli.
+  source: string;
+  note: typeof FALLBACK_NOTE;
+}
 
 export interface Alternative {
   project: ProjectRef;
@@ -73,6 +83,8 @@ export interface ModAnalysis {
   adoptedAlternative?: AdoptedAlternative;
   // Remplacement imposé par une correspondance de modshift.config.json.
   mapping?: { rule: string; original?: ProjectRef };
+  // Présent quand la version cible ne tourne sur le loader cible que par repli.
+  fallback?: FallbackCompatibility;
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }
@@ -81,6 +93,7 @@ export interface AddedDependency {
   project: ProjectRef;
   version: VersionRef;
   requiredBy: string[];
+  fallback?: FallbackCompatibility;
 }
 
 export interface MissingDependency {

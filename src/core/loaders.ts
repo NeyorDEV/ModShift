@@ -1,19 +1,32 @@
+import { acceptedLoaders, fallbackFor, getLoader } from '../loaders/registry.js';
 import type { ModrinthVersion, VersionType } from '../modrinth/types.js';
 import type { Loader, MigrationTarget } from '../types.js';
+import { type FallbackCompatibility, FALLBACK_NOTE } from './types.js';
 
-// Loaders dont les mods peuvent tourner sur la cible.
-// Quilt charge les mods Fabric : une version Fabric est acceptée pour une cible Quilt.
-// NeoForge 1.20.1 pouvait charger certains mods Forge, mais ce n'est plus vrai ensuite :
-// par simplicité, Forge et NeoForge sont traités comme strictement distincts.
-export function acceptedLoaders(target: Loader): Loader[] {
-  return target === 'quilt' ? ['quilt', 'fabric'] : [target];
+// Loaders acceptés pour une cible (le loader lui-même puis ses replis documentés) :
+// voir src/loaders/registry.ts. Forge et NeoForge restent distincts (aucune source officielle
+// accessible ne confirme la compatibilité de NeoForge 1.20.1 avec les mods Forge).
+export { acceptedLoaders } from '../loaders/registry.js';
+
+// Décrit le repli utilisé par une version (undefined si elle vise le loader cible lui-même).
+export function fallbackCompatibility(
+  version: ModrinthVersion,
+  target: MigrationTarget,
+): FallbackCompatibility | undefined {
+  const rule = fallbackFor(target.loader, version.loaders);
+  return rule ? { loader: rule.loader, source: rule.source, note: FALLBACK_NOTE } : undefined;
+}
+
+// Phrase ajoutée à la raison d'un mod retenu par repli.
+export function fallbackReason(fallback: FallbackCompatibility, target: MigrationTarget): string {
+  return `Fallback compatibility, to test: a ${getLoader(fallback.loader as Loader).name} version running on ${getLoader(target.loader).name} (${fallback.source}).`;
 }
 
 export function versionSupportsTarget(version: ModrinthVersion, target: MigrationTarget): boolean {
   const loaders = acceptedLoaders(target.loader);
   return (
     version.game_versions.includes(target.minecraftVersion) &&
-    version.loaders.some((l) => (loaders as string[]).includes(l))
+    version.loaders.some((l) => loaders.includes(l))
   );
 }
 

@@ -1,0 +1,4 @@
+name: BungeeTab
+version: 2.0.1
+main: org.example.bungeetab.BungeeTab
+author: Fixture

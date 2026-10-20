@@ -1,0 +1,14 @@
+# Fixture : plugin Bukkit/Spigot (données factices).
+name: ChestShop
+version: '3.12.2'
+main: com.example.chestshop.ChestShop
+api-version: '1.20'
+author: Fixture
+depend: [Vault]
+softdepend:
+  - WorldGuard
+  - "LWC"
+commands:
+  shop:
+    description: Opens the shop
+    usage: /shop

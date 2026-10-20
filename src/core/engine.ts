@@ -4,7 +4,13 @@ import type { ModrinthProject, ModrinthVersion } from '../modrinth/types.js';
 import type { MigrationTarget, ModEntry, ModPack } from '../types.js';
 import { findAlternatives } from './alternatives.js';
 import { resolveDependencies, type SelectedVersion } from './dependencies.js';
-import { acceptedLoaders, pickBestVersion, versionSupportsTarget } from './loaders.js';
+import {
+  acceptedLoaders,
+  fallbackCompatibility,
+  fallbackReason,
+  pickBestVersion,
+  versionSupportsTarget,
+} from './loaders.js';
 import { type ModrinthApi, toProjectRef, toVersionRef } from './refs.js';
 import {
   type AdoptedAlternative,
@@ -208,11 +214,16 @@ export async function analyzePack(
         mapping,
       };
       if (best) {
+        const fallback = fallbackCompatibility(best, target);
         mods.push({
           ...common,
           status: 'update-found',
           targetVersion: toVersionRef(best),
-          reason: `Replaced by ${replacement.title} (mapping "${map.rule}" in modshift.config.json).`,
+          fallback,
+          reason: joinReasons(
+            `Replaced by ${replacement.title} (mapping "${map.rule}" in modshift.config.json).`,
+            fallback && fallbackReason(fallback, target),
+          ),
         });
         selected.set(replacement.id, { project: replacement, version: best });
       } else {
@@ -247,11 +258,13 @@ export async function analyzePack(
     };
 
     if (current && versionSupportsTarget(current, target)) {
+      const fallback = fallbackCompatibility(current, target);
       mods.push({
         ...common,
         status: 'compatible',
         targetVersion: toVersionRef(current),
-        reason: idNote || undefined,
+        fallback,
+        reason: joinReasons(idNote, fallback && fallbackReason(fallback, target)),
       });
       selected.set(project.id, { project, version: current });
       continue;
@@ -259,11 +272,13 @@ export async function analyzePack(
 
     const best = bestByProject.get(project.id);
     if (best) {
+      const fallback = fallbackCompatibility(best, target);
       mods.push({
         ...common,
         status: 'update-found',
         targetVersion: toVersionRef(best),
-        reason: idNote || undefined,
+        fallback,
+        reason: joinReasons(idNote, fallback && fallbackReason(fallback, target)),
       });
       selected.set(project.id, { project, version: best });
       continue;
@@ -325,6 +340,15 @@ export async function analyzePack(
     otherFilesCount: pack.otherFiles.length,
     warnings,
   };
+}
+
+// Assemble des morceaux d'explication (vides ignorés) ; undefined si rien à dire.
+function joinReasons(...parts: (string | undefined)[]): string | undefined {
+  const text = parts
+    .map((p) => p?.trim())
+    .filter((p) => p)
+    .join(' ');
+  return text || undefined;
 }
 
 // Le même projet présent dans plusieurs fichiers (ex. deux versions d'un même mod).

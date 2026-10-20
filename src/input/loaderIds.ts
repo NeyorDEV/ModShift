@@ -1,12 +1,8 @@
+import { MRPACK_KEY_TO_LOADER } from '../loaders/registry.js';
 import type { Loader } from '../types.js';
 
-// Clés de `dependencies` dans modrinth.index.json → loader.
-export const MRPACK_LOADER_KEYS: Record<string, Loader> = {
-  forge: 'forge',
-  neoforge: 'neoforge',
-  'fabric-loader': 'fabric',
-  'quilt-loader': 'quilt',
-};
+// Clés de `dependencies` dans modrinth.index.json → loader (définies dans le registre).
+export const MRPACK_LOADER_KEYS: Record<string, Loader> = MRPACK_KEY_TO_LOADER;
 
 // Convertit un identifiant CurseForge (« forge-47.2.0 », « neoforge-21.1.1 »…) en loader + version.
 export function parseCurseForgeLoaderId(

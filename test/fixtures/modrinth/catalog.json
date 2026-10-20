@@ -289,6 +289,85 @@
         "1.21.1"
       ],
       "downloads": 2000000
+    },
+    {
+      "id": "CHESTSHP",
+      "slug": "chestshop",
+      "title": "ChestShop",
+      "description": "ChestShop (fixture)",
+      "categories": [
+        "economy"
+      ],
+      "project_type": "mod",
+      "client_side": "unsupported",
+      "server_side": "required",
+      "loaders": [
+        "spigot"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 400000
+    },
+    {
+      "id": "DYNMAP01",
+      "slug": "dynmap",
+      "title": "Dynmap",
+      "description": "Dynmap (fixture)",
+      "categories": [
+        "utility"
+      ],
+      "project_type": "mod",
+      "client_side": "unsupported",
+      "server_side": "required",
+      "loaders": [
+        "paper",
+        "purpur"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 900000
+    },
+    {
+      "id": "BUNGTAB1",
+      "slug": "bungeetab",
+      "title": "BungeeTab",
+      "description": "BungeeTab (fixture)",
+      "categories": [
+        "social"
+      ],
+      "project_type": "mod",
+      "client_side": "unsupported",
+      "server_side": "required",
+      "loaders": [
+        "bungeecord"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "downloads": 50000
+    },
+    {
+      "id": "PROXYCHT",
+      "slug": "proxychat",
+      "title": "ProxyChat",
+      "description": "ProxyChat (fixture)",
+      "categories": [
+        "social"
+      ],
+      "project_type": "mod",
+      "client_side": "unsupported",
+      "server_side": "required",
+      "loaders": [
+        "velocity"
+      ],
+      "game_versions": [
+        "1.21.1"
+      ],
+      "downloads": 60000
     }
   ],
   "versions": [
@@ -951,6 +1030,147 @@
           "filename": "v1embed.jar",
           "primary": true,
           "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1chest",
+      "project_id": "CHESTSHP",
+      "name": "3.12.2",
+      "version_number": "3.12.2",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "spigot"
+      ],
+      "version_type": "release",
+      "date_published": "2024-01-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2",
+            "sha512": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1chest.jar",
+          "filename": "v1chest.jar",
+          "primary": true,
+          "size": 3000
+        }
+      ]
+    },
+    {
+      "id": "v2chest",
+      "project_id": "CHESTSHP",
+      "name": "3.13.0",
+      "version_number": "3.13.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "spigot"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3",
+            "sha512": "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2chest.jar",
+          "filename": "v2chest.jar",
+          "primary": true,
+          "size": 3000
+        }
+      ]
+    },
+    {
+      "id": "v2dynmap",
+      "project_id": "DYNMAP01",
+      "name": "3.7",
+      "version_number": "3.7",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "paper",
+        "purpur"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+            "sha512": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2dynmap.jar",
+          "filename": "v2dynmap.jar",
+          "primary": true,
+          "size": 3000
+        }
+      ]
+    },
+    {
+      "id": "v1btab",
+      "project_id": "BUNGTAB1",
+      "name": "2.1.0",
+      "version_number": "2.1.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "bungeecord"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5",
+            "sha512": "d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1btab.jar",
+          "filename": "v1btab.jar",
+          "primary": true,
+          "size": 3000
+        }
+      ]
+    },
+    {
+      "id": "v1pchat",
+      "project_id": "PROXYCHT",
+      "name": "1.5.0",
+      "version_number": "1.5.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "velocity"
+      ],
+      "version_type": "release",
+      "date_published": "2024-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6",
+            "sha512": "d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6d6"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1pchat.jar",
+          "filename": "v1pchat.jar",
+          "primary": true,
+          "size": 3000
         }
       ]
     }

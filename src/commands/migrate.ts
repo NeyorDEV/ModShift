@@ -3,10 +3,10 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { analyzePack } from '../core/engine.js';
 import type { AnalysisResult } from '../core/types.js';
 import { loadPack } from '../input/index.js';
+import { getLoader, supportsMrpack } from '../loaders/registry.js';
 import { buildMigrationPlan, type MigrationPlan, resolveLoaderVersion } from '../migrate/plan.js';
 import { MIGRATION_REPORT_FILE, renderMigrationReport, renderPlanText } from '../migrate/report.js';
 import { buildMrpackArchive, collectOverrides } from '../migrate/writer.js';
-import type { Loader } from '../types.js';
 import {
   type CliIo,
   createSession,
@@ -40,14 +40,6 @@ export interface MigrateResult {
   written: boolean;
 }
 
-// Où trouver la version d'un loader (message d'erreur actionnable).
-const LOADER_VERSION_HELP: Record<Loader, string> = {
-  fabric: 'https://fabricmc.net/develop/',
-  quilt: 'https://quiltmc.org/',
-  forge: 'https://files.minecraftforge.net/',
-  neoforge: 'https://neoforged.net/',
-};
-
 async function exists(path: string): Promise<boolean> {
   try {
     await stat(path);
@@ -80,6 +72,12 @@ export async function runMigrate(
 
   const session = createSession(options, io);
   const { config, target } = await loadSettings(options, session.logger, io);
+  if (!supportsMrpack(target.loader)) {
+    const { name } = getLoader(target.loader);
+    throw new UsageError(
+      `${name} cannot be the target of a .mrpack (the format only declares Forge, NeoForge, Fabric and Quilt): use "modshift analyze" to check ${name} compatibility.`,
+    );
+  }
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
 
@@ -97,7 +95,7 @@ export async function runMigrate(
     throw new UsageError(
       `Cannot determine the ${target.loader} version for Minecraft ${target.minecraftVersion}: ` +
         `pass --loader-version <version> or set "target.loaderVersion" in modshift.config.json ` +
-        `(see ${LOADER_VERSION_HELP[target.loader]}).`,
+        `(see ${getLoader(target.loader).website ?? 'the loader website'}).`,
     );
   }
   await session.prepare(pack);

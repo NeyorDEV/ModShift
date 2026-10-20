@@ -67,7 +67,7 @@ export function renderMigrationReport(
     lines.push('| Mod | Version | Status | Origin |', '| --- | --- | --- | --- |');
     for (const mod of plan.mods) {
       lines.push(
-        `| ${cell(mod.title)} | ${cell(versionLabel(mod.version))} | ${SOURCE_LABELS[mod.source]} | ${cell(modOrigin(mod))} |`,
+        `| ${cell(mod.title)} | ${cell(versionLabel(mod.version))} | ${SOURCE_LABELS[mod.source]}${mod.fallbackLoader ? `, ${mod.fallbackLoader} version: fallback compatibility, to test` : ''} | ${cell(modOrigin(mod))} |`,
       );
     }
   }
@@ -184,7 +184,10 @@ export function renderPlanText(
         : mod.source === 'alternative'
           ? ` (alternative to ${mod.replaces ?? '?'}: suggestion, to verify)`
           : '';
-    out.push(`  ${SOURCE_ICONS[mod.source]} ${mod.title} ${versions}${extra}`);
+    const fallback = mod.fallbackLoader
+      ? ` [${mod.fallbackLoader} version: fallback compatibility, to test]`
+      : '';
+    out.push(`  ${SOURCE_ICONS[mod.source]} ${mod.title} ${versions}${extra}${fallback}`);
   }
   out.push('', 'Excluded:');
   if (plan.excluded.length === 0) out.push('  (none)');

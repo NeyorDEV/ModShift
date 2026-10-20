@@ -1,0 +1,4 @@
+name: Dynmap
+version: 3.7-beta-4
+main: org.example.dynmap.DynmapPlugin
+api-version: '1.20'

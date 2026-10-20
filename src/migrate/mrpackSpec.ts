@@ -1,5 +1,4 @@
 import { strFromU8, unzipSync } from 'fflate';
-import type { Loader } from '../types.js';
 
 // Règles du format .mrpack, relevées dans le code source de Modrinth (voir docs/mrpack-format.md).
 
@@ -13,13 +12,6 @@ export const ALLOWED_DOWNLOAD_DOMAINS = [
 ];
 export const DEPENDENCY_KEYS = ['minecraft', 'forge', 'neoforge', 'fabric-loader', 'quilt-loader'];
 export const ENV_VALUES = ['required', 'optional', 'unsupported', 'unknown'];
-
-export const LOADER_DEPENDENCY_KEY: Record<Loader, string> = {
-  forge: 'forge',
-  neoforge: 'neoforge',
-  fabric: 'fabric-loader',
-  quilt: 'quilt-loader',
-};
 
 export type EnvValue = 'required' | 'optional' | 'unsupported' | 'unknown';
 
