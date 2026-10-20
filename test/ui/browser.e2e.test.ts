@@ -85,7 +85,8 @@ describe.skipIf(!executablePath)('web UI in a browser', () => {
     expect(await page.locator('#detail-body').innerText()).toContain('0.6.0');
     await page.keyboard.press('Escape');
 
-    // Construction et téléchargement du pack migré.
+    // Construction et téléchargement du pack migré (liens invisibles avant la construction).
+    expect(await page.isVisible('#download-mrpack')).toBe(false);
     await page.fill('#loader-version', '0.16.5');
     await page.click('#build');
     await page.waitForSelector('#downloads:not([hidden])');

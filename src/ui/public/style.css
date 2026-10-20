@@ -59,6 +59,11 @@
   box-sizing: border-box;
 }
 
+/* L'attribut hidden doit l'emporter sur les règles display (sinon .downloads, .target-form… restent visibles). */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);

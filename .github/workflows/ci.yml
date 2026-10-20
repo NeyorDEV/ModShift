@@ -15,8 +15,8 @@ jobs:
       matrix:
         node-version: [20, 22]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -25,4 +25,6 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run build
+      - name: Check that docs/cli.md matches the CLI help
+        run: npm run docs:cli && git diff --exit-code docs/cli.md
       - run: npm run test:coverage

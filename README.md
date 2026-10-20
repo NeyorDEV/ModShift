@@ -3,14 +3,19 @@
 > Migrate a Minecraft modpack to another Minecraft version and/or mod loader.
 
 [![CI](https://github.com/NeyorDEV/ModShift/actions/workflows/ci.yml/badge.svg)](https://github.com/NeyorDEV/ModShift/actions/workflows/ci.yml)
-![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+![Node.js 20.17+ or 22.13+](https://img.shields.io/badge/node-20.17%2B%20%7C%2022.13%2B-brightgreen)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 Moving a modpack from, say, **1.20.1 Forge** to **1.21.1 NeoForge** usually means checking every
 mod by hand: is there a version for the new target? If not, what replaces it? Which dependencies
 are now missing? **ModShift automates that.** It reads your pack, identifies each mod on
 [Modrinth](https://modrinth.com), finds a compatible version, suggests alternatives, resolves
-dependencies and can write a migrated `.mrpack`.
+dependencies and can write a migrated `.mrpack`. Use it from the command line, through a guided
+interactive mode, or in a small local web page.
+
+![ModShift web interface: a Forge 1.20.1 pack analysed for NeoForge 1.21.1](docs/images/ui-light.png)
+
+_Screenshot of the test suite's fixture pack (fake data), analysed in `modshift ui`._
 
 > ModShift does **not** convert mod code. It looks for versions or equivalents of your mods for
 > the target. A mod with no port stays a mod with no port.
@@ -18,7 +23,8 @@ dependencies and can write a migrated `.mrpack`.
 ## Contents
 
 - [Features](#features) · [Installation](#installation) · [Quick start](#quick-start)
-- [Commands](#commands) · [Options](#options) · [Configuration file](#configuration-file)
+- [Commands](#commands) · [Interactive mode](#interactive-mode) · [Web interface](#web-interface)
+- [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)
 - [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
 - [Example output](#example-output) · [How it works](#how-it-works) · [FAQ](#faq)
 - [Limitations](#limitations) · [Programmatic API](#programmatic-api)
@@ -27,7 +33,10 @@ dependencies and can write a migrated `.mrpack`.
 ## Features
 
 - **Inputs:** Modrinth `.mrpack`, CurseForge export `.zip` (`manifest.json`), or a folder of
-  `.jar` files (an instance folder with a `mods/` subfolder works too).
+  `.jar` files (an instance folder with `mods/`, or a server folder with `plugins/`).
+- **Loaders:** Forge, NeoForge, Fabric, Quilt and older mod loaders; Bukkit, Spigot, Paper, Purpur
+  and Sponge server plugins; BungeeCord, Waterfall and Velocity proxies. Documented cross-loader
+  compatibility (e.g. Fabric mods on Quilt) is reported as "fallback compatibility, to test".
 - **Identification:** by SHA-1/SHA-512 hash on Modrinth (exact). As a fallback, the jar's mod id
   (`fabric.mod.json`, `quilt.mod.json`, `mods.toml`, `neoforge.mods.toml`) is tried as a Modrinth
   slug, reported as _unverified_.
@@ -43,8 +52,10 @@ dependencies and can write a migrated `.mrpack`.
   rules, plus a `MIGRATION_REPORT.md` listing what was excluded and why.
 - **Reports:** console table, JSON or Markdown.
 - **Offline-friendly:** a local cache of API responses, `--offline`, and `modshift cache` commands.
-- **Configurable:** an optional `modshift.config.json` with a default target, an ignore list and
-  manual mappings.
+- **Configurable:** an optional `modshift.config.json` with a default target, ignore and exclude
+  lists and manual mappings, written for you by the interactive mode.
+- **Three ways to use it:** CLI commands for scripts and CI, `modshift interactive` to decide mod
+  by mod, and `modshift ui` for a local web page (127.0.0.1 only).
 - **Polite to Modrinth:** explicit User-Agent, client-side rate limiting, retries with backoff.
 
 ## Installation
@@ -127,6 +138,10 @@ A small local page to drop a `.mrpack` or CurseForge `.zip`, choose the target, 
 (sortable, filterable by status, with a detail view per mod: versions, alternatives,
 dependencies), then download the migrated `.mrpack`, the `MIGRATION_REPORT.md` and the JSON
 analysis. Light and dark themes follow your system, and a toggle overrides them.
+
+<p align="center">
+  <img src="docs/images/ui-dark.png" alt="The same analysis in the dark theme" width="720" />
+</p>
 
 The server only listens on `127.0.0.1` and protects its API with a random token. Uploaded files
 stay in a temporary folder that is deleted when you stop it (Ctrl+C). See [SECURITY.md](SECURITY.md).
@@ -347,6 +362,10 @@ Yes, with `--offline`, once the cache has been filled by a previous run.
 - CurseForge references need a `CURSEFORGE_API_KEY`.
 - Alternatives and mod-id matches are heuristics: they can be wrong.
 - Requests are sequential. Large packs take a while the first time; later runs use the cache.
+- Plugin platforms (Paper, Velocity…) can be analysed, but `migrate` only writes `.mrpack` files,
+  which only support Forge, NeoForge, Fabric and Quilt.
+- Not tested against the live Modrinth and CurseForge APIs from the development environment (see
+  [PROGRESS.md](PROGRESS.md)).
 
 ## Programmatic API
 

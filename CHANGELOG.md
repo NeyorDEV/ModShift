@@ -31,8 +31,25 @@ First public version (not yet published to npm).
   `schemas/`).
 - Actionable error messages, a progress bar and `--verbose` logs.
 - Programmatic API (`import { analyzePack } from 'modshift'`) with TypeScript types.
+- Loader registry: older mod loaders (LiteLoader, Rift, Legacy Fabric, Ornithe…), server plugin
+  platforms (Bukkit, Spigot, Paper, Purpur, Sponge) and proxies (BungeeCord, Waterfall, Velocity),
+  with plugin metadata (`plugin.yml`, `paper-plugin.yml`, `bungee.yml`, `velocity-plugin.json`).
+- Fallback compatibility, documented by each loader (Quilt ← Fabric, Paper ← Spigot/Bukkit,
+  Purpur ← Paper/Spigot/Bukkit, Waterfall ← BungeeCord), reported as "fallback compatibility, to
+  test".
+- `modshift interactive` (`-i`): guided migration with per-mod decisions saved to
+  `modshift.config.json`; new `exclude` list.
+- `modshift ui`: local web interface on 127.0.0.1 (drag and drop, sortable and filterable results,
+  per-mod details, downloads, light/dark theme).
+- `docs/cli.md`: command reference generated from the CLI help.
 
 ### Security
 
 - Bounded zip extraction (entry count, declared sizes) against zip bombs; zip-slip paths are
   rejected. See `SECURITY.md`.
+- Web interface: loopback only, per-run token, Host header check, bounded uploads, temporary files
+  only, strict Content Security Policy.
+
+### Changed
+
+- Node.js requirement: `^20.17.0 || >=22.13.0` (needed by the prompt library).
