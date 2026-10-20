@@ -1,5 +1,6 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { TARGET_SIDES, type TargetSide } from '../core/sides.js';
 import { isLoader, LOADERS, type Loader } from '../types.js';
 
 export const CONFIG_FILE = 'modshift.config.json';
@@ -11,6 +12,8 @@ export interface ModShiftConfig {
     minecraftVersion?: string;
     loader?: Loader;
     loaderVersion?: string;
+    // Installation visée : client, server (serveur dédié) ou both.
+    side?: TargetSide;
   };
   // Mods à ignorer : nom de fichier (joker « * » accepté), slug ou id de projet Modrinth.
   ignore?: string[];
@@ -37,7 +40,7 @@ export class ConfigError extends Error {
 }
 
 const KNOWN_KEYS = new Set(['$schema', 'target', 'ignore', 'exclude', 'mappings']);
-const TARGET_KEYS = new Set(['minecraftVersion', 'loader', 'loaderVersion']);
+const TARGET_KEYS = new Set(['minecraftVersion', 'loader', 'loaderVersion', 'side']);
 // Un fichier de configuration raisonnable fait quelques kilo-octets.
 const MAX_CONFIG_BYTES = 1024 * 1024;
 
@@ -65,7 +68,7 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
     for (const key of Object.keys(raw.target)) {
       if (!TARGET_KEYS.has(key)) throw new ConfigError(path, `unknown key "target.${key}"`);
     }
-    const { minecraftVersion, loader, loaderVersion } = raw.target;
+    const { minecraftVersion, loader, loaderVersion, side } = raw.target;
     if (minecraftVersion !== undefined && !nonEmptyString(minecraftVersion)) {
       throw new ConfigError(path, '"target.minecraftVersion" must be a non-empty string');
     }
@@ -75,10 +78,14 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
     if (loaderVersion !== undefined && !nonEmptyString(loaderVersion)) {
       throw new ConfigError(path, '"target.loaderVersion" must be a non-empty string');
     }
+    if (side !== undefined && !TARGET_SIDES.includes(side as TargetSide)) {
+      throw new ConfigError(path, `"target.side" must be one of: ${TARGET_SIDES.join(', ')}`);
+    }
     config.target = {
       ...(minecraftVersion !== undefined ? { minecraftVersion: minecraftVersion.trim() } : {}),
       ...(loader !== undefined ? { loader: loader as Loader } : {}),
       ...(loaderVersion !== undefined ? { loaderVersion: loaderVersion.trim() } : {}),
+      ...(side !== undefined ? { side: side as TargetSide } : {}),
     };
   }
 

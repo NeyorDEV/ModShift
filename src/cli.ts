@@ -184,6 +184,10 @@ function withCommonOptions(command: Command): Command {
         '--loader <loader>',
         `target mod loader: ${LOADERS.join(', ')} (or "target" in the config)`,
       )
+      .option(
+        '--side <side>',
+        'installation the pack is for: client, server or both (or "target.side" in the config)',
+      )
       .option('--config <file>', `configuration file (default: ./${CONFIG_FILE} if present)`)
       .option('--no-config', `ignore ${CONFIG_FILE}`),
   ).option('-q, --quiet', 'no progress messages on stderr', false);
