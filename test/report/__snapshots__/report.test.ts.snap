@@ -52,6 +52,13 @@ Missing (no compatible version):
 | --- | --- | --- |
 | Text Lib | Mod Menu | No version for Minecraft 1.21.1 / fabric |
 
+## Client and server
+
+Target installation: **both** (\`--side\`). Sides come from Modrinth metadata (the version's \`environment\`, else the project's \`client_side\` / \`server_side\`).
+
+- **Client-only:** Sodium, Mod Menu
+- **Side unknown or ambiguous (check them):** Cloth Config API
+
 ## Warnings
 
 - fixture.mrpack: ignoring unsafe path "../escape.jar"
@@ -79,6 +86,7 @@ Missing dependencies:
 Summary: 1 compatible, 2 update found, 1 alternative suggested, 2 not found
 Alternatives are suggestions, to verify before use.
 2 non-mod file(s) (resource packs, configs…) were not analysed.
+Sides (--side both): 2 client-only, 1 with an unknown side (check them).
 
 Warnings:
   - fixture.mrpack: ignoring unsafe path "../escape.jar"
