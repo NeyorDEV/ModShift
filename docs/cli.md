@@ -60,6 +60,8 @@ Options:
                           7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)
   --max-alternatives <n>  alternatives suggested per missing mod (0 to disable)
                           (default: "3")
+  --concurrency <n>       Modrinth requests sent at the same time, 1-16 (rate
+                          limit still applies) (default: "4")
   -v, --verbose           log every API request, cache hit and retry on stderr
                           (default: false)
   -q, --quiet             no progress messages on stderr (default: false)
@@ -102,6 +104,8 @@ Options:
                               12h, 7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)
   --max-alternatives <n>      alternatives suggested per missing mod (0 to
                               disable) (default: "3")
+  --concurrency <n>           Modrinth requests sent at the same time, 1-16
+                              (rate limit still applies) (default: "4")
   -v, --verbose               log every API request, cache hit and retry on
                               stderr (default: false)
   -q, --quiet                 no progress messages on stderr (default: false)
@@ -140,6 +144,8 @@ Options:
                           7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)
   --max-alternatives <n>  alternatives suggested per missing mod (0 to disable)
                           (default: "3")
+  --concurrency <n>       Modrinth requests sent at the same time, 1-16 (rate
+                          limit still applies) (default: "4")
   -v, --verbose           log every API request, cache hit and retry on stderr
                           (default: false)
   -h, --help              display help for command
@@ -163,6 +169,8 @@ Options:
                           7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)
   --max-alternatives <n>  alternatives suggested per missing mod (0 to disable)
                           (default: "3")
+  --concurrency <n>       Modrinth requests sent at the same time, 1-16 (rate
+                          limit still applies) (default: "4")
   -v, --verbose           log every API request, cache hit and retry on stderr
                           (default: false)
   -h, --help              display help for command
