@@ -5,6 +5,7 @@ import {
   modDisplayName,
   modNotes,
   STATUS_ICONS,
+  sideGroups,
   STATUS_LABELS,
   versionLabel,
 } from './labels.js';
@@ -130,6 +131,16 @@ export function renderTable(result: AnalysisResult, options: TableOptions = {}):
     out.push(
       `Ignored by modshift.config.json: ${result.ignored.map((m) => m.project?.title ?? m.fileName).join(', ')}`,
     );
+  }
+  const sides = sideGroups(result);
+  const sideParts = [
+    sides.client.length > 0 ? `${sides.client.length} client-only` : '',
+    sides.server.length > 0 ? `${sides.server.length} server-only` : '',
+    sides.unknown.length > 0 ? `${sides.unknown.length} with an unknown side (check them)` : '',
+  ].filter(Boolean);
+  if (sideParts.length > 0) out.push(`Sides (--side ${result.side}): ${sideParts.join(', ')}.`);
+  if (sides.notNeeded.length > 0) {
+    out.push(`Not needed for --side ${result.side}: ${sides.notNeeded.join(', ')}.`);
   }
   if (result.warnings.length > 0) {
     out.push('', c(ANSI.bold, 'Warnings:'));

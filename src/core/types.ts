@@ -1,5 +1,6 @@
 import type { COMPAT_LAYER_NOTE } from '../loaders/compatLayers.js';
 import type { VersionType } from '../modrinth/types.js';
+import type { ModSide, TargetSide } from './sides.js';
 import type { Loader, MigrationTarget, ModOrigin, PackSource } from '../types.js';
 
 export const MOD_STATUSES = [
@@ -34,6 +35,8 @@ export interface VersionRef {
   gameVersions: string[];
   loaders: string[];
   datePublished: string;
+  // Champ `environment` de Modrinth (côté client / serveur), s'il est connu.
+  environment?: string;
   file?: {
     fileName: string;
     url: string;
@@ -92,6 +95,7 @@ export interface AdoptedAlternative {
   version: VersionRef;
   reason: Alternative['reason'];
   note: typeof ALTERNATIVE_NOTE;
+  side?: ModSide;
 }
 
 export interface ModAnalysis {
@@ -114,6 +118,8 @@ export interface ModAnalysis {
   // Présent quand aucune version native n'existe mais qu'une couche de compatibilité pourrait
   // charger la version d'un autre loader (« experimental, not guaranteed »).
   compatLayer?: CompatLayerHint;
+  // Côté client / serveur de la version retenue (présent quand une version cible existe).
+  side?: ModSide;
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }
@@ -123,6 +129,7 @@ export interface AddedDependency {
   version: VersionRef;
   requiredBy: string[];
   fallback?: FallbackCompatibility;
+  side?: ModSide;
 }
 
 export interface MissingDependency {
@@ -164,6 +171,8 @@ export interface AnalysisResult {
     loader?: Loader;
   };
   target: MigrationTarget;
+  // Installation visée (--side) : les rapports signalent les mods inutiles ou incertains.
+  side: TargetSide;
   mods: ModAnalysis[];
   dependencies: {
     added: AddedDependency[];

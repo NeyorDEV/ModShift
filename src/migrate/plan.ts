@@ -1,4 +1,6 @@
+import { mrpackEnv, type ModSide, neededOn, type TargetSide } from '../core/sides.js';
 import type { AnalysisResult, LoaderChange, ModAnalysis, VersionRef } from '../core/types.js';
+import { sideLabel } from '../report/labels.js';
 import type { MigrationTarget, ModPack, PackIndexFile } from '../types.js';
 import {
   type EnvValue,
@@ -126,12 +128,11 @@ function keptIndexFile(file: PackIndexFile): MrpackFile | { error: string } {
 }
 
 // Titres des mods exclus par la configuration (pour écarter leurs dépendances).
-function excludedByConfigTitles(excluded: ModAnalysis[], hasExcludeRules: boolean): string[] {
-  if (!hasExcludeRules) return [];
-  return excluded
-    .filter((m) => m.reason?.startsWith('Excluded by modshift.config.json'))
-    .flatMap((m) => (m.project ? [m.project.title] : []));
-}
+const SIDE_NAMES: Record<TargetSide, string> = {
+  client: 'client',
+  server: 'dedicated server',
+  both: 'client and server',
+};
 
 export function buildMigrationPlan(
   pack: ModPack,
@@ -170,9 +171,27 @@ export function buildMigrationPlan(
     return true;
   };
 
+  // Titres des mods retirés volontairement (config, côté) : leurs dépendances ne sont plus utiles.
+  const removedTitles = new Set<string>();
+  const side = analysis.side;
+  // Le mod est-il utile pour --side ? Signale les cas incertains.
+  const keepForSide = (title: string, modSide: ModSide | undefined): boolean => {
+    if (side === 'both') return true;
+    const needed = modSide ? neededOn(modSide, side) : 'unknown';
+    if (needed === 'unknown') {
+      warnings.push(
+        `${title}: client/server side unknown on Modrinth, kept; check whether a ${SIDE_NAMES[side]} needs it.`,
+      );
+    }
+    return needed !== 'no';
+  };
+  const sideReason = (modSide: ModSide | undefined): string =>
+    `Not needed on a ${SIDE_NAMES[side]} (--side ${side}): ${sideLabel(modSide)} according to Modrinth.`;
+
   const envByPath = new Map(pack.mods.map((m) => [m.path, normalizeEnv(m.env)]));
   for (const mod of analysis.mods) {
-    const env = envByPath.get(mod.path);
+    // L'env du pack source prime ; sinon celui déduit des métadonnées Modrinth.
+    const env = envByPath.get(mod.path) ?? (mod.side ? mrpackEnv(mod.side) : undefined);
     const excludeRule = options.exclude?.find((pattern) =>
       matchesModRef(pattern, {
         fileName: mod.fileName,
@@ -185,6 +204,7 @@ export function buildMigrationPlan(
         ...mod,
         reason: `Excluded by modshift.config.json (rule "${excludeRule}").`,
       });
+      if (mod.project) removedTitles.add(mod.project.title);
       continue;
     }
     if (
@@ -192,6 +212,11 @@ export function buildMigrationPlan(
       mod.project &&
       mod.targetVersion
     ) {
+      if (!keepForSide(mod.project.title, mod.side)) {
+        excluded.push({ ...mod, reason: sideReason(mod.side) });
+        removedTitles.add(mod.project.title);
+        continue;
+      }
       const ok = add(
         {
           source: mod.status === 'compatible' ? 'kept' : 'updated',
@@ -209,7 +234,7 @@ export function buildMigrationPlan(
       continue;
     }
     const adopted = mod.adoptedAlternative;
-    if (adopted) {
+    if (adopted && keepForSide(adopted.project.title, adopted.side)) {
       const ok = add(
         {
           source: 'alternative',
@@ -227,10 +252,13 @@ export function buildMigrationPlan(
   }
 
   // Une dépendance ajoutée uniquement pour des mods exclus n'a plus de raison d'être.
-  const excludedTitles = new Set(excludedByConfigTitles(excluded, options.exclude !== undefined));
   for (const dep of analysis.dependencies.added) {
-    if (excludedTitles.size > 0 && dep.requiredBy.every((title) => excludedTitles.has(title))) {
+    if (removedTitles.size > 0 && dep.requiredBy.every((title) => removedTitles.has(title))) {
       warnings.push(`${dep.project.title}: not added, only required by excluded mods`);
+      continue;
+    }
+    if (!keepForSide(dep.project.title, dep.side)) {
+      warnings.push(`${dep.project.title}: not added, ${sideReason(dep.side)}`);
       continue;
     }
     add(
@@ -242,7 +270,7 @@ export function buildMigrationPlan(
         requiredBy: dep.requiredBy,
         ...(dep.fallback ? { fallbackLoader: dep.fallback.loader } : {}),
       },
-      undefined,
+      dep.side ? mrpackEnv(dep.side) : undefined,
     );
   }
 

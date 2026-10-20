@@ -16,6 +16,7 @@ import {
   curseForgeApiKey,
 } from '../curseforge/client.js';
 import { missingKeyWarning, resolveCurseForgeRefs } from '../curseforge/resolve.js';
+import { TARGET_SIDES, type TargetSide } from '../core/sides.js';
 import { isLoader, LOADERS, type MigrationTarget, type ModPack } from '../types.js';
 
 export interface AnalyzeCommandOptions {
@@ -30,6 +31,8 @@ export interface AnalyzeCommandOptions {
   cacheDir?: string;
   cacheTtl?: string;
   maxAlternatives: string;
+  // client, server ou both (défaut : target.side de la config, sinon both).
+  side?: string;
   quiet: boolean;
   verbose?: boolean;
   color: boolean;
@@ -90,6 +93,14 @@ function parseFormat(format: string): ReportFormat {
   return alias as ReportFormat;
 }
 
+export function parseSide(value: string): TargetSide {
+  const normalized = value.trim().toLowerCase();
+  if (!(TARGET_SIDES as readonly string[]).includes(normalized)) {
+    throw new UsageError(`Invalid --side "${value}" (expected one of: ${TARGET_SIDES.join(', ')})`);
+  }
+  return normalized as TargetSide;
+}
+
 export function parseMaxAlternatives(value: string): number {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 0 || n > 20) {
@@ -108,13 +119,14 @@ export async function runAnalyze(
   const format = parseFormat(options.format);
   const maxAlternatives = parseMaxAlternatives(options.maxAlternatives);
   const session = createSession(options, io);
-  const { config, target } = await loadSettings(options, session.logger, io);
+  const { config, target, side } = await loadSettings(options, session.logger, io);
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
   await session.prepare(pack);
 
   const result = await analyzePack(pack, target, session.api, {
     maxAlternatives,
+    side,
     ignore: config.ignore,
     mappings: config.mappings,
     ...session.progress,
@@ -147,12 +159,13 @@ export interface Settings {
   config: ModShiftConfig;
   configPath?: string;
   target: MigrationTarget;
+  side: TargetSide;
 }
 
 // Charge modshift.config.json (sauf --no-config) et en déduit la cible : les options de la ligne
 // de commande l'emportent sur la configuration.
 export async function loadSettings(
-  options: { config?: string | false; mc?: string; loader?: string },
+  options: { config?: string | false; mc?: string; loader?: string; side?: string },
   logger: Logger,
   io: CliIo,
 ): Promise<Settings> {
@@ -173,7 +186,9 @@ export async function loadSettings(
       'missing target loader: pass --loader <loader> or set "target.loader" in modshift.config.json',
     );
   }
-  return { config, configPath: path, target: parseTarget(mc, loader) };
+  const side =
+    options.side !== undefined ? parseSide(options.side) : (config.target?.side ?? 'both');
+  return { config, configPath: path, target: parseTarget(mc, loader), side };
 }
 
 export interface Session {

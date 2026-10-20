@@ -14,6 +14,10 @@ All notable changes to ModShift are documented here. The format follows
   popularity), with a score and an explanation for each suggestion in every report.
 - Compatibility layer hints (Sinytra Connector, Kilt), limited to the combinations their authors
   document and marked "experimental, not guaranteed". They are never added to the migrated pack.
+- Client/server detection from Modrinth metadata (`environment`, else `client_side` /
+  `server_side`), `--side client|server|both` and `target.side` in the config. Client-only or
+  server-only mods are listed, ambiguous ones flagged, and `.mrpack` `env` filled from Modrinth
+  when the source pack has none.
 
 ## [0.1.0]
 

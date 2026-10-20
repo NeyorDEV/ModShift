@@ -72,7 +72,7 @@ export async function runMigrate(
   const reportPath = join(dirname(outPath), MIGRATION_REPORT_FILE);
 
   const session = createSession(options, io);
-  const { config, target } = await loadSettings(options, session.logger, io);
+  const { config, target, side } = await loadSettings(options, session.logger, io);
   if (!supportsMrpack(target.loader)) {
     const { name } = getLoader(target.loader);
     throw new UsageError(
@@ -104,6 +104,7 @@ export async function runMigrate(
   const analysis = await analyzePack(pack, target, session.api, {
     maxAlternatives,
     adoptAlternatives: options.includeAlternatives,
+    side,
     ignore: config.ignore,
     mappings: config.mappings,
     ...session.progress,

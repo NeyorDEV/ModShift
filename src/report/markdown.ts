@@ -9,6 +9,7 @@ import {
   versionLabel,
   alternativeWhy,
   compatLayerSection,
+  sideSection,
 } from './labels.js';
 
 // Échappe les caractères qui casseraient un tableau Markdown.
@@ -126,6 +127,8 @@ export function renderMarkdown(result: AnalysisResult): string {
       );
     }
   }
+
+  lines.push(...sideSection(result));
 
   if (result.warnings.length > 0) {
     lines.push('', '## Warnings', '');

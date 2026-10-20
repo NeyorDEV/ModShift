@@ -5,33 +5,63 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
+    "$schema": {
+      "type": "string"
+    },
     "target": {
-      "description": "Default target used when --mc, --loader or --loader-version are not given.",
+      "description": "Default target used when --mc, --loader, --loader-version or --side are not given.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "minecraftVersion": { "type": "string", "minLength": 1, "examples": ["1.21.1"] },
-        "loader": { "enum": ["forge", "neoforge", "fabric", "quilt"] },
-        "loaderVersion": { "type": "string", "minLength": 1, "examples": ["21.1.77"] }
+        "minecraftVersion": {
+          "type": "string",
+          "minLength": 1,
+          "examples": ["1.21.1"]
+        },
+        "loader": {
+          "enum": ["forge", "neoforge", "fabric", "quilt"]
+        },
+        "loaderVersion": {
+          "type": "string",
+          "minLength": 1,
+          "examples": ["21.1.77"]
+        },
+        "side": {
+          "description": "Installation the pack is for: client, server (dedicated server) or both (default). Mods not needed on that side are left out of migrated packs.",
+          "enum": ["client", "server", "both"]
+        }
       }
     },
     "ignore": {
       "description": "Mods left out of the analysis and of migrated packs: file name (\"*\" wildcard allowed), Modrinth slug or project id.",
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "examples": [["optifine*.jar", "old-minimap"]]
     },
     "exclude": {
       "description": "Mods that are analysed and reported but left out of migrated packs: file name (\"*\" wildcard allowed), Modrinth slug or project id.",
       "type": "array",
-      "items": { "type": "string", "minLength": 1 }
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "mappings": {
-      "description": "Manual replacements: source mod (file name, Modrinth slug or project id) → Modrinth project (slug or id) to use for the target.",
+      "description": "Manual replacements: source mod (file name, Modrinth slug or project id) \u2192 Modrinth project (slug or id) to use for the target.",
       "type": "object",
-      "additionalProperties": { "type": "string", "minLength": 1 },
-      "examples": [{ "rubidium": "embeddium", "my-local-mod.jar": "sodium" }]
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "examples": [
+        {
+          "rubidium": "embeddium",
+          "my-local-mod.jar": "sodium"
+        }
+      ]
     }
   }
 }

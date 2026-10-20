@@ -135,8 +135,8 @@
         "library"
       ],
       "project_type": "mod",
-      "client_side": "optional",
-      "server_side": "optional",
+      "client_side": "unknown",
+      "server_side": "unknown",
       "loaders": [
         "fabric",
         "neoforge"
@@ -477,7 +477,8 @@
           "primary": true,
           "size": 1000
         }
-      ]
+      ],
+      "environment": "client_only"
     },
     {
       "id": "v3sodium",
@@ -505,7 +506,8 @@
           "primary": true,
           "size": 1000
         }
-      ]
+      ],
+      "environment": "client_only"
     },
     {
       "id": "v2sodiumneo",
@@ -589,7 +591,8 @@
           "primary": true,
           "size": 1000
         }
-      ]
+      ],
+      "environment": "client_and_server"
     },
     {
       "id": "v1menu",
@@ -633,7 +636,8 @@
           "primary": true,
           "size": 1000
         }
-      ]
+      ],
+      "environment": "client_only"
     },
     {
       "id": "v1omap",
@@ -690,7 +694,8 @@
           "primary": true,
           "size": 1000
         }
-      ]
+      ],
+      "environment": "client_only"
     },
     {
       "id": "v1jmap",

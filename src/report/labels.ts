@@ -4,7 +4,9 @@ import type {
   ModAnalysis,
   ModStatus,
   VersionRef,
+  AnalysisResult,
 } from '../core/types.js';
+import { type ModSide, neededOn, sideCategory, type SideCategory } from '../core/sides.js';
 
 export const STATUS_LABELS: Record<ModStatus, string> = {
   compatible: 'compatible',
@@ -75,6 +77,69 @@ export function compatLayerSection(mods: ModAnalysis[]): string[] {
       .join(', ');
     lines.push(
       `- **${modDisplayName(mod)}**: ${hint.runs} version ${hint.version.versionNumber} through ${hint.name}. Requires ${requires}.${hint.caveat ? ` ${hint.caveat}` : ''} Source: ${hint.source}.`,
+    );
+  }
+  return lines;
+}
+
+const SIDE_LABELS = {
+  client: 'client-only',
+  server: 'server-only',
+  both: 'client and server',
+  unknown: 'side unknown',
+} as const;
+
+// Libellé du côté d'un mod (client-only, server-only…).
+export function sideLabel(side: ModSide | undefined): string {
+  return SIDE_LABELS[side ? sideCategory(side) : 'unknown'];
+}
+
+export interface SideGroups {
+  client: string[];
+  server: string[];
+  unknown: string[];
+  // Mods inutiles pour l'installation visée (--side).
+  notNeeded: string[];
+}
+
+// Regroupe les mods retenus (et les dépendances ajoutées) selon leur côté.
+export function sideGroups(result: AnalysisResult): SideGroups {
+  const groups: SideGroups = { client: [], server: [], unknown: [], notNeeded: [] };
+  const entries = [
+    ...result.mods.flatMap((m) =>
+      m.project && m.targetVersion ? [{ title: m.project.title, side: m.side }] : [],
+    ),
+    ...result.dependencies.added.map((d) => ({ title: d.project.title, side: d.side })),
+  ];
+  for (const { title, side } of entries) {
+    const category: SideCategory = side ? sideCategory(side) : 'unknown';
+    if (category !== 'both') groups[category].push(title);
+    if (side && result.side !== 'both' && neededOn(side, result.side) === 'no') {
+      groups.notNeeded.push(title);
+    }
+  }
+  return groups;
+}
+
+// Section Markdown « client / serveur » ; vide si tous les mods vont des deux côtés.
+export function sideSection(result: AnalysisResult): string[] {
+  const groups = sideGroups(result);
+  if (groups.client.length + groups.server.length + groups.unknown.length === 0) return [];
+  const lines = ['', '## Client and server', ''];
+  lines.push(
+    `Target installation: **${result.side}** (\`--side\`). Sides come from Modrinth metadata ` +
+      "(the version's `environment`, else the project's `client_side` / `server_side`).",
+    '',
+  );
+  if (groups.client.length > 0) lines.push(`- **Client-only:** ${groups.client.join(', ')}`);
+  if (groups.server.length > 0) lines.push(`- **Server-only:** ${groups.server.join(', ')}`);
+  if (groups.unknown.length > 0) {
+    lines.push(`- **Side unknown or ambiguous (check them):** ${groups.unknown.join(', ')}`);
+  }
+  if (groups.notNeeded.length > 0) {
+    lines.push(
+      '',
+      `Not needed for \`--side ${result.side}\`, left out of migrated packs: ${groups.notNeeded.join(', ')}.`,
     );
   }
   return lines;

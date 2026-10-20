@@ -30,6 +30,7 @@ describe('validateConfig', () => {
     [{ target: 'x' }, '"target" must be an object'],
     [{ target: { mc: '1' } }, 'unknown key "target.mc"'],
     [{ target: { loader: 'not-a-loader' } }, '"target.loader" must be one of'],
+    [{ target: { side: 'dedicated' } }, '"target.side" must be one of: client, server, both'],
     [{ target: { minecraftVersion: ' ' } }, '"target.minecraftVersion" must be a non-empty string'],
     [{ ignore: ['ok', 3] }, '"ignore" must be an array of non-empty strings'],
     [{ mappings: [] }, '"mappings" must be an object'],
