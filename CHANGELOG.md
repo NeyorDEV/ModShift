@@ -6,6 +6,15 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Cross-loader migration (e.g. Forge → Fabric): multi-loader mods keep the same Modrinth project
+  and the switch is reported explicitly.
+- Alternatives are ranked by relevance (shared categories, similar name, description keywords,
+  popularity), with a score and an explanation for each suggestion in every report.
+- Compatibility layer hints (Sinytra Connector, Kilt), limited to the combinations their authors
+  document and marked "experimental, not guaranteed". They are never added to the migrated pack.
+
 ## [0.1.0]
 
 First public version (not yet published to npm).
