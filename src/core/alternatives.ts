@@ -14,6 +14,8 @@ function hitToProject(hit: ModrinthSearchHit): ProjectRef {
   return { id: hit.project_id, slug: hit.slug, title: hit.title, categories: hit.categories };
 }
 
+const LOADER_WORDS = new Set<string>(LOADERS);
+
 // Poids du score de pertinence (sur 100).
 const WEIGHTS = { categories: 40, name: 30, keywords: 10, popularity: 20 };
 
@@ -31,7 +33,7 @@ function formatDownloads(downloads: number): string {
 export function scoreAlternative(
   hit: ModrinthSearchHit,
   original: { title: string; categories: string[]; description?: string },
-): { score: number; explanation: string; nameMatch: boolean } {
+): { score: number; explanation: string; nameMatch: boolean; keywordMatch: boolean } {
   const wanted = themes(original.categories);
   const shared = themes(hit.categories).filter((c) => wanted.includes(c));
   const categoryScore = wanted.length > 0 ? shared.length / wanted.length : 0;
@@ -43,7 +45,8 @@ export function scoreAlternative(
   // Mots-clés : mots du titre et de la description d'origine retrouvés dans la description du candidat.
   const keywords = new Set([...titleWords, ...words(original.description ?? '').slice(0, 20)]);
   const hitText = new Set(words(`${hit.title} ${hit.description}`));
-  const sharedKeywords = [...keywords].filter((w) => hitText.has(w));
+  // Un nom de loader (« fabric ») dans une description ne rapproche pas deux mods.
+  const sharedKeywords = [...keywords].filter((w) => hitText.has(w) && !LOADER_WORDS.has(w));
   const keywordScore =
     keywords.size > 0 ? Math.min(1, sharedKeywords.length / Math.min(keywords.size, 5)) : 0;
 
@@ -62,7 +65,12 @@ export function scoreAlternative(
   const extraKeywords = sharedKeywords.filter((w) => !sharedTitle.includes(w));
   if (extraKeywords.length > 0) parts.push(`keywords (${extraKeywords.slice(0, 3).join(', ')})`);
   parts.push(formatDownloads(hit.downloads));
-  return { score, explanation: parts.join(' · '), nameMatch: sharedTitle.length > 0 };
+  return {
+    score,
+    explanation: parts.join(' · '),
+    nameMatch: sharedTitle.length > 0,
+    keywordMatch: extraKeywords.length > 0,
+  };
 }
 
 // Cherche des projets compatibles avec la cible pouvant remplacer `project`, puis les classe par
@@ -117,21 +125,95 @@ export async function findAlternatives(
     categories: project.categories,
     description: options.description,
   };
-  return [...candidates.values()]
-    .map((hit) => ({ hit, ...scoreAlternative(hit, original) }))
-    .sort((a, b) => b.score - a.score || b.hit.downloads - a.hit.downloads)
-    .slice(0, options.max)
-    .map(({ hit, score, explanation, nameMatch }) => ({
-      project: hitToProject(hit),
-      downloads: hit.downloads,
-      reason: nameMatch ? ('similar-name' as const) : ('same-category' as const),
-      score,
-      explanation,
-      note: ALTERNATIVE_NOTE,
-    }));
+  return (
+    [...candidates.values()]
+      .map((hit) => ({ hit, ...scoreAlternative(hit, original) }))
+      // Une catégorie large (ex. « utility ») et de la popularité ne suffisent pas : il faut un
+      // lien réel avec le mod d'origine (nom proche ou mot-clé commun dans la description).
+      .filter((c) => c.nameMatch || c.keywordMatch)
+      .sort((a, b) => b.score - a.score || b.hit.downloads - a.hit.downloads)
+      .slice(0, options.max)
+      .map(({ hit, score, explanation, nameMatch }) => ({
+        project: hitToProject(hit),
+        downloads: hit.downloads,
+        reason: nameMatch ? ('similar-name' as const) : ('same-category' as const),
+        score,
+        explanation,
+        note: ALTERNATIVE_NOTE,
+      }))
+  );
 }
 
-const STOP_WORDS = new Set(['the', 'mod', 'mods', 'for', 'and', 'api', 'lib', 'of']);
+// Mots trop génériques pour rapprocher deux mods (titres et descriptions Modrinth).
+const STOP_WORDS = new Set([
+  'the',
+  'mod',
+  'mods',
+  'for',
+  'and',
+  'api',
+  'lib',
+  'library',
+  'of',
+  'minecraft',
+  'game',
+  'client',
+  'server',
+  'vanilla',
+  'adds',
+  'add',
+  'allows',
+  'allow',
+  'your',
+  'you',
+  'with',
+  'that',
+  'this',
+  'from',
+  'into',
+  'more',
+  'like',
+  'make',
+  'makes',
+  'all',
+  'can',
+  'are',
+  'which',
+  'while',
+  'has',
+  'have',
+  'its',
+  'new',
+  'not',
+  'but',
+  'only',
+  'other',
+  'when',
+  'will',
+  'lets',
+  'also',
+  'just',
+  'simple',
+  'small',
+  'without',
+  'use',
+  'using',
+  'players',
+  'player',
+  'way',
+  'what',
+  'some',
+  'any',
+  'out',
+  'over',
+  'very',
+  'much',
+  'many',
+  'better',
+  'fix',
+  'fixes',
+  'fixed',
+]);
 
 function words(title: string): string[] {
   return title

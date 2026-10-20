@@ -46,8 +46,9 @@ describe('analyzePack — 1.20.1 Fabric → 1.21.1 Fabric', () => {
     expect(mod?.alternatives.map((a) => [a.project.title, a.reason])).toEqual([
       ["Xaero's Minimap", 'similar-name'],
       // Même thème (carte) avant un mod plus populaire mais d'un autre thème.
+      // Même thème et mot-clé « minimap » ; JEI (même catégorie large « utility », très populaire)
+      // n'a aucun lien réel avec une minimap : il n'est plus proposé.
       ['JourneyMap', 'same-category'],
-      ['Just Enough Items', 'same-category'],
     ]);
     expect(mod?.alternatives.every((a) => a.note === 'suggestion, to verify')).toBe(true);
     // Les projets déjà présents dans le pack ne sont pas proposés.
@@ -114,7 +115,8 @@ describe('analyzePack — other targets', () => {
       project: { title: 'Forgified Fabric API' },
       reason: 'similar-name',
     });
-    expect(byFile(result, 'modmenu-7.2.2.jar')?.status).toBe('alternative-suggested');
+    // Aucun projet NeoForge lié à Mod Menu : pas d'alternative sans rapport.
+    expect(byFile(result, 'modmenu-7.2.2.jar')?.status).toBe('not-found');
   });
 
   it('accepts Fabric versions for a Quilt target', async () => {

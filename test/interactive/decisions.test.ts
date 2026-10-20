@@ -48,7 +48,6 @@ describe('options', () => {
     expect(labels).toEqual([
       "Use Xaero's Minimap instead (suggestion, to verify)",
       'Use JourneyMap instead (suggestion, to verify)',
-      'Use Just Enough Items instead (suggestion, to verify)',
       'Exclude it from the migrated pack',
       'Ignore it',
     ]);

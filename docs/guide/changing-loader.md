@@ -14,7 +14,10 @@ For each mod, in this order:
 2. **Alternatives**, when the project has no version for the target. Candidates come from two
    Modrinth searches (similar name, same categories) filtered on the target, then are **ranked by
    relevance** (shared categories 40 %, similar name 30 %, popularity 20 %, keywords from the
-   description 10 %). Each suggestion comes with its score and why it was chosen, for example
+   description 10 %). A candidate must have a similar name or share a meaningful keyword with
+   the original's description: a popular mod that only shares a broad category (such as
+   "utility") is not suggested. Each suggestion comes with its score and why it was chosen, for
+   example
    `relevance 79/100 — similar name (minimap) · same categories (adventure, utility) · 1.0M downloads`.
    Alternatives are **suggestions, to verify**: a different mod is never a drop-in replacement
    (worlds, configs and recipes can differ).
