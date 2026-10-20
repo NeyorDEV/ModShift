@@ -10,6 +10,9 @@ All notable changes to ModShift are documented here. The format follows
 
 - Unrelated alternatives: a popular mod sharing only a broad category (e.g. Xaero's Minimap for
   CIT Resewn) is no longer suggested; a candidate needs a similar name or a shared keyword.
+- A dependency published only for another loader (e.g. KotlinLangForge, NeoForge only, declared
+  by Zoomify's single Fabric + NeoForge file) is no longer reported as missing for the target;
+  a warning explains why it was ignored.
 
 ### Added
 
