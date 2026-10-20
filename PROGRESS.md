@@ -704,6 +704,28 @@ log, debug }`, `CandidateRequest`, `SourceCandidate` (note "external source, to 
   unchanged, no GitHub source there); the CLI never loads third-party code (programmatic API
   only, on purpose).
 
+## Phase 21 — GitHub Action "ModShift Check" ✅ (not published)
+
+Done (branch `feat/github-action`):
+
+- `action/action.yml`: **composite** action (syntax checked against `github/docs`
+  `metadata-syntax.md`): `actions/setup-node@v5`, `npm ci && npm run build` in
+  `${{ github.action_path }}/..` (ModShift is not on npm), then `node $GITHUB_ACTION_PATH/run.mjs`.
+  Inputs: `pack`, `mc`, `loader`, `side`, `config`, `fail-on`, `comment`, `token`
+  (`github.token`), `curseforge-api-key`, `node-version`; outputs: `report`, `json` and one count
+  per status. Every input reaches the script through `env:` (no `${{ }}` inside `run:`, against
+  script injection); the pack path goes after `--`.
+- `action/run.mjs` + `action/lib.mjs` (typed by `lib.d.mts`): two `analyze` passes (JSON for
+  counts, Markdown served from the cache), `$GITHUB_OUTPUT`, `$GITHUB_STEP_SUMMARY`, a single PR
+  comment found by a hidden marker (`<!-- modshift-check -->`) and updated in place via the REST
+  "issue comments" endpoints (checked in GitHub's OpenAPI description), truncated under 65,536
+  characters; a refused write (fork) becomes a warning; `fail-on` fails the job.
+- Tests (`test/action.test.ts`): input parsing, argument building, comment create/update/refusal
+  with a fake GitHub API, and the runner against a **stub CLI** (no request).
+- `action/README.md`, README "GitHub Action" with a workflow example, CHANGELOG.
+- **Not run on GitHub yet** (it needs a real pull request and the real Modrinth API): manual
+  action below. Not published on the Marketplace (manual decision).
+
 ## Known limitations
 
 - **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
@@ -763,7 +785,8 @@ the previous one, with its own draft PR whose base is the previous branch:
 | `feat/cross-loader-migration` | phase 17             | NeyorDEV/ModShift#11 → #10   |
 | `feat/client-server-sides`    | phase 18             | NeyorDEV/ModShift#12 → #11   |
 | `perf/concurrent-requests`    | phase 19             | NeyorDEV/ModShift#13 → #12   |
-| `feat/source-plugins`         | phase 20             | draft PR → #13               |
+| `feat/source-plugins`         | phase 20             | NeyorDEV/ModShift#14 → #13   |
+| `feat/github-action`          | phase 21             | draft PR → #14               |
 | next phases                   | one branch per phase | one draft PR each            |
 
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
@@ -779,6 +802,10 @@ the previous one, with its own draft PR whose base is the previous branch:
 - **Delete the remote branch `claude/great-galileo-gi0422`** (GitHub → Branches). The session's git
   proxy refuses to delete it, and its PR #1 is already closed.
 - Run ModShift once against the real Modrinth API (blocked from the cloud environment).
+- **Try the GitHub Action** on a test pull request (workflow example in `action/README.md`, with
+  `permissions: pull-requests: write`). Publishing it on the **Marketplace** is optional and
+  manual (it needs `action.yml` at the root of a dedicated public repository, or a release from
+  this one: decide first).
 - **npm publish (when ready):**
   1. check that the `modshift` name is still free (`npm view modshift`);
   2. merge the PRs;
@@ -790,31 +817,25 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Phases 1–20 are done. Then 21 and 22, in order, one branch and one draft PR per phase (base = the
-previous phase's branch). At the end, take every PR out of draft with a summary.
+Phases 1–21 are done. Then phase 22, on its own branch and draft PR (base = `feat/github-action`).
+At the end, take every PR out of draft with a summary.
 
-- **Phase 21, GitHub Action "ModShift Check"** (branch `feat/github-action`):
-  - `action/action.yml`, a **composite** action (simplest: no bundled JS, no new dependency):
-    `actions/setup-node`, install ModShift (from the action's own checkout:
-    `npm ci && npm run build` in `${{ github.action_path }}/..`, since nothing is published on
-    npm), run `analyze --format markdown` (and optionally `--format json` for a summary/exit
-    code) on the pack path given as input;
-  - inputs: `pack`, `mc`, `loader`, `side`, `config`, `fail-on` (e.g. `not-found`), `comment`
-    (`true` / `false`), `token` (default `${{ github.token }}`), `curseforge-api-key` (optional,
-    passed as env var only);
-  - outputs: report path, counts per status;
-  - write the report to `$GITHUB_STEP_SUMMARY`; PR comment via `gh api` with the token
-    (update one comment identified by a hidden marker instead of posting a new one each run);
-    permissions needed: `pull-requests: write` (document it);
-  - a workflow example in the README (`on: pull_request`, `paths: ['**/*.mrpack', ...]`), and a
-    test workflow in `.github/workflows/` that runs the action on a fixture pack **without**
-    network? Not possible: analyze needs Modrinth. Options: run with `--offline` and a cache
-    prepared from fixtures, or only lint `action.yml` (actionlint is not installed; keep a small
-    Node test that parses the YAML structure). Decide the simplest and note it;
-  - **do not publish on the Marketplace** (manual action).
-- **Phase 22:** VitePress docs site in `docs/` and a GitHub Pages deploy workflow (Pages **not**
-  enabled: manual action). Careful: `docs/` already holds `mrpack-format.md`,
-  `curseforge-api.md`, `loaders.md`, `cli.md` and `images/`; reuse them as pages.
+- **Phase 22, documentation site** (branch `docs/vitepress-site`):
+  - VitePress in `docs/` (dev dependency `vitepress`, exact version, installed with
+    `npx -y npm@11 install -D`; check its advisories). `docs/.vitepress/config.mts` with nav and
+    sidebar; `base: '/ModShift/'` for project Pages;
+  - pages: install, getting started, every command (reuse the generated `docs/cli.md`), config
+    formats (`modshift.config.json`, `.mrpack` → `docs/mrpack-format.md`, CurseForge →
+    `docs/curseforge-api.md`), loaders (`docs/loaders.md`), plugins (`docs/plugins.md`), GitHub
+    Action (`action/README.md` content), FAQ, known limitations; keep README as the short entry
+    point and link the site;
+  - `npm run docs:build` must succeed in CI (add a step or a job), without network at build time;
+  - `.github/workflows/docs.yml`: build + `actions/upload-pages-artifact` + `actions/deploy-pages`
+    on `main` pushes, with `pages: write` and `id-token: write`. **Do not enable Pages**: manual
+    action (Settings → Pages → Source: GitHub Actions);
+  - careful: Prettier formats `docs/`; `.vitepress/cache` and `dist` must be ignored (git,
+    Prettier, ESLint); `scripts/gen-cli-docs.mjs` writes `docs/cli.md` (keep its path or update
+    the CI check).
 
 Pitfalls:
 
