@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import { invalidLoaderVersionMessage, isValidLoaderVersion } from '../loaders/loaderVersion.js';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -303,6 +304,9 @@ export async function startUiServer(options: UiServerOptions): Promise<UiServer>
       typeof body.loaderVersion === 'string' && body.loaderVersion.trim()
         ? body.loaderVersion.trim()
         : undefined;
+    if (explicit !== undefined && !isValidLoaderVersion(explicit)) {
+      throw new HttpError(400, invalidLoaderVersionMessage(explicit));
+    }
     const loaderVersion = resolveLoaderVersion(session.pack, target, explicit);
     if (!loaderVersion.version) {
       throw new HttpError(

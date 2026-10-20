@@ -1,4 +1,5 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
+import { invalidLoaderVersionMessage, isValidLoaderVersion } from '../loaders/loaderVersion.js';
 import { basename, dirname, join, resolve } from 'node:path';
 import { analyzePack } from '../core/engine.js';
 import type { AnalysisResult } from '../core/types.js';
@@ -91,6 +92,9 @@ export async function runMigrate(
   // généré serait inutilisable.
   const explicitLoaderVersion = options.loaderVersion ?? config.target?.loaderVersion;
   const loaderVersionSource = options.loaderVersion ? 'option' : 'config';
+  if (explicitLoaderVersion !== undefined && !isValidLoaderVersion(explicitLoaderVersion)) {
+    throw new UsageError(invalidLoaderVersionMessage(explicitLoaderVersion));
+  }
   const loaderVersion = resolveLoaderVersion(
     pack,
     target,

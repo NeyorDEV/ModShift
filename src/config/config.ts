@@ -1,6 +1,7 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { TARGET_SIDES, type TargetSide } from '../core/sides.js';
+import { invalidLoaderVersionMessage, isValidLoaderVersion } from '../loaders/loaderVersion.js';
 import { isLoader, LOADERS, type Loader } from '../types.js';
 
 export const CONFIG_FILE = 'modshift.config.json';
@@ -79,6 +80,12 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
     }
     if (loaderVersion !== undefined && !nonEmptyString(loaderVersion)) {
       throw new ConfigError(path, '"target.loaderVersion" must be a non-empty string');
+    }
+    if (loaderVersion !== undefined && !isValidLoaderVersion(loaderVersion.trim())) {
+      throw new ConfigError(
+        path,
+        `"target.loaderVersion": ${invalidLoaderVersionMessage(loaderVersion)}`,
+      );
     }
     if (side !== undefined && !TARGET_SIDES.includes(side as TargetSide)) {
       throw new ConfigError(path, `"target.side" must be one of: ${TARGET_SIDES.join(', ')}`);
