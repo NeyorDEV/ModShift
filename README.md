@@ -27,7 +27,7 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
 - [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)
 - [Other sources](#other-sources-plugins) · [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
 - [Changing loader](#changing-loader-eg-forge--fabric) · [Client and server](#client-and-server)
-- [Performance](#performance) · [Example output](#example-output)
+- [GitHub Action](#github-action) · [Performance](#performance) · [Example output](#example-output)
 - [How it works](#how-it-works) · [FAQ](#faq)
 - [Limitations](#limitations) · [Programmatic API](#programmatic-api)
 - [Contributing](#contributing) · [Security](#security) · [License](#license)
@@ -331,6 +331,33 @@ itself uses for its v2 API.
 ```bash
 modshift migrate pack.mrpack --mc 1.21.1 --loader fabric --loader-version 0.16.5 \
   --side server --out server.mrpack
+```
+
+## GitHub Action
+
+[`action/`](action/README.md) contains **ModShift Check**, a reusable action that checks a pack
+on each pull request and posts the report as a comment (updated on each run) and in the job
+summary. It is not published on the Marketplace: use it from this repository, pinned to a tag or
+commit.
+
+```yaml
+on:
+  pull_request:
+    paths: ['pack/**']
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: NeyorDEV/ModShift/action@main
+        with:
+          pack: pack/my-pack.mrpack
+          mc: '1.21.1'
+          loader: neoforge
+          fail-on: not-found
 ```
 
 ## Performance
