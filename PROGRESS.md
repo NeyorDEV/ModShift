@@ -577,6 +577,45 @@ Done:
 - CI: `actions/checkout@v5` and `actions/setup-node@v5` (v4 runs on Node 20, deprecated on
   GitHub). The browser E2E test **runs in CI** (GitHub's Chrome), confirmed in the job logs.
 
+## Phase 17 — Cross-loader migration ✅
+
+Done (branch `feat/cross-loader-migration`):
+
+- **Same project first.** The engine already queried the same project for the target loader;
+  a version picked for another loader than the pack's is now recorded as `loaderChange
+{from, to}` with the reason "Same project: its Fabric version replaces the Forge one
+  (multi-loader mod)", shown in the analysis reports, `MIGRATION_REPORT.md`, the plan text and
+  the UI. Not set when the same file is kept, nor for a fallback that keeps the pack's loader
+  (Fabric version on Quilt).
+- **Ranked alternatives** (`src/core/alternatives.ts`): both searches (similar name, same
+  categories) always run, candidates are merged and scored by `scoreAlternative`: shared thematic
+  categories 40, shared title words 30, popularity 20 (log10 of downloads / 7), description
+  keywords 10. Each `Alternative` has `score` (0–100) and `explanation` (e.g. "similar name
+  (minimap) · same categories (adventure, utility) · 1.0M downloads"). Shown in every report,
+  the interactive mode and the UI; `MIGRATION_REPORT.md` has a "Why these alternatives" section.
+  The fixture order changed as intended: JourneyMap (same theme) now ranks above JEI (more
+  downloads, other theme).
+- **Compatibility layers** (`src/loaders/compatLayers.ts`), verified from the projects' own files
+  on raw.githubusercontent.com:
+  - Sinytra Connector, `dev` README: Fabric mods on **NeoForge**, 1.21.1 "primary supported
+    version"; requires `connector` + `forgified-fabric-api` (which _replaces_ Fabric API);
+  - Sinytra Connector, `1.20.1` branch README: Fabric mods on **MinecraftForge** 1.20.1, LTS
+    (critical bugfixes only);
+  - Kilt, `version/1.20.1` README + `fabric.mod.json`: Forge mods on **Fabric** 1.20.1, "very
+    experimental", "may break worlds"; requires `kilt`, `fabric-api`, `fabric-language-kotlin`.
+    Its NeoForge 1.21.1 build is "in progress": not listed.
+    A mod with no target version but a version for the layer's source loader and the target MC
+    version gets `compatLayer` (note "experimental, not guaranteed"); one extra request per such
+    mod and layer. The plan **never** includes it. `analyzePack(..., { compatLayers: false })`
+    disables the check (no CLI flag, to keep the CLI small). Offline cache misses become warnings.
+- Fixtures: `test/fixtures/packs/mrpack-forge-to-fabric` (JEI multi-loader, Create and Rubidium
+  with alternatives, Storage Tweaks with no equivalent) and catalog additions (`v1jeifabric`,
+  Create Fabric, Storage Tweaks). Tests: `test/core/alternatives.test.ts`,
+  `crossLoader.test.ts`, `compatLayers.test.ts`.
+- README section "Changing loader (e.g. Forge → Fabric)" (ModShift does not convert mod code),
+  `docs/loaders.md` "Compatibility layers" with sources, CHANGELOG.
+- 335 tests; coverage core 94.6 %, input 94.6 %.
+
 ## Known limitations
 
 - **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
@@ -590,7 +629,9 @@ Done:
 - Alternatives (name or category search) and mod-id/slug matches are heuristics: always check
   them.
 - Unapplied fallbacks for lack of an official source: NeoForge ← Forge (1.20.1), Spigot ← Bukkit.
-- No compatibility layer (Sinytra Connector…) is taken into account yet (phase 17).
+- Compatibility layers are only reported for the documented combinations (Connector on NeoForge
+  1.21.1 / Forge 1.20.1, Kilt on Fabric 1.20.1); exact MC versions only (no 1.21 or 1.20).
+- Relevance weights are a heuristic tuned on fixtures, not on real search results.
 - Client/server environments are not distinguished: `env` is copied from the source pack, and
   added mods have none (phase 18).
 - Requests are sequential (phase 19 adds concurrency): a big pack takes a while the first time.
@@ -617,11 +658,19 @@ Done:
 At the user's request, every phase now has its own branch, named after its task and stacked on
 the previous one, with its own draft PR whose base is the previous branch:
 
-| Branch                       | Content              | PR                           |
-| ---------------------------- | -------------------- | ---------------------------- |
-| `feat/modpack-migration-cli` | phases 1–8           | NeyorDEV/ModShift#2 → `main` |
-| `feat/offline-cache`         | phase 9              | NeyorDEV/ModShift#3 → #2     |
-| next phases                  | one branch per phase | one draft PR each            |
+| Branch                        | Content              | PR                           |
+| ----------------------------- | -------------------- | ---------------------------- |
+| `feat/modpack-migration-cli`  | phases 1–8           | NeyorDEV/ModShift#2 → `main` |
+| `feat/offline-cache`          | phase 9              | NeyorDEV/ModShift#3 → #2     |
+| `feat/curseforge-api`         | phase 10             | NeyorDEV/ModShift#4 → #3     |
+| `feat/config-and-security`    | phase 11             | NeyorDEV/ModShift#5 → #4     |
+| `chore/release-readiness`     | phase 12             | NeyorDEV/ModShift#6 → #5     |
+| `feat/loader-registry`        | phase 13             | NeyorDEV/ModShift#7 → #6     |
+| `feat/interactive-mode`       | phase 14             | NeyorDEV/ModShift#8 → #7     |
+| `feat/web-ui`                 | phase 15             | NeyorDEV/ModShift#9 → #8     |
+| `docs/finishing-touches`      | phase 16             | NeyorDEV/ModShift#10 → #9    |
+| `feat/cross-loader-migration` | phase 17             | draft PR → #10               |
+| next phases                   | one branch per phase | one draft PR each            |
 
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
   #2.
@@ -647,26 +696,24 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Phases 1–16 are done. Then come phases 17 → 22 (the user's third message), in order, with one
-branch and one draft PR per phase. At the end, take every PR out of draft with a summary.
+Phases 1–17 are done. Then 18 → 22, in order, one branch and one draft PR per phase (base = the
+previous phase's branch). At the end, take every PR out of draft with a summary.
 
-- **Phase 17, cross-loader migration** (branch `feat/cross-loader-migration`):
-  - the engine already looks first for the same project with a version for the target loader
-    (`getProjectVersions` with `acceptedLoaders`); make this explicit in the report ("same
-    project, now available for X");
-  - rank alternatives by relevance (categories in common, popularity, keywords) and explain each
-    one (score, reasons). Today: name search, then category search by downloads;
-  - Sinytra Connector (runs Fabric mods on NeoForge/Forge): verify its official docs/README on
-    raw.githubusercontent.com (`Sinytra/Connector`). If relevant, report Fabric-only mods that
-    _could_ run on NeoForge through it, marked "experimental, not guaranteed", **never** added
-    to the pack automatically;
-  - README: ModShift does not convert mod code;
-  - fixtures: Forge → Fabric pack with multi-loader mods, mods without an equivalent, and
-    alternatives.
-- **Phase 18:** client/server detection (`client_side` / `server_side` from Modrinth),
-  `--side server|client|both`, ambiguous cases reported.
-- **Phase 19:** configurable concurrency within the rate limit; `bench/` with 200–500-mod
-  synthetic packs and a mock API (the README must say it measures local processing only).
+- **Phase 18, client/server sides** (branch `feat/client-server-sides`):
+  - Modrinth projects have `client_side` / `server_side` (`required`, `optional`, `unsupported`,
+    `unknown`); `ModrinthProject` in `src/modrinth/types.ts` may need these fields typed. The
+    fake catalog already has them (all `optional`): vary them in fixtures;
+  - `identified` projects come from `getProjects` (engine step 2); added dependencies and adopted
+    alternatives may need their project fetched too (check `resolveDependencies`);
+  - add `side` to `ModAnalysis` / `AddedDependency` (`client`, `server`, `both`, `unknown`), an
+    option `--side server|client|both` for `analyze` and `migrate` (filter + `env` in the
+    `.mrpack`: today `env` is copied from the source and added mods have none, see
+    `src/migrate/plan.ts`), flag ambiguous / `unknown` cases in reports;
+  - regenerate `docs/cli.md` (`npm run build && npm run docs:cli`); config `target.side`?
+    (keep simple: CLI + config only if cheap, update the JSON schema if so).
+- **Phase 19:** configurable concurrency within the rate limit (`RateLimiter` is already shared;
+  engine step 3 loops sequentially over `distinctProjects`); `bench/` with 200–500-mod synthetic
+  packs and a mock API (the README must say it measures local processing only).
 - **Phase 20:** source plugin system (Modrinth, CurseForge, GitHub Releases with an optional
   `GITHUB_TOKEN`), docs and contract tests.
 - **Phase 21:** reusable GitHub Action in `action/` (check plus a PR comment or job summary),
@@ -686,6 +733,9 @@ Pitfalls:
 - The test CLI IO (`test/helpers/cli.ts`) uses a fake clock. A client built with the real clock
   but a no-op `sleep` busy-waits on rate-limit pauses (a test once took 37 s).
 - Not verified against the live Modrinth API (network blocked here): do a manual run.
+- Search fixtures: the fake `/search` uses project-level `loaders` and `game_versions`, so a new
+  project in `catalog.json` can change alternatives in other tests (snapshots). Check
+  `npx vitest run -u` diffs before accepting them.
 - In tests, `createIo({ prompter })` simulates a TTY; without `prompter`, `interactive` refuses.
   Commander calls `process.exit` on unknown options: in tests, call `runInteractive` directly to
   test those cases.
