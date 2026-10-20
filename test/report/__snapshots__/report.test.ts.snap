@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Markdown report > renders summary, mods, alternatives, dependencies and warnings 1`] = `
+"# ModShift report: Fixture Fabric Pack
+
+- **Source:** 1.20.1 fabric (mrpack)
+- **Target:** 1.21.1 fabric
+- **Mods analysed:** 6
+- **Other files (not analysed):** 2
+
+## Summary
+
+| Status | Count |
+| --- | --- |
+| ✔ compatible | 1 |
+| ↑ update found | 2 |
+| ? alternative suggested | 1 |
+| ✘ not found | 2 |
+
+## Mods
+
+| Status | Mod | File | Current | Target | Notes |
+| --- | --- | --- | --- | --- | --- |
+| ↑ update found | [Sodium](https://modrinth.com/mod/sodium) | sodium-fabric-0.5.8.jar | 0.5.8 | 0.6.0 |   |
+| ↑ update found | [Fabric API](https://modrinth.com/mod/fabric-api) | fabric-api-0.92.0.jar | 0.92.0 | 0.104.0 |   |
+| ✔ compatible | [Mod Menu](https://modrinth.com/mod/modmenu) | modmenu-7.2.2.jar | 7.2.2 | 7.2.2 |   |
+| ? alternative suggested | [Old Minimap](https://modrinth.com/mod/old-minimap) | old-minimap-1.0.jar | 1.0 | — | Suggestions (to verify): Xaero's Minimap, Just Enough Items, JourneyMap |
+| ✘ not found | mystery-mod.jar | mystery-mod.jar | — | — | Unknown file hash on Modrinth. |
+| ✘ not found | local-mod.jar | local-mod.jar | — | — | Unknown file hash on Modrinth and no Modrinth project matches mod id "localmod". |
+
+## Suggested alternatives
+
+> These are **suggestions, to verify**: they are not equivalent replacements.
+
+### Old Minimap
+
+- [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) — similar name, 1,000,000 downloads
+- [Just Enough Items](https://modrinth.com/mod/jei) — same category, 9,000,000 downloads
+- [JourneyMap](https://modrinth.com/mod/journeymap) — same category, 500,000 downloads
+
+## Dependencies
+
+Added (required by mods of the migrated pack):
+
+| Dependency | Version | Required by |
+| --- | --- | --- |
+| Cloth Config API | 15.0.0 | Sodium |
+
+Missing (no compatible version):
+
+| Dependency | Required by | Reason |
+| --- | --- | --- |
+| Text Lib | Mod Menu | No version for Minecraft 1.21.1 / fabric |
+
+## Warnings
+
+- fixture.mrpack: ignoring unsafe path "../escape.jar"
+"
+`;
+
+exports[`table report > renders an aligned plain-text table without colors by default 1`] = `
+"ModShift — Fixture Fabric Pack  1.20.1 fabric → 1.21.1 fabric
+
+Status                   Mod              Current  Target   Notes
+───────────────────────  ───────────────  ───────  ───────  ──────────────────────────────────────────────────────────────────────
+↑ update found           Sodium           0.5.8    0.6.0
+↑ update found           Fabric API       0.92.0   0.104.0
+✔ compatible             Mod Menu         7.2.2    7.2.2
+? alternative suggested  Old Minimap      1.0      —        Suggestions (to verify): Xaero's Minimap, Just Enough Items, JourneyM…
+✘ not found              mystery-mod.jar  —        —        Unknown file hash on Modrinth.
+✘ not found              local-mod.jar    —        —        Unknown file hash on Modrinth and no Modrinth project matches mod id …
+
+Dependencies added:
+  + Cloth Config API 15.0.0 (required by Sodium)
+
+Missing dependencies:
+  ! Text Lib (required by Mod Menu): No version for Minecraft 1.21.1 / fabric
+
+Summary: 1 compatible, 2 update found, 1 alternative suggested, 2 not found
+Alternatives are suggestions, to verify before use.
+2 non-mod file(s) (resource packs, configs…) were not analysed.
+
+Warnings:
+  - fixture.mrpack: ignoring unsafe path "../escape.jar"
+"
+`;

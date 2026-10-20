@@ -16,7 +16,8 @@ export class ModrinthNetworkError extends Error {
     readonly url: string,
     options?: ErrorOptions,
   ) {
-    super(`Network error while calling ${url}`, options);
+    const cause = options?.cause instanceof Error ? ` (${options.cause.message})` : '';
+    super(`Network error while calling ${url}${cause}`, options);
     this.name = 'ModrinthNetworkError';
   }
 }

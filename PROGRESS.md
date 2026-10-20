@@ -127,6 +127,52 @@ Decisions:
 - Dependencies declared only in jar metadata (unidentified jars) are not resolved; Modrinth
   dependency data is the source of truth.
 
-## Remaining
+## Phase 5 — CLI `analyze` and reports ✅
 
-- Phase 5: `analyze` command and reports.
+Done:
+
+- `modshift analyze <pack> --mc <version> --loader <loader>` with `--format table|json|markdown`
+  (`md` alias), `--output`, `--offline`, `--no-cache`, `--cache-dir`, `--max-alternatives`,
+  `--quiet`, `--no-color`.
+- Reports (`src/report/`):
+  - table: aligned columns, optional ANSI colors (TTY only, honours `NO_COLOR`), long notes
+    truncated;
+  - JSON: the full `AnalysisResult` plus `schemaVersion` (1) and `generator`;
+  - Markdown: summary, mods table with Modrinth links, alternatives section, dependencies,
+    conflicts, warnings; pipes are escaped.
+- Errors are printed without a stack trace and exit with code 1: invalid options, unreadable
+  pack, network failure after retries, offline cache miss.
+- Progress messages go to stderr, so stdout stays clean for `--format json`.
+- CLI tests run the full program (parsing → analysis → report) against the fake Modrinth, with a
+  real on-disk cache in a temp folder (the offline test reuses it).
+- Smoke test of the built binary: in this sandbox, `api.modrinth.com` is blocked by the network
+  policy. The CLI retries 3 times (1 s, 2 s, 4 s) and exits with
+  `error: Network error while calling …`, as intended. **No analysis against the real Modrinth API
+  could be run from this environment.**
+
+Decisions:
+
+- The exit code does not depend on statuses (a pack with "not found" mods still exits 0); a
+  `--fail-on` option can be added later for CI use.
+- The "to verify" warning is placed at the start of the alternatives note, so table truncation
+  never hides it.
+- Colors use raw ANSI codes (no `chalk`/`picocolors` dependency).
+
+## Remaining (not started, per the phase plan)
+
+- **Phase 6, `migrate`:** build a new `.mrpack` from the analysis (compatible + updated mods +
+  added dependencies, `dependencies` set to the target loader/version, overrides copied, user
+  choice for alternatives).
+- Possible follow-ups:
+  - analyse resource packs and shaders (Modrinth loaders `minecraft`, `iris`, `optifine`);
+  - optional parallel requests;
+  - a `--fail-on` exit-code policy;
+  - a `--upgrade-all` option to update mods even when the current file is already compatible;
+  - CurseForge API support (needs an API key provided by the user, never stored in the repo).
+- Not verified against the live Modrinth API from this environment (network blocked). Request and
+  response shapes follow the official OpenAPI spec; a manual run against the real API is
+  recommended.
+
+## Known issues
+
+- None blocking. No test needed more than one fix attempt.
