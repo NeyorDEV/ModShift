@@ -33,7 +33,8 @@ honours `Retry-After`.
 ModShift **never downloads files from CurseForge** and never writes CurseForge URLs into generated
 packs (the `.mrpack` format only allows Modrinth and GitHub download domains anyway). Only metadata
 is used, to identify mods. This avoids redistributing files whose authors disabled third-party
-distribution (`downloadUrl: null` / `allowModDistribution: false`).
+distribution (the API then returns no `downloadUrl`; packwiz and Prism Launcher both treat that
+as "distribution disabled", and Prism falls back to Modrinth for such mods, as ModShift does).
 
 Read the API terms shown in the CurseForge for Studios console (where the key is created) before
 using your key in automation.
