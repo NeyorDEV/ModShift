@@ -25,7 +25,8 @@ function loaderLine(plan: MigrationPlan): string {
 function modOrigin(mod: PlannedMod): string {
   if (mod.source === 'dependency') return `required by ${mod.requiredBy?.join(', ') ?? '?'}`;
   if (mod.source === 'kept') return 'same version as the source pack';
-  return mod.replaces ? `replaces ${mod.replaces}` : '';
+  const unverified = mod.unverified ? ' (identified by mod id only, unverified)' : '';
+  return mod.replaces ? `replaces ${mod.replaces}${unverified}` : '';
 }
 
 // Rapport Markdown écrit à côté du .mrpack généré (MIGRATION_REPORT.md).

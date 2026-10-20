@@ -206,6 +206,89 @@
         "1.21.1"
       ],
       "downloads": 9000000
+    },
+    {
+      "id": "CREATE01",
+      "slug": "create",
+      "title": "Create",
+      "description": "Create (fixture)",
+      "categories": [
+        "technology",
+        "decoration"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 6000000
+    },
+    {
+      "id": "FLYWHEL1",
+      "slug": "flywheel",
+      "title": "Flywheel",
+      "description": "Flywheel (fixture)",
+      "categories": [
+        "library"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 5000000
+    },
+    {
+      "id": "RUBIDIUM",
+      "slug": "rubidium",
+      "title": "Rubidium",
+      "description": "Rubidium (fixture)",
+      "categories": [
+        "optimization"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge"
+      ],
+      "game_versions": [
+        "1.20.1"
+      ],
+      "downloads": 3000000
+    },
+    {
+      "id": "EMBEDIUM",
+      "slug": "embeddium",
+      "title": "Embeddium",
+      "description": "Embeddium (fixture)",
+      "categories": [
+        "optimization"
+      ],
+      "project_type": "mod",
+      "client_side": "optional",
+      "server_side": "optional",
+      "loaders": [
+        "forge",
+        "neoforge"
+      ],
+      "game_versions": [
+        "1.20.1",
+        "1.21.1"
+      ],
+      "downloads": 2000000
     }
   ],
   "versions": [
@@ -658,6 +741,216 @@
           "filename": "v1jei.jar",
           "primary": true,
           "size": 1000
+        }
+      ]
+    },
+    {
+      "id": "v0jeiforge",
+      "project_id": "JEIJEIJE",
+      "name": "15.2.0.27",
+      "version_number": "15.2.0.27",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-02-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "7777777777777777777777777777777777777777",
+            "sha512": "77777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v0jeiforge.jar",
+          "filename": "v0jeiforge.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1create",
+      "project_id": "CREATE01",
+      "name": "0.5.1.f",
+      "version_number": "0.5.1.f",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-01-01T00:00:00Z",
+      "dependencies": [
+        {
+          "version_id": null,
+          "project_id": "FLYWHEL1",
+          "file_name": null,
+          "dependency_type": "required"
+        }
+      ],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "8888888888888888888888888888888888888888",
+            "sha512": "88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1create.jar",
+          "filename": "v1create.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v2create",
+      "project_id": "CREATE01",
+      "name": "6.0.0",
+      "version_number": "6.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2025-02-01T00:00:00Z",
+      "dependencies": [
+        {
+          "version_id": null,
+          "project_id": "FLYWHEL1",
+          "file_name": null,
+          "dependency_type": "required"
+        }
+      ],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+            "sha512": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2create.jar",
+          "filename": "v2create.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1fly",
+      "project_id": "FLYWHEL1",
+      "name": "0.6.10",
+      "version_number": "0.6.10",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-01-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3",
+            "sha512": "b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1fly.jar",
+          "filename": "v1fly.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v2fly",
+      "project_id": "FLYWHEL1",
+      "name": "1.0.0",
+      "version_number": "1.0.0",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2025-01-15T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4",
+            "sha512": "b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v2fly.jar",
+          "filename": "v2fly.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1rubidium",
+      "project_id": "RUBIDIUM",
+      "name": "0.7.1",
+      "version_number": "0.7.1",
+      "game_versions": [
+        "1.20.1"
+      ],
+      "loaders": [
+        "forge"
+      ],
+      "version_type": "release",
+      "date_published": "2023-09-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "9999999999999999999999999999999999999999",
+            "sha512": "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1rubidium.jar",
+          "filename": "v1rubidium.jar",
+          "primary": true,
+          "size": 2000
+        }
+      ]
+    },
+    {
+      "id": "v1embed",
+      "project_id": "EMBEDIUM",
+      "name": "1.0.11",
+      "version_number": "1.0.11",
+      "game_versions": [
+        "1.21.1"
+      ],
+      "loaders": [
+        "neoforge"
+      ],
+      "version_type": "release",
+      "date_published": "2024-10-01T00:00:00Z",
+      "dependencies": [],
+      "status": "listed",
+      "files": [
+        {
+          "hashes": {
+            "sha1": "b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5",
+            "sha512": "b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5"
+          },
+          "url": "https://cdn.modrinth.com/data/fixture/v1embed.jar",
+          "filename": "v1embed.jar",
+          "primary": true,
+          "size": 2000
         }
       ]
     }

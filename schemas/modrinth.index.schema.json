@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/NeyorDEV/ModShift/schemas/modrinth.index.schema.json",
+  "title": "Modrinth modpack index (modrinth.index.json, formatVersion 1)",
+  "description": "Structure of modrinth.index.json as validated by Modrinth (see docs/mrpack-format.md). Some rules (canonical URLs, Windows device names) are checked in code by src/migrate/mrpackSpec.ts.",
+  "type": "object",
+  "required": ["formatVersion", "game", "versionId", "name", "files", "dependencies"],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "game": { "const": "minecraft" },
+    "versionId": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "summary": { "type": "string", "maxLength": 2048 },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "hashes", "downloads", "fileSize"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?![/\\\\])(?![a-zA-Z]:)(?!.*\\\\)(?!(.*/)?\\.\\.(/|$))[^\\u0000]+$"
+          },
+          "hashes": {
+            "type": "object",
+            "required": ["sha1", "sha512"],
+            "properties": {
+              "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+              "sha512": { "type": "string", "pattern": "^[0-9a-f]{128}$" }
+            }
+          },
+          "env": {
+            "type": "object",
+            "required": ["client", "server"],
+            "additionalProperties": false,
+            "properties": {
+              "client": { "enum": ["required", "optional", "unsupported", "unknown"] },
+              "server": { "enum": ["required", "optional", "unsupported", "unknown"] }
+            }
+          },
+          "downloads": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^https?://(cdn\\.modrinth\\.com|github\\.com|raw\\.githubusercontent\\.com)/"
+            }
+          },
+          "fileSize": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "required": ["minecraft"],
+      "additionalProperties": false,
+      "properties": {
+        "minecraft": { "type": "string", "minLength": 1 },
+        "forge": { "type": "string", "minLength": 1 },
+        "neoforge": { "type": "string", "minLength": 1 },
+        "fabric-loader": { "type": "string", "minLength": 1 },
+        "quilt-loader": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

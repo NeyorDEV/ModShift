@@ -24,6 +24,8 @@ export interface PlannedMod {
   // Fichier du pack d'origine remplacé (kept / updated / alternative).
   replaces?: string;
   requiredBy?: string[];
+  // Mod identifié seulement par son mod id (le fichier d'origine n'est pas connu de Modrinth).
+  unverified?: boolean;
 }
 
 export type LoaderVersionSource = 'option' | 'source-pack';
@@ -164,6 +166,7 @@ export function buildMigrationPlan(
           projectId: mod.project.id,
           version: mod.targetVersion,
           replaces: mod.fileName,
+          ...(mod.identification === 'mod-id' ? { unverified: true } : {}),
         },
         env,
       );
