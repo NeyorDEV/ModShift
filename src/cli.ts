@@ -3,6 +3,7 @@ import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
 import { type CliIo, runAnalyze } from './commands/analyze.js';
+import { runCacheClear, runCacheStats } from './commands/cache.js';
 import { runMigrate } from './commands/migrate.js';
 import { describeError, formatError } from './errorMessages.js';
 import { ModrinthClient } from './modrinth/client.js';
@@ -75,6 +76,22 @@ export function buildProgram(io: CliIo = defaultIo): Command {
     .option('--dry-run', 'show what would be done without writing any file', false)
     .option('--force', 'overwrite the output file if it exists', false)
     .action(guarded((pack: string, options) => runMigrate(pack, options, io)));
+
+  const cache = program.command('cache').description('Inspect or clear the local API cache');
+  cache
+    .command('stats')
+    .description('Show the number, size and age of cached API responses')
+    .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
+    .option('--cache-ttl <duration>', 'lifetime used to count expired entries (default: 24h)')
+    .option('--json', 'print the statistics as JSON', false)
+    .action(guarded((options) => runCacheStats(options, io)));
+  cache
+    .command('clear')
+    .description('Delete cached API responses (all of them, or only expired ones)')
+    .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
+    .option('--expired', 'only delete expired or unreadable entries', false)
+    .option('--cache-ttl <duration>', 'lifetime used with --expired (default: 24h)')
+    .action(guarded((options) => runCacheClear(options, io)));
 
   return program;
 }
