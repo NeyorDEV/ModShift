@@ -6,6 +6,7 @@ import { type CliIo, runAnalyze, UsageError } from './commands/analyze.js';
 import { runCacheClear, runCacheStats } from './commands/cache.js';
 import { type InteractiveCommandOptions, runInteractive } from './commands/interactive.js';
 import { runMigrate } from './commands/migrate.js';
+import { runUi, type UiCommandOptions } from './commands/ui.js';
 import { createInquirerPrompter, PromptCancelledError } from './interactive/prompter.js';
 import { CONFIG_FILE } from './config/config.js';
 import { describeError, formatError } from './errorMessages.js';
@@ -121,6 +122,24 @@ export function buildProgram(io: CliIo = defaultIo): Command {
         });
       }),
     );
+
+  withCacheOptions(
+    program
+      .command('ui')
+      .description('Start the local web interface (http://127.0.0.1 only)')
+      .option('--port <port>', 'port to listen on (default: any free port)')
+      .option('--no-open', 'do not open the browser'),
+  ).action(
+    guarded(async (options: UiCommandOptions) => {
+      const server = await runUi(options, io);
+      // Arrêt propre sur Ctrl+C : fermeture du serveur et suppression des fichiers temporaires.
+      await new Promise<void>((resolve) => {
+        process.once('SIGINT', resolve);
+        process.once('SIGTERM', resolve);
+      });
+      await server.close();
+    }),
+  );
 
   const cache = program.command('cache').description('Inspect or clear the local API cache');
   cache

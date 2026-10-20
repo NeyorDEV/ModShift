@@ -38,6 +38,8 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
+    "dist/**/*.html",
+    "dist/**/*.css",
     "schemas",
     "CHANGELOG.md"
   ],
@@ -45,7 +47,7 @@
     "node": "^20.17.0 || >=22.13.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-ui-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -70,6 +72,7 @@
     "ajv": "^8.20.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
+    "playwright-core": "1.63.0",
     "prettier": "^3.6.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.0",

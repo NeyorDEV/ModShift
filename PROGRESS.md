@@ -512,6 +512,53 @@ Decisions:
 - A version published more than two weeks ago (8.7.3) was preferred over the release from the day
   before (8.7.4).
 
+## Phase 15 — Local web UI ✅
+
+Done:
+
+- `modshift ui [--port <n>] [--no-open]` plus the cache options (`src/commands/ui.ts`). It opens the
+  browser through `xdg-open` / `open` / `explorer.exe`, without a shell. Ctrl+C closes the server
+  and deletes its temporary files.
+- Server `src/ui/server.ts` (`node:http`, no framework):
+  - listens on **127.0.0.1 only**, random port by default;
+  - random token in the URL, then the `X-ModShift-Token` header (compared in constant time);
+  - `Host` check against DNS rebinding;
+  - static files from a **whitelist** (`STATIC_FILES`); no path is built from the URL;
+  - API: `GET /api/info`, `POST /api/analyze?mc&loader&maxAlternatives&name` (raw pack body,
+    200 MiB max, 413 above), `POST /api/migrate {sessionId, loaderVersion, includeAlternatives}`,
+    `GET /api/sessions/:id/download/{mrpack|report|analysis}`, `DELETE /api/sessions/:id`;
+  - sessions in memory, one subfolder per session in `mkdtemp(modshift-ui-*)`, expiry after 1 h,
+    everything deleted by `close()`;
+  - headers: CSP `default-src 'none'`, `nosniff`, `X-Frame-Options: DENY`, `no-referrer`, COOP/CORP,
+    `Permissions-Policy`;
+  - errors: upstream errors (network, quota, Modrinth/CurseForge, offline) → 502; input errors →
+    400, with the hint.
+- Page `src/ui/public/` (`index.html`, `style.css`, `app.js`, `logic.js`): drag-and-drop, target
+  (loaders from the registry, grouped by kind), status chips and filter, search, sortable table,
+  detail dialog (versions, loaders, fallback, reason, alternatives, dependencies, Modrinth link),
+  build and downloads (through `fetch` + blob, since the token is a header), light/dark theme
+  (system preference plus a toggle in `localStorage`), responsive, keyboard-accessible. Data goes
+  in with `textContent` only.
+- Build: `scripts/copy-ui-assets.mjs` copies the assets to `dist/ui/public`; the npm `files` include
+  them. ESLint declares browser globals for `src/ui/public/**/*.js`.
+- Tests:
+  - `test/ui/server.test.ts`: exposure, headers, whitelist, Host check, token, analyze/migrate,
+    validated download, plugin platforms, invalid uploads, zip bomb, 413, session ids, temp
+    folder;
+  - `test/ui/logic.test.ts`: sorting, filters, labels, safe links;
+  - `test/ui/browser.e2e.test.ts`: **headless Chromium** through `playwright-core` 1.63.0 (dev,
+    pinned, downloads no browser). Upload, filters, detail, build, download of a valid `.mrpack`,
+    no JS or CSP errors. It runs if a browser is found (`MODSHIFT_CHROMIUM`,
+    `/opt/pw-browsers/chromium`, `/usr/bin/google-chrome`, …), otherwise it is skipped; GitHub's
+    Ubuntu runners ship Google Chrome.
+
+Decisions:
+
+- No framework or bundler: the page is about 700 lines of HTML/CSS/JS served as is. The pure logic
+  (`logic.js` + `logic.d.ts`) is tested in Node.
+- Folders of jars cannot be uploaded (only archives); use the CLI for folders.
+- The 1 h sessions live in memory: restarting `modshift ui` loses them, by design.
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -547,24 +594,16 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phases 15 → 16, then phases 17 → 22, in order. One branch and one
+Work plan agreed with the user: phase 16, then phases 17 → 22, in order. One branch and one
 draft PR per phase; push after every commit group. Never change GitHub settings or publish
 anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 15, web UI** (branch `feat/web-ui`):
-  - `modshift ui`: `node:http` server bound to **127.0.0.1 only** (never 0.0.0.0), random port by
-    default, opens the browser;
-  - static page (HTML/CSS/vanilla JS, no framework): pack drag-and-drop, target, results table
-    sortable and filterable by status, per-mod detail, `.mrpack` + report downloads, light/dark
-    theme;
-  - security: upload size limit, bounded `readZip` (zip-slip / zip-bomb), writes only in a
-    per-session temp folder, CSP / `X-Content-Type-Options` / `X-Frame-Options` headers, random
-    session token, and a `Host` header check against DNS rebinding;
-  - tests: HTTP API against the fake Modrinth, plus a minimal end-to-end test (Playwright and
-    Chromium are pre-installed in the cloud environment; otherwise test with `fetch` only);
-  - write the UI section of SECURITY.md.
-- **Phase 16:** final docs (README with loaders, interactive mode and UI examples; CHANGELOG;
-  options), and the known limits and ideas in PROGRESS.md.
+- **Phase 16, polish** (branch `docs/finishing-touches`):
+  - README: check that every section matches the code (loaders, interactive mode, UI, options;
+    the Node badge still says `>=20`, but the engines are now `^20.17 || >=22.13`);
+  - capture real UI output or a screenshot (Playwright is available: `page.screenshot`);
+  - CHANGELOG `Unreleased` → entries for phases 13–15; a full options doc (`docs/cli.md`);
+  - in PROGRESS.md, a "Known limitations" section and ideas for later.
 - **Phases 17–22:**
   - cross-loader migration and Sinytra Connector hints (experimental, never auto-included);
   - `--side client|server`;
@@ -584,8 +623,6 @@ Pitfalls:
 - The test CLI IO (`test/helpers/cli.ts`) uses a fake clock. A client built with the real clock
   but a no-op `sleep` busy-waits on rate-limit pauses (a test once took 37 s).
 - Not verified against the live Modrinth API (network blocked here): do a manual run.
-- `SECURITY.md` refers to the local web UI's own security section, which comes in phase 15:
-  write it then.
 - In tests, `createIo({ prompter })` simulates a TTY; without `prompter`, `interactive` refuses.
   Commander calls `process.exit` on unknown options: in tests, call `runInteractive` directly to
   test those cases.
