@@ -4,6 +4,7 @@ import { getLoader } from '../loaders/registry.js';
 import { OfflineCacheMissError } from '../modrinth/errors.js';
 import type { ModrinthProject, ModrinthVersion } from '../modrinth/types.js';
 import type { Loader, MigrationTarget, ModEntry, ModPack } from '../types.js';
+import { DEFAULT_CONCURRENCY, mapConcurrent } from '../concurrency.js';
 import { findAlternatives } from './alternatives.js';
 import { resolveDependencies, type SelectedVersion } from './dependencies.js';
 import {
@@ -45,6 +46,8 @@ export interface AnalyzeOptions {
   mappings?: Record<string, string>;
   // Installation visée (client, serveur ou les deux) ; « both » par défaut.
   side?: TargetSide;
+  // Requêtes simultanées vers Modrinth (4 par défaut) ; le débit reste limité par le client.
+  concurrency?: number;
   // Signale les mods qu'une couche de compatibilité pourrait charger (vrai par défaut).
   compatLayers?: boolean;
 }
@@ -185,18 +188,50 @@ export async function analyzePack(
   });
   const distinctProjects = [...new Map(lookedUp.map((p) => [p.id, p])).values()];
   const tick = options.onProgressTick ?? (() => undefined);
-  for (const [i, project] of distinctProjects.entries()) {
-    tick(i, distinctProjects.length, project.title);
+  const concurrency = options.concurrency ?? DEFAULT_CONCURRENCY;
+  // Requêtes en parallèle (le limiteur de débit du client reste le seul garde-fou) ; les
+  // résultats sont rangés par projet, donc indépendants de l'ordre de fin.
+  let done = 0;
+  tick(0, distinctProjects.length, distinctProjects[0]?.title ?? 'done');
+  await mapConcurrent(distinctProjects, concurrency, async (project) => {
     const versions = await api.getProjectVersions(project.id, {
       loaders: acceptedLoaders(target.loader),
       gameVersions: [target.minecraftVersion],
     });
     bestByProject.set(project.id, pickBestVersion(versions, target));
-  }
+    done++;
+    if (done < distinctProjects.length) tick(done, distinctProjects.length, project.title);
+  });
   tick(distinctProjects.length, distinctProjects.length, 'done');
 
-  // Étape 4 : statut de chaque mod, et alternatives pour ceux sans version.
+  // Étape 3 bis : alternatives et couches de compatibilité des mods sans version, cherchées en
+  // parallèle. L'adoption éventuelle d'une alternative reste séquentielle (étape 4).
   const packProjectIds = new Set(lookedUp.map((p) => p.id));
+  const withoutVersion = [
+    ...new Map(
+      pack.mods.flatMap((entry) => {
+        const id = identified.get(entry);
+        if (ignoredEntries.has(entry) || mapped.has(entry) || !id) return [];
+        if (id.currentVersion && versionSupportsTarget(id.currentVersion, target)) return [];
+        if (bestByProject.get(id.project.id)) return [];
+        return [[id.project.id, id.project] as const];
+      }),
+    ).values(),
+  ];
+  const replacements = new Map<string, Replacements>();
+  await mapConcurrent(withoutVersion, concurrency, async (raw) => {
+    progress(`Searching alternatives for ${raw.title}…`);
+    replacements.set(
+      raw.id,
+      await searchReplacements(api, toProjectRef(raw), raw.description, target, {
+        maxAlternatives,
+        excludeProjectIds: packProjectIds,
+        compatLayers: options.compatLayers !== false,
+      }),
+    );
+  });
+
+  // Étape 4 : statut de chaque mod, et alternatives pour ceux sans version.
   const selected = new Map<string, SelectedVersion>();
   const mods: ModAnalysis[] = [];
 
@@ -300,32 +335,10 @@ export async function analyzePack(
       continue;
     }
 
-    progress(`Searching alternatives for ${project.title}…`);
-    let alternatives: Alternative[] = [];
-    try {
-      alternatives = await findAlternatives(api, project, target, {
-        max: maxAlternatives,
-        excludeProjectIds: packProjectIds,
-        description: id.project.description,
-      });
-    } catch (error) {
-      // Hors-ligne, une recherche absente du cache ne doit pas bloquer toute l'analyse.
-      if (!(error instanceof OfflineCacheMissError)) throw error;
-      warnings.push(
-        `${project.title}: alternatives not available offline (${error.what} is not cached).`,
-      );
-    }
-    let compatLayer: CompatLayerHint | undefined;
-    if (options.compatLayers !== false) {
-      try {
-        compatLayer = await findCompatLayer(api, project, target);
-      } catch (error) {
-        if (!(error instanceof OfflineCacheMissError)) throw error;
-        warnings.push(
-          `${project.title}: compatibility layers not checked offline (${error.what} is not cached).`,
-        );
-      }
-    }
+    const found = replacements.get(project.id) ?? { alternatives: [], warnings: [] };
+    const { alternatives, compatLayer } = found;
+    // Une seule fois par projet, même s'il apparaît dans plusieurs fichiers.
+    warnings.push(...found.warnings.splice(0));
     const noVersion = `${idNote}No version for Minecraft ${target.minecraftVersion} / ${target.loader}.`;
     const adopted = options.adoptAlternatives
       ? await adoptAlternative(api, alternatives, target, selected)
@@ -360,7 +373,7 @@ export async function analyzePack(
 
   // Étape 5 : dépendances requises et incompatibilités de la liste finale.
   progress('Resolving dependencies…');
-  const deps = await resolveDependencies(api, [...selected.values()], target);
+  const deps = await resolveDependencies(api, [...selected.values()], target, { concurrency });
   warnings.push(...deps.warnings);
   const conflicts = [...findDuplicates(mods), ...deps.conflicts];
 
@@ -440,6 +453,47 @@ async function adoptAlternative(
     };
   }
   return undefined;
+}
+
+interface Replacements {
+  alternatives: Alternative[];
+  compatLayer?: CompatLayerHint;
+  warnings: string[];
+}
+
+// Alternatives et couche de compatibilité d'un projet sans version pour la cible.
+async function searchReplacements(
+  api: ModrinthApi,
+  project: ProjectRef,
+  description: string | undefined,
+  target: MigrationTarget,
+  options: { maxAlternatives: number; excludeProjectIds: Set<string>; compatLayers: boolean },
+): Promise<Replacements> {
+  const result: Replacements = { alternatives: [], warnings: [] };
+  try {
+    result.alternatives = await findAlternatives(api, project, target, {
+      max: options.maxAlternatives,
+      excludeProjectIds: options.excludeProjectIds,
+      description,
+    });
+  } catch (error) {
+    // Hors-ligne, une recherche absente du cache ne doit pas bloquer toute l'analyse.
+    if (!(error instanceof OfflineCacheMissError)) throw error;
+    result.warnings.push(
+      `${project.title}: alternatives not available offline (${error.what} is not cached).`,
+    );
+  }
+  if (options.compatLayers) {
+    try {
+      result.compatLayer = await findCompatLayer(api, project, target);
+    } catch (error) {
+      if (!(error instanceof OfflineCacheMissError)) throw error;
+      result.warnings.push(
+        `${project.title}: compatibility layers not checked offline (${error.what} is not cached).`,
+      );
+    }
+  }
+  return result;
 }
 
 function compatLayerReason(hint: CompatLayerHint): string {

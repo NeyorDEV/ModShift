@@ -3,6 +3,7 @@ import type { MigrationTarget } from '../types.js';
 import { acceptedLoaders, fallbackCompatibility, pickBestVersion } from './loaders.js';
 import { type ModrinthApi, toProjectRef, toVersionRef } from './refs.js';
 import { sideOf } from './sides.js';
+import { DEFAULT_CONCURRENCY, mapConcurrent } from '../concurrency.js';
 import type { AddedDependency, Conflict, MissingDependency, ProjectRef } from './types.js';
 
 export interface SelectedVersion {
@@ -42,6 +43,7 @@ export async function resolveDependencies(
   api: ModrinthApi,
   selected: SelectedVersion[],
   target: MigrationTarget,
+  options: { concurrency?: number } = {},
 ): Promise<DependencyResolution> {
   const present = new Map<string, SelectedVersion>();
   for (const s of selected) present.set(s.project.id, s);
@@ -89,17 +91,29 @@ export async function resolveDependencies(
 
     const raw = new Map((await api.getProjects([...needed.keys()])).map((p) => [p.id, p]));
     const projects = new Map([...raw].map(([id, p]) => [id, toProjectRef(p)]));
-    for (const [projectId, requiredBy] of needed) {
+    // Versions des dépendances de ce tour en parallèle, traitées ensuite dans l'ordre.
+    const entries = [...needed];
+    const bests = await mapConcurrent(
+      entries,
+      options.concurrency ?? DEFAULT_CONCURRENCY,
+      async ([projectId]) =>
+        projects.has(projectId)
+          ? pickBestVersion(
+              await api.getProjectVersions(projectId, {
+                loaders: acceptedLoaders(target.loader),
+                gameVersions: [target.minecraftVersion],
+              }),
+              target,
+            )
+          : undefined,
+    );
+    for (const [i, [projectId, requiredBy]] of entries.entries()) {
       const project = projects.get(projectId);
       if (!project) {
         missing.set(projectId, { projectId, requiredBy, reason: 'Unknown Modrinth project' });
         continue;
       }
-      const versions = await api.getProjectVersions(projectId, {
-        loaders: acceptedLoaders(target.loader),
-        gameVersions: [target.minecraftVersion],
-      });
-      const best = pickBestVersion(versions, target);
+      const best = bests[i];
       if (!best) {
         missing.set(projectId, {
           projectId,
