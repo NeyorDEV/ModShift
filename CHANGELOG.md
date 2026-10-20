@@ -6,6 +6,11 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Unrelated alternatives: a popular mod sharing only a broad category (e.g. Xaero's Minimap for
+  CIT Resewn) is no longer suggested; a candidate needs a similar name or a shared keyword.
+
 ### Added
 
 - Cross-loader migration (e.g. Forge → Fabric): multi-loader mods keep the same Modrinth project
