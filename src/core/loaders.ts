@@ -1,7 +1,7 @@
 import { acceptedLoaders, fallbackFor, getLoader } from '../loaders/registry.js';
 import type { ModrinthVersion, VersionType } from '../modrinth/types.js';
 import type { Loader, MigrationTarget } from '../types.js';
-import { type FallbackCompatibility, FALLBACK_NOTE } from './types.js';
+import { type FallbackCompatibility, FALLBACK_NOTE, type LoaderChange } from './types.js';
 
 // Loaders acceptés pour une cible (le loader lui-même puis ses replis documentés) :
 // voir src/loaders/registry.ts. Forge et NeoForge restent distincts (aucune source officielle
@@ -20,6 +20,28 @@ export function fallbackCompatibility(
 // Phrase ajoutée à la raison d'un mod retenu par repli.
 export function fallbackReason(fallback: FallbackCompatibility, target: MigrationTarget): string {
   return `Fallback compatibility, to test: a ${getLoader(fallback.loader as Loader).name} version running on ${getLoader(target.loader).name} (${fallback.source}).`;
+}
+
+// Migration inter-loaders (ex. Forge → Fabric) : le même projet Modrinth publie aussi une version
+// pour le loader cible (mod multi-loader). ModShift ne convertit pas le code du mod : il retient
+// la version que l'auteur publie pour ce loader.
+export function loaderChange(
+  packLoader: Loader | undefined,
+  version: ModrinthVersion,
+  target: MigrationTarget,
+): LoaderChange | undefined {
+  if (!packLoader || packLoader === target.loader) return undefined;
+  const to = version.loaders.includes(target.loader)
+    ? target.loader
+    : (fallbackFor(target.loader, version.loaders)?.loader ?? target.loader);
+  // Version du loader d'origine retenue par repli (ex. Fabric sur Quilt) : pas de changement.
+  return to === packLoader ? undefined : { from: packLoader, to };
+}
+
+export function loaderChangeReason(change: LoaderChange): string {
+  const from = getLoader(change.from as Loader).name;
+  const to = getLoader(change.to as Loader).name;
+  return `Same project: its ${to} version replaces the ${from} one (multi-loader mod).`;
 }
 
 export function versionSupportsTarget(version: ModrinthVersion, target: MigrationTarget): boolean {

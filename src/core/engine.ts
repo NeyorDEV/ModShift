@@ -8,6 +8,8 @@ import {
   acceptedLoaders,
   fallbackCompatibility,
   fallbackReason,
+  loaderChange,
+  loaderChangeReason,
   pickBestVersion,
   versionSupportsTarget,
 } from './loaders.js';
@@ -273,12 +275,18 @@ export async function analyzePack(
     const best = bestByProject.get(project.id);
     if (best) {
       const fallback = fallbackCompatibility(best, target);
+      const change = loaderChange(pack.loader, best, target);
       mods.push({
         ...common,
         status: 'update-found',
         targetVersion: toVersionRef(best),
         fallback,
-        reason: joinReasons(idNote, fallback && fallbackReason(fallback, target)),
+        loaderChange: change,
+        reason: joinReasons(
+          idNote,
+          change && loaderChangeReason(change),
+          fallback && fallbackReason(fallback, target),
+        ),
       });
       selected.set(project.id, { project, version: best });
       continue;

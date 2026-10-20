@@ -54,6 +54,12 @@ export interface FallbackCompatibility {
   note: typeof FALLBACK_NOTE;
 }
 
+// Changement de loader pour un même projet (mod multi-loader), ex. { from: 'forge', to: 'fabric' }.
+export interface LoaderChange {
+  from: string;
+  to: string;
+}
+
 export interface Alternative {
   project: ProjectRef;
   downloads: number;
@@ -88,6 +94,8 @@ export interface ModAnalysis {
   mapping?: { rule: string; original?: ProjectRef };
   // Présent quand la version cible ne tourne sur le loader cible que par repli.
   fallback?: FallbackCompatibility;
+  // Présent quand le pack change de loader et que le même projet a une version pour la cible.
+  loaderChange?: LoaderChange;
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }

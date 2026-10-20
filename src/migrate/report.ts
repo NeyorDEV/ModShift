@@ -72,7 +72,7 @@ export function renderMigrationReport(
     lines.push('| Mod | Version | Status | Origin |', '| --- | --- | --- | --- |');
     for (const mod of plan.mods) {
       lines.push(
-        `| ${cell(mod.title)} | ${cell(versionLabel(mod.version))} | ${SOURCE_LABELS[mod.source]}${mod.fallbackLoader ? `, ${mod.fallbackLoader} version: fallback compatibility, to test` : ''} | ${cell(modOrigin(mod))} |`,
+        `| ${cell(mod.title)} | ${cell(versionLabel(mod.version))} | ${SOURCE_LABELS[mod.source]}${mod.fallbackLoader ? `, ${mod.fallbackLoader} version: fallback compatibility, to test` : ''}${mod.loaderChange ? `, same project, ${mod.loaderChange.to} version (was ${mod.loaderChange.from})` : ''} | ${cell(modOrigin(mod))} |`,
       );
     }
   }
@@ -207,7 +207,12 @@ export function renderPlanText(
     const fallback = mod.fallbackLoader
       ? ` [${mod.fallbackLoader} version: fallback compatibility, to test]`
       : '';
-    out.push(`  ${SOURCE_ICONS[mod.source]} ${mod.title} ${versions}${extra}${fallback}`);
+    const switched = mod.loaderChange
+      ? ` [same project, ${mod.loaderChange.from} → ${mod.loaderChange.to}]`
+      : '';
+    out.push(
+      `  ${SOURCE_ICONS[mod.source]} ${mod.title} ${versions}${extra}${fallback}${switched}`,
+    );
   }
   out.push('', 'Excluded:');
   if (plan.excluded.length === 0) out.push('  (none)');
