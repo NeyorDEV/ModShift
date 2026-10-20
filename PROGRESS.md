@@ -616,6 +616,34 @@ Done (branch `feat/cross-loader-migration`):
   `docs/loaders.md` "Compatibility layers" with sources, CHANGELOG.
 - 335 tests; coverage core 94.6 %, input 94.6 %.
 
+## Phase 18 — Client/server sides ✅
+
+Done (branch `feat/client-server-sides`):
+
+- Verified in Modrinth's OpenAPI spec (raw.githubusercontent.com `modrinth/code`
+  `apps/docs/public/openapi.yaml`): project `client_side` / `server_side` (`required`, `optional`,
+  `unsupported`, `unknown`) are **deprecated** in favour of an `environment` field (on versions:
+  `client_and_server`, `client_only`, `client_only_server_optional`, `singleplayer_only`,
+  `server_only`, `server_only_client_optional`, `dedicated_server_only`, `client_or_server`,
+  `client_or_server_prefers_both`, `unknown`). The mapping between them is copied from labrinth's
+  `convert_v3_environment_to_v2_side_types` (`apps/labrinth/src/routes/v2_reroute.rs`), including
+  the fixed sides of plugins, data packs, shaders and resource packs.
+- `src/core/sides.ts`: `sideOf(project, version)` (version `environment` first, then project
+  fields, else unknown), `sideCategory` (client / server / both / unknown; `unsupported` on both
+  sides counts as unknown), `neededOn(side, target)`, `mrpackEnv`.
+- `ModAnalysis.side`, `AddedDependency.side`, `AdoptedAlternative.side`, `VersionRef.environment`,
+  `AnalysisResult.side` (target installation, `both` by default).
+- `--side client|server|both` on `analyze` and `migrate`, `target.side` in the config (validator
+  and JSON Schema). With `server` (or `client`), mods not needed are excluded with a reason, their
+  own dependencies dropped; unknown sides are **kept with a warning**. `.mrpack` `env` comes from
+  the source pack, else from Modrinth when both sides are known.
+- Reports: Markdown section "Client and server" (client-only, server-only, unknown/ambiguous,
+  not needed), one summary line in the table, side row in the UI detail panel.
+- Fixtures: `environment` on some catalog versions (Sodium, Mod Menu, Xaero client-only; Fabric
+  API both), Cloth Config with unknown sides. Tests: `test/core/sides.test.ts`,
+  `test/commands/side.test.ts`, config validation. 357 tests; coverage core 95.2 %, input 94.6 %.
+- Not done (kept simple): no `--side` in `interactive` or the web UI (they use `both`).
+
 ## Known limitations
 
 - **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
@@ -632,8 +660,8 @@ Done (branch `feat/cross-loader-migration`):
 - Compatibility layers are only reported for the documented combinations (Connector on NeoForge
   1.21.1 / Forge 1.20.1, Kilt on Fabric 1.20.1); exact MC versions only (no 1.21 or 1.20).
 - Relevance weights are a heuristic tuned on fixtures, not on real search results.
-- Client/server environments are not distinguished: `env` is copied from the source pack, and
-  added mods have none (phase 18).
+- Sides depend on Modrinth metadata, which authors often leave as `optional`/`optional`: a mod
+  marked so stays in a server pack. `interactive` and the web UI do not offer `--side` yet.
 - Requests are sequential (phase 19 adds concurrency): a big pack takes a while the first time.
 - Conflicts (incompatible, pinned versions, duplicates) are reported, never resolved
   automatically.
@@ -669,7 +697,8 @@ the previous one, with its own draft PR whose base is the previous branch:
 | `feat/interactive-mode`       | phase 14             | NeyorDEV/ModShift#8 → #7     |
 | `feat/web-ui`                 | phase 15             | NeyorDEV/ModShift#9 → #8     |
 | `docs/finishing-touches`      | phase 16             | NeyorDEV/ModShift#10 → #9    |
-| `feat/cross-loader-migration` | phase 17             | draft PR → #10               |
+| `feat/cross-loader-migration` | phase 17             | NeyorDEV/ModShift#11 → #10   |
+| `feat/client-server-sides`    | phase 18             | draft PR → #11               |
 | next phases                   | one branch per phase | one draft PR each            |
 
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
@@ -696,21 +725,21 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Phases 1–17 are done. Then 18 → 22, in order, one branch and one draft PR per phase (base = the
+Phases 1–18 are done. Then 19 → 22, in order, one branch and one draft PR per phase (base = the
 previous phase's branch). At the end, take every PR out of draft with a summary.
 
-- **Phase 18, client/server sides** (branch `feat/client-server-sides`):
-  - Modrinth projects have `client_side` / `server_side` (`required`, `optional`, `unsupported`,
-    `unknown`); `ModrinthProject` in `src/modrinth/types.ts` may need these fields typed. The
-    fake catalog already has them (all `optional`): vary them in fixtures;
-  - `identified` projects come from `getProjects` (engine step 2); added dependencies and adopted
-    alternatives may need their project fetched too (check `resolveDependencies`);
-  - add `side` to `ModAnalysis` / `AddedDependency` (`client`, `server`, `both`, `unknown`), an
-    option `--side server|client|both` for `analyze` and `migrate` (filter + `env` in the
-    `.mrpack`: today `env` is copied from the source and added mods have none, see
-    `src/migrate/plan.ts`), flag ambiguous / `unknown` cases in reports;
-  - regenerate `docs/cli.md` (`npm run build && npm run docs:cli`); config `target.side`?
-    (keep simple: CLI + config only if cheap, update the JSON schema if so).
+- **Phase 19, concurrency and benchmarks** (branch `perf/concurrent-requests`):
+  - `src/core/engine.ts` step 3 loops sequentially over `distinctProjects`
+    (`getProjectVersions`); `resolveDependencies` and alternatives are sequential too. Add a
+    small promise pool (no dependency) with `concurrency` in `AnalyzeOptions` and a CLI option
+    `--concurrency <n>` (default e.g. 4, bounded 1–16);
+  - the `RateLimiter` (`src/modrinth/rateLimiter.ts`) is per client and must stay the single
+    gate: check that parallel `acquire` calls cannot overshoot 300/min (test with a fake clock);
+  - keep result order deterministic (map by index, not completion order);
+  - `bench/`: a script generating synthetic packs of 200 and 500 mods plus a mocked API
+    (in-process, no network), measuring local processing time for several concurrency levels;
+    README section with the method, the machine and the numbers, stating clearly that it
+    measures local processing with a mocked API, not real network latency.
 - **Phase 19:** configurable concurrency within the rate limit (`RateLimiter` is already shared;
   engine step 3 loops sequentially over `distinctProjects`); `bench/` with 200–500-mod synthetic
   packs and a mock API (the README must say it measures local processing only).
