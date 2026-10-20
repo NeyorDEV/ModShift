@@ -2,13 +2,44 @@
   "name": "modshift",
   "version": "0.1.0",
   "description": "Migrate a Minecraft modpack to another Minecraft version and/or mod loader (Forge, NeoForge, Fabric, Quilt).",
+  "keywords": [
+    "minecraft",
+    "modpack",
+    "modrinth",
+    "forge",
+    "neoforge",
+    "fabric",
+    "quilt",
+    "cli"
+  ],
+  "homepage": "https://github.com/NeyorDEV/ModShift#readme",
+  "bugs": {
+    "url": "https://github.com/NeyorDEV/ModShift/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeyorDEV/ModShift.git"
+  },
   "license": "MIT",
+  "author": "NeyorDEV",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "modshift": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "schemas",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=20"
@@ -21,18 +52,11 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "prepack": "npm run clean && npm run build",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test"
   },
-  "keywords": [
-    "minecraft",
-    "modpack",
-    "modrinth",
-    "forge",
-    "neoforge",
-    "fabric",
-    "quilt",
-    "cli"
-  ],
   "dependencies": {
     "commander": "^14.0.3",
     "fflate": "^0.8.3",

@@ -1,0 +1,30 @@
+name: Wrong mod match or suggestion
+description: A mod was identified as the wrong project, or a suggested alternative is irrelevant.
+labels: [matching]
+body:
+  - type: input
+    id: mod
+    attributes:
+      label: Mod file or project
+      placeholder: rubidium-0.7.1.jar
+    validations:
+      required: true
+  - type: input
+    id: target
+    attributes:
+      label: Target
+      placeholder: 1.21.1 neoforge
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What ModShift reported
+      description: The relevant line or the JSON entry from `modshift analyze --format json`.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would be correct
+      description: The right Modrinth project (link), or why the suggestion is wrong.
