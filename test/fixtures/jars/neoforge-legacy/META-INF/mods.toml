@@ -1,0 +1,13 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+
+[[mods]]
+modId = "legacyneo"
+version = "0.9.0"
+displayName = "Legacy NeoForge Mod"
+
+[[dependencies.legacyneo]]
+modId = "neoforge"
+mandatory = true
+versionRange = "[20.4,)"

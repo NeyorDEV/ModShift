@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "sodium",
+  "version": "0.5.8+mc1.20.1",
+  "name": "Sodium",
+  "description": "A modern rendering engine for Minecraft.
+Multi-line description with a raw newline, as found in some real mods.",
+  "environment": "client",
+  "depends": {
+    "fabricloader": ">=0.12.0",
+    "minecraft": "1.20.1",
+    "fabric-api": "*",
+    "java": ">=17"
+  },
+  "recommends": {
+    "indium": ">=1.0.0"
+  }
+}

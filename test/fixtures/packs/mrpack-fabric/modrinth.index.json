@@ -1,0 +1,74 @@
+{
+  "formatVersion": 1,
+  "game": "minecraft",
+  "versionId": "1.0.0",
+  "name": "Fixture Fabric Pack",
+  "summary": "Test fixture: fake hashes and fake IDs, not real Modrinth data.",
+  "files": [
+    {
+      "path": "mods/sodium-fabric-0.5.8.jar",
+      "hashes": {
+        "sha1": "1111111111111111111111111111111111111111",
+        "sha512": "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "env": { "client": "required", "server": "unsupported" },
+      "downloads": ["https://cdn.modrinth.com/data/AANobbMI/versions/v1sodium/sodium-fabric-0.5.8.jar"],
+      "fileSize": 1024
+    },
+    {
+      "path": "mods/fabric-api-0.92.0.jar",
+      "hashes": {
+        "sha1": "2222222222222222222222222222222222222222",
+        "sha512": "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "downloads": ["https://cdn.modrinth.com/data/P7dR8mSH/versions/v1fapi/fabric-api-0.92.0.jar"],
+      "fileSize": 2048
+    },
+    {
+      "path": "mods/modmenu-7.2.2.jar",
+      "hashes": {
+        "sha1": "3333333333333333333333333333333333333333",
+        "sha512": "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "downloads": ["https://cdn.modrinth.com/data/mOgUt4GM/versions/v1menu/modmenu-7.2.2.jar"],
+      "fileSize": 512
+    },
+    {
+      "path": "mods/old-minimap-1.0.jar",
+      "hashes": {
+        "sha1": "4444444444444444444444444444444444444444",
+        "sha512": "44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "downloads": ["https://cdn.modrinth.com/data/OLDMAP01/versions/v1omap/old-minimap-1.0.jar"],
+      "fileSize": 256
+    },
+    {
+      "path": "mods/mystery-mod.jar",
+      "hashes": {
+        "sha1": "5555555555555555555555555555555555555555",
+        "sha512": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "downloads": ["https://example.com/mystery-mod.jar"],
+      "fileSize": 128
+    },
+    {
+      "path": "resourcepacks/faithful.zip",
+      "hashes": {
+        "sha1": "6666666666666666666666666666666666666666",
+        "sha512": "66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
+      },
+      "downloads": ["https://cdn.modrinth.com/data/RESPACK1/versions/v1faith/faithful.zip"],
+      "fileSize": 4096
+    },
+    {
+      "path": "../escape.jar",
+      "hashes": { "sha1": "7777777777777777777777777777777777777777" },
+      "downloads": ["https://example.com/escape.jar"],
+      "fileSize": 1
+    }
+  ],
+  "dependencies": {
+    "minecraft": "1.20.1",
+    "fabric-loader": "0.15.11"
+  }
+}

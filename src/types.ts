@@ -1,0 +1,75 @@
+// Types partagés du domaine ModShift.
+
+export const LOADERS = ['forge', 'neoforge', 'fabric', 'quilt'] as const;
+export type Loader = (typeof LOADERS)[number];
+
+export function isLoader(value: string): value is Loader {
+  return (LOADERS as readonly string[]).includes(value);
+}
+
+export interface FileHashes {
+  sha1?: string;
+  sha512?: string;
+}
+
+// Dépendance déclarée dans les métadonnées d'un .jar.
+export interface JarDependency {
+  modId: string;
+  required: boolean;
+  versionRange?: string;
+}
+
+// Métadonnées lues dans un .jar (un jar « multi-loader » peut en contenir plusieurs).
+export interface JarMetadata {
+  loader: Loader;
+  modId: string;
+  name?: string;
+  version?: string;
+  dependencies: JarDependency[];
+}
+
+export type PackSource = 'mrpack' | 'curseforge' | 'folder';
+
+// Origine d'un mod : listé dans l'index du pack, présent dans les overrides, ou fichier d'un dossier.
+export type ModOrigin = 'index' | 'override' | 'folder';
+
+export interface CurseForgeFileRef {
+  projectId: number;
+  fileId: number;
+  required: boolean;
+}
+
+export interface ModEntry {
+  // Nom du fichier (ex. « sodium-fabric-0.5.8.jar »).
+  fileName: string;
+  // Chemin relatif dans le pack (ex. « mods/sodium-fabric-0.5.8.jar »).
+  path: string;
+  origin: ModOrigin;
+  hashes: FileHashes;
+  // Métadonnées lues dans le jar, quand le jar est disponible localement.
+  metadata: JarMetadata[];
+  // Référence CurseForge (manifest.json), non résolvable sans clé API.
+  curseforge?: CurseForgeFileRef;
+  downloads?: string[];
+  fileSize?: number;
+  env?: { client?: string; server?: string };
+}
+
+export interface ModPack {
+  source: PackSource;
+  name?: string;
+  version?: string;
+  minecraftVersion?: string;
+  loader?: Loader;
+  loaderVersion?: string;
+  mods: ModEntry[];
+  // Fichiers non-mods (resource packs, shaders, configs…) conservés tels quels.
+  otherFiles: string[];
+  warnings: string[];
+}
+
+// Cible de migration.
+export interface MigrationTarget {
+  minecraftVersion: string;
+  loader: Loader;
+}

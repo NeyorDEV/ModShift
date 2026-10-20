@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "LGPL-3.0"
+
+[[mods]]
+modId = "examplemod"
+version = "1.4.2"
+displayName = "Example NeoForge Mod"
+
+[[dependencies.examplemod]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+
+[[dependencies.examplemod]]
+modId = "curios"
+type = "required"
+versionRange = "[9.0,)"
+
+[[dependencies.examplemod]]
+modId = "jei"
+type = "optional"
+
+[[dependencies.examplemod]]
+modId = "optifine"
+type = "incompatible"

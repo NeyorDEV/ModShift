@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "multimod",
+  "version": "3.0.0",
+  "name": "Multi Loader Mod",
+  "depends": { "fabricloader": "*", "cloth-config": ">=11" }
+}
