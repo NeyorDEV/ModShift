@@ -111,6 +111,7 @@ export async function runMigrate(
   const plan = buildMigrationPlan(pack, analysis, {
     loaderVersion: explicitLoaderVersion,
     loaderVersionSource,
+    exclude: config.exclude,
   });
 
   const isArchive = pack.source !== 'folder';

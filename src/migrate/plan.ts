@@ -9,6 +9,7 @@ import {
   type MrpackFile,
   type MrpackIndex,
 } from './mrpackSpec.js';
+import { matchesModRef } from '../config/config.js';
 import { getLoader } from '../loaders/registry.js';
 import { MODSHIFT_VERSION } from '../version.js';
 
@@ -51,6 +52,8 @@ export interface PlanOptions {
   loaderVersion?: string;
   // Provenance de `loaderVersion` (--loader-version ou modshift.config.json).
   loaderVersionSource?: 'option' | 'config';
+  // Liste « exclude » de modshift.config.json : mods retirés du pack migré.
+  exclude?: string[];
 }
 
 // Version du loader cible : option explicite, sinon celle du pack source si le loader
@@ -120,6 +123,14 @@ function keptIndexFile(file: PackIndexFile): MrpackFile | { error: string } {
   };
 }
 
+// Titres des mods exclus par la configuration (pour écarter leurs dépendances).
+function excludedByConfigTitles(excluded: ModAnalysis[], hasExcludeRules: boolean): string[] {
+  if (!hasExcludeRules) return [];
+  return excluded
+    .filter((m) => m.reason?.startsWith('Excluded by modshift.config.json'))
+    .flatMap((m) => (m.project ? [m.project.title] : []));
+}
+
 export function buildMigrationPlan(
   pack: ModPack,
   analysis: AnalysisResult,
@@ -160,6 +171,20 @@ export function buildMigrationPlan(
   const envByPath = new Map(pack.mods.map((m) => [m.path, normalizeEnv(m.env)]));
   for (const mod of analysis.mods) {
     const env = envByPath.get(mod.path);
+    const excludeRule = options.exclude?.find((pattern) =>
+      matchesModRef(pattern, {
+        fileName: mod.fileName,
+        slug: mod.project?.slug,
+        projectId: mod.project?.id,
+      }),
+    );
+    if (excludeRule) {
+      excluded.push({
+        ...mod,
+        reason: `Excluded by modshift.config.json (rule "${excludeRule}").`,
+      });
+      continue;
+    }
     if (
       (mod.status === 'compatible' || mod.status === 'update-found') &&
       mod.project &&
@@ -198,7 +223,13 @@ export function buildMigrationPlan(
     excluded.push(mod);
   }
 
+  // Une dépendance ajoutée uniquement pour des mods exclus n'a plus de raison d'être.
+  const excludedTitles = new Set(excludedByConfigTitles(excluded, options.exclude !== undefined));
   for (const dep of analysis.dependencies.added) {
+    if (excludedTitles.size > 0 && dep.requiredBy.every((title) => excludedTitles.has(title))) {
+      warnings.push(`${dep.project.title}: not added, only required by excluded mods`);
+      continue;
+    }
     add(
       {
         source: 'dependency',
