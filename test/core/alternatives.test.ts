@@ -78,4 +78,23 @@ describe('scoreAlternative', () => {
     expect(result.nameMatch).toBe(false);
     expect(result.keywordMatch).toBe(false);
   });
+
+  it('needs two shared keywords without a similar name (real-run regression)', () => {
+    // Cas observé : Xaero's Minimap proposé pour Paginated Advancements à cause du seul mot « screen ».
+    const original = {
+      title: 'Paginated Advancements & Custom Frames',
+      categories: ['fabric', 'utility'],
+      description: 'Makes the advancements screen paginated and bigger.',
+    };
+    const oneWord = scoreAlternative(
+      hit({ title: "Xaero's Minimap", description: 'A minimap on your screen.' }),
+      original,
+    );
+    expect(oneWord.keywordMatch).toBe(false);
+    const twoWords = scoreAlternative(
+      hit({ title: 'Better Progress', description: 'A bigger, paginated progress screen.' }),
+      original,
+    );
+    expect(twoWords.keywordMatch).toBe(true);
+  });
 });

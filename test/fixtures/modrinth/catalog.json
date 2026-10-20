@@ -5,7 +5,7 @@
       "id": "AANobbMI",
       "slug": "sodium",
       "title": "Sodium",
-      "description": "Sodium (fixture)",
+      "description": "A modern rendering engine that greatly improves frame rates and stuttering.",
       "categories": [
         "optimization"
       ],
@@ -254,7 +254,7 @@
       "id": "RUBIDIUM",
       "slug": "rubidium",
       "title": "Rubidium",
-      "description": "Rubidium (fixture)",
+      "description": "Unofficial port of Sodium: a rendering engine that greatly improves frame rates.",
       "categories": [
         "optimization"
       ],
@@ -273,7 +273,7 @@
       "id": "EMBEDIUM",
       "slug": "embeddium",
       "title": "Embeddium",
-      "description": "Embeddium (fixture)",
+      "description": "Fork of the Sodium rendering engine that improves frame rates.",
       "categories": [
         "optimization"
       ],
