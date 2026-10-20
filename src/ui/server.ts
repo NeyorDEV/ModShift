@@ -75,6 +75,8 @@ export interface UiServerOptions {
   cache?: ResponseCache;
   cacheTtlMs?: number;
   offline?: boolean;
+  // Requêtes simultanées vers Modrinth pendant une analyse.
+  concurrency?: number;
   env?: NodeJS.ProcessEnv;
   createCurseForgeApi?: (options: CurseForgeClientOptions) => CurseForgeClient;
   // Jeton imposé (tests) ; aléatoire par défaut.
@@ -247,7 +249,10 @@ export async function startUiServer(options: UiServerOptions): Promise<UiServer>
     try {
       const pack = await loadPack(packFile);
       await resolveCurseForge(pack);
-      const analysis = await analyzePack(pack, target, api, { maxAlternatives });
+      const analysis = await analyzePack(pack, target, api, {
+        maxAlternatives,
+        concurrency: options.concurrency,
+      });
       const session: UiSession = {
         id,
         dir,
@@ -312,6 +317,7 @@ export async function startUiServer(options: UiServerOptions): Promise<UiServer>
         ? await analyzePack(session.pack, target, api, {
             maxAlternatives: session.maxAlternatives,
             adoptAlternatives: true,
+            concurrency: options.concurrency,
           })
         : session.analysis;
     const plan = buildMigrationPlan(session.pack, analysis, {

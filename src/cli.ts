@@ -2,6 +2,7 @@
 import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
+import { DEFAULT_CONCURRENCY, MAX_CONCURRENCY } from './concurrency.js';
 import { type CliIo, runAnalyze, UsageError } from './commands/analyze.js';
 import { runCacheClear, runCacheStats } from './commands/cache.js';
 import { type InteractiveCommandOptions, runInteractive } from './commands/interactive.js';
@@ -171,6 +172,11 @@ function withCacheOptions(command: Command): Command {
       'how long cached responses stay valid, e.g. 30m, 12h, 7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)',
     )
     .option('--max-alternatives <n>', 'alternatives suggested per missing mod (0 to disable)', '3')
+    .option(
+      '--concurrency <n>',
+      `Modrinth requests sent at the same time, 1-${MAX_CONCURRENCY} (rate limit still applies)`,
+      String(DEFAULT_CONCURRENCY),
+    )
     .option('-v, --verbose', 'log every API request, cache hit and retry on stderr', false);
 }
 

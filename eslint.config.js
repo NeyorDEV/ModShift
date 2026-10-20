@@ -33,4 +33,13 @@ export default tseslint.config(
     files: ['src/ui/public/**/*.js'],
     languageOptions: { globals: browserGlobals },
   },
+  // Scripts de benchmark (Node) : globales Web standard disponibles dans Node 20+.
+  {
+    files: ['bench/**/*.mjs'],
+    languageOptions: {
+      globals: Object.fromEntries(
+        ['Response', 'URL', 'setTimeout'].map((name) => [name, 'readonly']),
+      ),
+    },
+  },
 );

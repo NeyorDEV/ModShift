@@ -104,6 +104,7 @@ export async function runMigrate(
   const analysis = await analyzePack(pack, target, session.api, {
     maxAlternatives,
     adoptAlternatives: options.includeAlternatives,
+    concurrency: session.concurrency,
     side,
     ignore: config.ignore,
     mappings: config.mappings,

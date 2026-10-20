@@ -644,6 +644,33 @@ Done (branch `feat/client-server-sides`):
   `test/commands/side.test.ts`, config validation. 357 tests; coverage core 95.2 %, input 94.6 %.
 - Not done (kept simple): no `--side` in `interactive` or the web UI (they use `both`).
 
+## Phase 19 — Concurrency & benchmarks ✅
+
+Done (branch `perf/concurrent-requests`):
+
+- `src/concurrency.ts`: `mapConcurrent(items, limit, fn)`, an ordered promise pool (results in
+  input order, no new call after the first error), `DEFAULT_CONCURRENCY` 4, `MAX_CONCURRENCY` 16.
+  No dependency added.
+- Engine: version lookups (step 3), alternatives + compatibility layer searches (new step "3 bis",
+  `searchReplacements`, prefetched for every identified mod without a target version) and each
+  dependency round (`resolveDependencies(..., { concurrency })`) run in the pool. Adopting an
+  alternative stays sequential (it depends on what is already selected), and warnings are pushed
+  in pack order, so results are **identical** whatever the concurrency (tested with deep equality
+  and with the CLI's JSON output).
+- `RateLimiter` already serialises `acquire()`: tested with 12 parallel calls and a fake clock,
+  never more than `maxRequests` per window. It stays the only gate on the request rate.
+- `ModrinthClient` coalesces identical requests in flight (`inFlight` map keyed like the cache):
+  the benchmark showed duplicate category searches with concurrency > 1.
+- `--concurrency <n>` (1–16, default 4) on `analyze`, `migrate`, `interactive` and `ui`
+  (`parseConcurrency`); `docs/cli.md` regenerated.
+- `bench/` (`npm run bench`): `synthetic.mjs` (deterministic 200/500-mod packs and catalog),
+  `fakeApi.mjs` (indexed in-memory Modrinth, optional artificial latency), `run.mjs` (warm-up +
+  median of N runs, Markdown or `--json`), `bench/README.md` (method). Uses `dist/` (build first).
+  Results in the README "Performance" section, stated as local processing with a fake API.
+  The rate limiter is disabled in the bench; the script prints the minimum time the real 300
+  requests/minute would impose (≈ 49 s for the 500-mod pack's 545 requests).
+- 366 tests.
+
 ## Known limitations
 
 - **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
@@ -662,7 +689,8 @@ Done (branch `feat/client-server-sides`):
 - Relevance weights are a heuristic tuned on fixtures, not on real search results.
 - Sides depend on Modrinth metadata, which authors often leave as `optional`/`optional`: a mod
   marked so stays in a server pack. `interactive` and the web UI do not offer `--side` yet.
-- Requests are sequential (phase 19 adds concurrency): a big pack takes a while the first time.
+- With an empty cache, Modrinth's 300 requests/minute dominate big packs (≈ 50 s for 500 mods).
+  The benchmark measures local processing only; no real-network benchmark exists.
 - Conflicts (incompatible, pinned versions, duplicates) are reported, never resolved
   automatically.
 - A dependency that only an excluded mod needed is dropped, but not its own transitive
@@ -698,7 +726,8 @@ the previous one, with its own draft PR whose base is the previous branch:
 | `feat/web-ui`                 | phase 15             | NeyorDEV/ModShift#9 → #8     |
 | `docs/finishing-touches`      | phase 16             | NeyorDEV/ModShift#10 → #9    |
 | `feat/cross-loader-migration` | phase 17             | NeyorDEV/ModShift#11 → #10   |
-| `feat/client-server-sides`    | phase 18             | draft PR → #11               |
+| `feat/client-server-sides`    | phase 18             | NeyorDEV/ModShift#12 → #11   |
+| `perf/concurrent-requests`    | phase 19             | draft PR → #12               |
 | next phases                   | one branch per phase | one draft PR each            |
 
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
@@ -725,24 +754,25 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Phases 1–18 are done. Then 19 → 22, in order, one branch and one draft PR per phase (base = the
+Phases 1–19 are done. Then 20 → 22, in order, one branch and one draft PR per phase (base = the
 previous phase's branch). At the end, take every PR out of draft with a summary.
 
-- **Phase 19, concurrency and benchmarks** (branch `perf/concurrent-requests`):
-  - `src/core/engine.ts` step 3 loops sequentially over `distinctProjects`
-    (`getProjectVersions`); `resolveDependencies` and alternatives are sequential too. Add a
-    small promise pool (no dependency) with `concurrency` in `AnalyzeOptions` and a CLI option
-    `--concurrency <n>` (default e.g. 4, bounded 1–16);
-  - the `RateLimiter` (`src/modrinth/rateLimiter.ts`) is per client and must stay the single
-    gate: check that parallel `acquire` calls cannot overshoot 300/min (test with a fake clock);
-  - keep result order deterministic (map by index, not completion order);
-  - `bench/`: a script generating synthetic packs of 200 and 500 mods plus a mocked API
-    (in-process, no network), measuring local processing time for several concurrency levels;
-    README section with the method, the machine and the numbers, stating clearly that it
-    measures local processing with a mocked API, not real network latency.
-- **Phase 19:** configurable concurrency within the rate limit (`RateLimiter` is already shared;
-  engine step 3 loops sequentially over `distinctProjects`); `bench/` with 200–500-mod synthetic
-  packs and a mock API (the README must say it measures local processing only).
+- **Phase 20, source plugins** (branch `feat/source-plugins`):
+  - today Modrinth is wired through `ModrinthApi` (`src/core/refs.ts`, used everywhere in the
+    engine) and CurseForge only resolves manifest references (`src/curseforge/resolve.ts`, called
+    from `createSession().prepare`). Keep the engine on Modrinth data and add a small
+    `ModSource` contract (`id`, `name`, `identify(mods)` returning project/version metadata
+    and download URLs, maybe `findVersions`) plus a registry (`registerSource`, built-ins
+    `modrinth`, `curseforge`), simplest design that does not require a massive refactor;
+  - example plugin: GitHub Releases (`GITHUB_TOKEN` optional, from the environment only; never in
+    tests or fixtures). api.github.com is blocked here: verify the REST contract from an official
+    source reachable through raw.githubusercontent.com (e.g. `github/rest-api-description`), and
+    test only with a mocked fetch;
+  - `.mrpack` download whitelist only allows cdn.modrinth.com, github.com,
+    raw.githubusercontent.com (`src/migrate/mrpackSpec.ts`): GitHub release asset URLs
+    (`https://github.com/<owner>/<repo>/releases/download/...`) are allowed;
+  - plugin docs (`docs/plugins.md`) and a reusable **contract test suite** that every source
+    (built-in or third-party) must pass.
 - **Phase 20:** source plugin system (Modrinth, CurseForge, GitHub Releases with an optional
   `GITHUB_TOKEN`), docs and contract tests.
 - **Phase 21:** reusable GitHub Action in `action/` (check plus a PR comment or job summary),

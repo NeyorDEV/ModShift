@@ -27,7 +27,7 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
 - [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)
 - [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
 - [Changing loader](#changing-loader-eg-forge--fabric) · [Client and server](#client-and-server)
-- [Example output](#example-output)
+- [Performance](#performance) · [Example output](#example-output)
 - [How it works](#how-it-works) · [FAQ](#faq)
 - [Limitations](#limitations) · [Programmatic API](#programmatic-api)
 - [Contributing](#contributing) · [Security](#security) · [License](#license)
@@ -315,6 +315,34 @@ modshift migrate pack.mrpack --mc 1.21.1 --loader fabric --loader-version 0.16.5
   --side server --out server.mrpack
 ```
 
+## Performance
+
+ModShift sends up to `--concurrency` requests to Modrinth at the same time (4 by default, 1–16).
+The client's rate limiter remains the only gate on the request rate, identical requests in flight
+are sent once, and reports are identical whatever the concurrency.
+
+Benchmark (`npm run bench`, method in [`bench/README.md`](bench/README.md)). It measures **local
+processing only**, against an **in-memory fake Modrinth**: no real network, no real API, no rate
+limit. The "simulated latency" rows add an artificial 20 ms delay per request to show what
+concurrency changes when requests wait on I/O; they are not real network measurements.
+
+Intel Xeon @ 2.80 GHz (4 threads), Node 22.22, Linux x64, median of 5 runs:
+
+| Mods | Simulated latency | `--concurrency 1` | `--concurrency 4` | `--concurrency 8` | Requests |
+| ---: | ----------------: | ----------------: | ----------------: | ----------------: | -------: |
+|  200 |                 0 |             48 ms |             50 ms |             35 ms |      224 |
+|  200 |             20 ms |             4.7 s |             1.3 s |             0.7 s |      224 |
+|  500 |                 0 |             70 ms |             70 ms |             59 ms |      545 |
+|  500 |             20 ms |            11.4 s |             3.1 s |             1.7 s |      545 |
+
+What this means in practice:
+
+- ModShift's own work is small (well under 0.1 s for 500 mods). Real runs are dominated by the
+  network and by Modrinth.
+- With an **empty cache**, Modrinth's limit of 300 requests per minute applies: the 545 requests
+  of a 500-mod pack need at least about 50 s, whatever `--concurrency`. Concurrency helps below
+  that limit and for smaller packs; later runs use the cache.
+
 ## Example output
 
 The output below is **real ModShift output on the test fixtures** (`test/fixtures/packs/mrpack-forge`,
@@ -427,7 +455,8 @@ Yes, with `--offline`, once the cache has been filled by a previous run.
 - Only `mods/*.jar` are analysed; resource packs, shaders and configs are copied unchanged.
 - CurseForge references need a `CURSEFORGE_API_KEY`.
 - Alternatives and mod-id matches are heuristics: they can be wrong.
-- Requests are sequential. Large packs take a while the first time; later runs use the cache.
+- Large packs take a while the first time (Modrinth allows 300 requests per minute); later runs
+  use the cache.
 - Plugin platforms (Paper, Velocity…) can be analysed, but `migrate` only writes `.mrpack` files,
   which only support Forge, NeoForge, Fabric and Quilt.
 - Not tested against the live Modrinth and CurseForge APIs from the development environment (see

@@ -58,7 +58,8 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "prepack": "npm run clean && npm run build",
     "prepublishOnly": "npm run lint && npm run typecheck && npm test",
-    "docs:cli": "node scripts/gen-cli-docs.mjs"
+    "docs:cli": "node scripts/gen-cli-docs.mjs",
+    "bench": "npm run build && node bench/run.mjs"
   },
   "dependencies": {
     "@inquirer/prompts": "8.7.3",
