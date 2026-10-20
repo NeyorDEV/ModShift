@@ -26,7 +26,14 @@ npm run format:check   # Prettier (npm run format to fix)
 npm run typecheck      # tsc --noEmit, strict mode
 npm run test:coverage  # Vitest, coverage thresholds on src/core and src/input
 npm run build
+npm run docs:cli       # regenerate docs/cli.md from the CLI help (after build)
+npm run docs:pages     # regenerate the site's guide pages from README.md
+npm run docs:build     # build the VitePress site (npm run docs:dev to preview it)
 ```
+
+The site's guide pages (`docs/guide/`, `docs/faq.md`, `docs/limitations.md`) are generated: edit
+`README.md` (or `action/README.md`, `bench/README.md`) and run `npm run docs:pages`. CI fails if
+they are stale.
 
 ## Conventions
 
@@ -64,9 +71,13 @@ src/
   migrate/     .mrpack format rules, migration plan, writer, migration report
   report/      table / JSON / Markdown renderers
   config/      modshift.config.json
-  commands/    CLI commands (analyze, migrate, cache) and logging
+  commands/    CLI commands (analyze, migrate, interactive, ui, cache) and logging
+  sources/     mod source plugins (registry, CurseForge, GitHub Releases)
+  loaders/     loader registry and compatibility layers
   cli.ts       entry point
-docs/          format notes (mrpack, CurseForge API)
+action/        "ModShift Check" GitHub Action
+bench/         benchmarks on synthetic packs (npm run bench)
+docs/          VitePress site and reference pages (format notes, loaders, plugins, CLI)
 schemas/       JSON Schemas (modrinth.index.json, modshift.config.json)
 test/          Vitest tests, helpers and fixtures
 ```

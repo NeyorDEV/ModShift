@@ -22,6 +22,9 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
 
 ## Contents
 
+Full documentation: the [`docs/`](docs/) site (VitePress, `npm run docs:dev`), to be published at
+https://neyordev.github.io/ModShift/ once GitHub Pages is enabled.
+
 - [Features](#features) · [Installation](#installation) · [Quick start](#quick-start)
 - [Commands](#commands) · [Interactive mode](#interactive-mode) · [Web interface](#web-interface)
 - [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)

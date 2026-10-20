@@ -27,6 +27,8 @@ All notable changes to ModShift are documented here. The format follows
   migrated packs.
 - "ModShift Check" GitHub Action in `action/` (job summary, one updated pull request comment,
   outputs per status, `fail-on`). Not published on the Marketplace.
+- Documentation site (VitePress) in `docs/`, its guide pages generated from the README, and a
+  GitHub Pages deployment workflow (Pages itself not enabled).
 - `bench/`: reproducible benchmarks on synthetic 200 and 500 mod packs against an in-memory fake
   Modrinth (`npm run bench`).
 
