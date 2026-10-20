@@ -132,6 +132,12 @@ export function renderTable(result: AnalysisResult, options: TableOptions = {}):
       `Ignored by modshift.config.json: ${result.ignored.map((m) => m.project?.title ?? m.fileName).join(', ')}`,
     );
   }
+  const external = result.mods.filter((m) => m.external && m.external.length > 0);
+  if (external.length > 0) {
+    out.push(
+      `Found on other sources (to verify, not added to packs): ${external.map(modDisplayName).join(', ')}.`,
+    );
+  }
   const sides = sideGroups(result);
   const sideParts = [
     sides.client.length > 0 ? `${sides.client.length} client-only` : '',
