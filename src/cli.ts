@@ -2,9 +2,11 @@
 import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
-import { type CliIo, runAnalyze } from './commands/analyze.js';
+import { type CliIo, runAnalyze, UsageError } from './commands/analyze.js';
 import { runCacheClear, runCacheStats } from './commands/cache.js';
+import { type InteractiveCommandOptions, runInteractive } from './commands/interactive.js';
 import { runMigrate } from './commands/migrate.js';
+import { createInquirerPrompter, PromptCancelledError } from './interactive/prompter.js';
 import { CONFIG_FILE } from './config/config.js';
 import { describeError, formatError } from './errorMessages.js';
 import { ModrinthClient } from './modrinth/client.js';
@@ -21,6 +23,8 @@ const defaultIo: CliIo = {
   setExitCode: (code) => {
     process.exitCode = code;
   },
+  stdinIsTTY: Boolean(process.stdin.isTTY),
+  createPrompter: createInquirerPrompter,
 };
 
 // Construit le programme CLI (exporté pour pouvoir le tester sans lancer de processus).
@@ -42,6 +46,11 @@ export function buildProgram(io: CliIo = defaultIo): Command {
       try {
         await fn(...args);
       } catch (error) {
+        if (error instanceof PromptCancelledError) {
+          io.stderr(`${error.message}\n`);
+          io.setExitCode(130);
+          return;
+        }
         const described = describeError(error);
         if (!described) throw error;
         io.stderr(formatError(described));
@@ -78,6 +87,41 @@ export function buildProgram(io: CliIo = defaultIo): Command {
     .option('--force', 'overwrite the output file if it exists', false)
     .action(guarded((pack: string, options) => runMigrate(pack, options, io)));
 
+  const interactive = async (pack: string | undefined, options: InteractiveCommandOptions) => {
+    if (!io.stdinIsTTY || !io.createPrompter) {
+      throw new UsageError(
+        'the interactive mode needs a terminal. In scripts and CI, use "modshift analyze" and "modshift migrate" (with modshift.config.json to replay saved choices).',
+      );
+    }
+    await runInteractive(pack, options, io, await io.createPrompter());
+  };
+  withCacheOptions(
+    program
+      .command('interactive')
+      .alias('i')
+      .description('Guided migration: choose the target, review each mod, save your choices')
+      .argument('[pack]', '.mrpack file, CurseForge export .zip, or folder of .jar files')
+      .option('--config <file>', `where choices are saved (default: ./${CONFIG_FILE})`),
+  ).action(guarded(interactive));
+  program
+    .option(
+      '-i, --interactive',
+      'start the guided interactive mode (same as "modshift interactive")',
+    )
+    .action(
+      guarded(async (options: { interactive?: boolean }) => {
+        if (!options.interactive) {
+          program.help();
+          return;
+        }
+        await interactive(undefined, {
+          offline: false,
+          cache: true,
+          maxAlternatives: '3',
+        });
+      }),
+    );
+
   const cache = program.command('cache').description('Inspect or clear the local API cache');
   cache
     .command('stats')
@@ -97,17 +141,9 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   return program;
 }
 
-// Options communes à analyze et migrate.
-function withCommonOptions(command: Command): Command {
+// Options d'accès à Modrinth (cache, hors-ligne, alternatives, verbosité).
+function withCacheOptions(command: Command): Command {
   return command
-    .argument('<pack>', '.mrpack file, CurseForge export .zip, or folder of .jar files')
-    .option('--mc <version>', 'target Minecraft version, e.g. 1.21.1 (or "target" in the config)')
-    .option(
-      '--loader <loader>',
-      `target mod loader: ${LOADERS.join(', ')} (or "target" in the config)`,
-    )
-    .option('--config <file>', `configuration file (default: ./${CONFIG_FILE} if present)`)
-    .option('--no-config', `ignore ${CONFIG_FILE}`)
     .option('--offline', 'use only cached API responses (no network)', false)
     .option('--no-cache', 'do not read or write the local API cache')
     .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
@@ -116,8 +152,22 @@ function withCommonOptions(command: Command): Command {
       'how long cached responses stay valid, e.g. 30m, 12h, 7d, 0 (default: $MODSHIFT_CACHE_TTL or 24h)',
     )
     .option('--max-alternatives <n>', 'alternatives suggested per missing mod (0 to disable)', '3')
-    .option('-q, --quiet', 'no progress messages on stderr', false)
     .option('-v, --verbose', 'log every API request, cache hit and retry on stderr', false);
+}
+
+// Options communes à analyze et migrate.
+function withCommonOptions(command: Command): Command {
+  return withCacheOptions(
+    command
+      .argument('<pack>', '.mrpack file, CurseForge export .zip, or folder of .jar files')
+      .option('--mc <version>', 'target Minecraft version, e.g. 1.21.1 (or "target" in the config)')
+      .option(
+        '--loader <loader>',
+        `target mod loader: ${LOADERS.join(', ')} (or "target" in the config)`,
+      )
+      .option('--config <file>', `configuration file (default: ./${CONFIG_FILE} if present)`)
+      .option('--no-config', `ignore ${CONFIG_FILE}`),
+  ).option('-q, --quiet', 'no progress messages on stderr', false);
 }
 
 // Point d'entrée uniquement quand le fichier est exécuté directement

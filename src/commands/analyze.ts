@@ -3,6 +3,7 @@ import { analyzePack } from '../core/engine.js';
 import type { ModrinthApi } from '../core/refs.js';
 import type { AnalysisResult } from '../core/types.js';
 import { loadConfig, type ModShiftConfig } from '../config/config.js';
+import type { Prompter } from '../interactive/prompter.js';
 import { loadPack } from '../input/index.js';
 import { DEFAULT_CACHE_TTL_MS, defaultCacheDir, FileCache } from '../modrinth/cache.js';
 import { formatDuration, parseDuration } from '../duration.js';
@@ -50,6 +51,9 @@ export interface CliIo {
   env?: NodeJS.ProcessEnv;
   // Dossier courant (recherche de modshift.config.json) ; process.cwd() par défaut.
   cwd?: string;
+  // Mode interactif : l'entrée standard est-elle un terminal, et comment poser les questions.
+  stdinIsTTY?: boolean;
+  createPrompter?: () => Promise<Prompter>;
   setExitCode: (code: number) => void;
 }
 
