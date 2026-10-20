@@ -334,6 +334,16 @@ function showDetail(mod) {
   if (mod.targetVersion) rows.push(['Target loaders', mod.targetVersion.loaders.join(', ')]);
   if (mod.fallback)
     rows.push(['Fallback', `${mod.fallback.loader} version: fallback compatibility, to test`]);
+  if (mod.loaderChange)
+    rows.push([
+      'Loader',
+      `same project, ${mod.loaderChange.from} → ${mod.loaderChange.to} version`,
+    ]);
+  if (mod.compatLayer)
+    rows.push([
+      'Compatibility layer',
+      `${mod.compatLayer.runs} version ${mod.compatLayer.version.versionNumber} through ${mod.compatLayer.name}: experimental, not guaranteed, not added to the pack. Requires ${mod.compatLayer.requires.map((r) => r.title).join(', ')}.`,
+    ]);
   if (mod.reason) rows.push(['Why', mod.reason]);
   const body = [el('dl', {}, ...rows.flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}, v)]))];
   if (mod.project) {
