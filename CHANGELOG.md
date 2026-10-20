@@ -6,47 +6,9 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
-### Fixed
+## [0.1.0] - 2026-10-20
 
-- `migrate` (and the config and web UI) now reject a loader version that is not a version, such
-  as a `<version>` or `X.Y.Z` placeholder copied from an example (a version must contain a
-  digit), instead of writing an invalid pack.
-- Unrelated alternatives: a popular mod sharing only a broad category (e.g. Xaero's Minimap for
-  CIT Resewn) is no longer suggested; a candidate needs a similar name or two shared keywords
-  (one generic word such as "screen" is not enough).
-- A dependency published only for another loader (e.g. KotlinLangForge, NeoForge only, declared
-  by Zoomify's single Fabric + NeoForge file) is no longer reported as missing for the target;
-  a warning explains why it was ignored.
-
-### Added
-
-- Cross-loader migration (e.g. Forge → Fabric): multi-loader mods keep the same Modrinth project
-  and the switch is reported explicitly.
-- Alternatives are ranked by relevance (shared categories, similar name, description keywords,
-  popularity), with a score and an explanation for each suggestion in every report.
-- Compatibility layer hints (Sinytra Connector, Kilt), limited to the combinations their authors
-  document and marked "experimental, not guaranteed". They are never added to the migrated pack.
-- Client/server detection from Modrinth metadata (`environment`, else `client_side` /
-  `server_side`), `--side client|server|both` and `target.side` in the config. Client-only or
-  server-only mods are listed, ambiguous ones flagged, and `.mrpack` `env` filled from Modrinth
-  when the source pack has none.
-- Concurrent Modrinth requests (`--concurrency <n>`, 1–16, default 4) within the client's rate
-  limit, with identical parallel requests sent only once. Reports stay identical whatever the
-  concurrency.
-- Mod source plugins: a `ModSource` contract and a registry (Modrinth primary, CurseForge,
-  GitHub Releases), a `sources` config key, a reusable contract test suite and
-  `docs/plugins.md`. Files found on other sources are reported "to verify" and never added to
-  migrated packs.
-- "ModShift Check" GitHub Action in `action/` (job summary, one updated pull request comment,
-  outputs per status, `fail-on`). Not published on the Marketplace.
-- Documentation site (VitePress) in `docs/`, its guide pages generated from the README, and a
-  GitHub Pages deployment workflow (Pages itself not enabled).
-- `bench/`: reproducible benchmarks on synthetic 200 and 500 mod packs against an in-memory fake
-  Modrinth (`npm run bench`).
-
-## [0.1.0]
-
-First public version (not yet published to npm).
+First public version.
 
 ### Added
 
@@ -80,6 +42,29 @@ First public version (not yet published to npm).
 - `modshift ui`: local web interface on 127.0.0.1 (drag and drop, sortable and filterable results,
   per-mod details, downloads, light/dark theme).
 - `docs/cli.md`: command reference generated from the CLI help.
+- Cross-loader migration (e.g. Forge → Fabric): multi-loader mods keep the same Modrinth project
+  and the switch is reported explicitly.
+- Alternatives are ranked by relevance (shared categories, similar name, description keywords,
+  popularity), with a score and an explanation for each suggestion in every report.
+- Compatibility layer hints (Sinytra Connector, Kilt), limited to the combinations their authors
+  document and marked "experimental, not guaranteed". They are never added to the migrated pack.
+- Client/server detection from Modrinth metadata (`environment`, else `client_side` /
+  `server_side`), `--side client|server|both` and `target.side` in the config. Client-only or
+  server-only mods are listed, ambiguous ones flagged, and `.mrpack` `env` filled from Modrinth
+  when the source pack has none.
+- Concurrent Modrinth requests (`--concurrency <n>`, 1–16, default 4) within the client's rate
+  limit, with identical parallel requests sent only once. Reports stay identical whatever the
+  concurrency.
+- Mod source plugins: a `ModSource` contract and a registry (Modrinth primary, CurseForge,
+  GitHub Releases), a `sources` config key, a reusable contract test suite and
+  `docs/plugins.md`. Files found on other sources are reported "to verify" and never added to
+  migrated packs.
+- "ModShift Check" GitHub Action in `action/` (job summary, one updated pull request comment,
+  outputs per status, `fail-on`). Not published on the Marketplace.
+- Documentation site (VitePress) in `docs/`, its guide pages generated from the README, and a
+  GitHub Pages deployment workflow (Pages itself not enabled).
+- `bench/`: reproducible benchmarks on synthetic 200 and 500 mod packs against an in-memory fake
+  Modrinth (`npm run bench`).
 
 ### Security
 
@@ -91,3 +76,20 @@ First public version (not yet published to npm).
 ### Changed
 
 - Node.js requirement: `^20.17.0 || >=22.13.0` (needed by the prompt library).
+
+### Fixed
+
+Found while testing against the real Modrinth API (Fabulously Optimized 1.21.1 → 26.3):
+
+- `migrate` (and the config and web UI) now reject a loader version that is not a version, such
+  as a `<version>` or `X.Y.Z` placeholder copied from an example (a version must contain a
+  digit), instead of writing an invalid pack.
+- Unrelated alternatives: a popular mod sharing only a broad category (e.g. Xaero's Minimap for
+  CIT Resewn) is no longer suggested; a candidate needs a similar name or two shared keywords
+  (one generic word such as "screen" is not enough).
+- A dependency published only for another loader (e.g. KotlinLangForge, NeoForge only, declared
+  by Zoomify's single Fabric + NeoForge file) is no longer reported as missing for the target;
+  a warning explains why it was ignored.
+
+[Unreleased]: https://github.com/NeyorDEV/ModShift/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/NeyorDEV/ModShift/releases/tag/v0.1.0
