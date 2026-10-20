@@ -26,7 +26,8 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
 - [Commands](#commands) · [Interactive mode](#interactive-mode) · [Web interface](#web-interface)
 - [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)
 - [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
-- [Changing loader](#changing-loader-eg-forge--fabric) · [Example output](#example-output)
+- [Changing loader](#changing-loader-eg-forge--fabric) · [Client and server](#client-and-server)
+- [Example output](#example-output)
 - [How it works](#how-it-works) · [FAQ](#faq)
 - [Limitations](#limitations) · [Programmatic API](#programmatic-api)
 - [Contributing](#contributing) · [Security](#security) · [License](#license)
@@ -160,6 +161,7 @@ The web interface uses the same cache and options as the CLI (`--offline`, `--ca
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | `--mc <version>`         | Target Minecraft version (e.g. `1.21.1`). Required unless set in the config.                                         |
 | `--loader <loader>`      | Target loader, e.g. `neoforge`, `fabric`, `paper` ([full list](docs/loaders.md)). Required unless set in the config. |
+| `--side <side>`          | Installation the pack is for: `client`, `server` or `both` (default). See [Client and server](#client-and-server).   |
 | `--config <file>`        | Configuration file (default: `./modshift.config.json` if it exists).                                                 |
 | `--no-config`            | Ignore `modshift.config.json`.                                                                                       |
 | `--offline`              | Only use cached API responses; never touch the network.                                                              |
@@ -217,7 +219,8 @@ network failure, offline cache miss…). Every error comes with a `hint:` line t
 }
 ```
 
-- `target`: defaults for `--mc`, `--loader` and `--loader-version`. Command-line options win.
+- `target`: defaults for `--mc`, `--loader`, `--loader-version` and `--side` (`side`).
+  Command-line options win.
 - `ignore`: mods left out entirely. Entries are file names (`*` wildcard), Modrinth slugs or
   project ids.
 - `exclude`: mods that are analysed and reported, but left out of migrated packs (with the
@@ -291,6 +294,26 @@ For each mod, in this order:
    break worlds. Sources: [`docs/loaders.md`](docs/loaders.md#compatibility-layers).
 
 4. Otherwise the mod is **not found** and excluded, with the reason in `MIGRATION_REPORT.md`.
+
+## Client and server
+
+ModShift reads each retained mod's side from Modrinth: the version's `environment` field (for
+example `client_only` or `server_only_client_optional`), or the older project fields
+`client_side` / `server_side` when it is missing. The mapping between the two is the one Modrinth
+itself uses for its v2 API.
+
+- Reports list **client-only**, **server-only** and **side unknown or ambiguous** mods (missing or
+  contradictory metadata). Check the ambiguous ones yourself.
+- `--side server` builds a dedicated-server pack: client-only mods (and dependencies only they
+  needed) are left out, with the reason in `MIGRATION_REPORT.md`. `--side client` does the reverse.
+  Mods with an unknown side are **kept**, with a warning. The default, `both`, filters nothing.
+- When the source pack gives no `env` for a file, the migrated `.mrpack` gets the side from
+  Modrinth (never guessed when it is unknown).
+
+```bash
+modshift migrate pack.mrpack --mc 1.21.1 --loader fabric --loader-version 0.16.5 \
+  --side server --out server.mrpack
+```
 
 ## Example output
 
