@@ -35,8 +35,8 @@ packs (the `.mrpack` format only allows Modrinth and GitHub download domains any
 is used, to identify mods. This avoids redistributing files whose authors disabled third-party
 distribution (`downloadUrl: null` / `allowModDistribution: false`).
 
-Read the CurseForge [third-party API terms](https://support.curseforge.com/en/support/solutions/articles/9000207405)
-before using your key in automation.
+Read the API terms shown in the CurseForge for Studios console (where the key is created) before
+using your key in automation.
 
 ## How this was verified
 
