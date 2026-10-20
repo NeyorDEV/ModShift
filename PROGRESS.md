@@ -90,7 +90,43 @@ Decisions:
 - Requests are sent one at a time (the limiter serialises them). Simple and well within the rate
   limit; parallelism can be added later if analysis feels slow.
 
+## Phase 4 — Compatibility engine & dependencies ✅
+
+Done (`src/core/`):
+
+- `analyzePack(pack, target, api)` runs these steps:
+  1. identify files by hash (`POST /version_files`, SHA-1, or SHA-512 when only that is known);
+  2. fallback for local jars unknown to Modrinth: look up a project whose slug equals the jar's
+     mod id (also trying `_` → `-`). Marked `identification: "mod-id"` and "unverified";
+  3. fetch target versions per project (`loaders` + `game_versions` filters);
+  4. status per mod: **compatible** (the current file already supports the target),
+     **update-found**, **alternative-suggested**, or **not-found**, each with a reason;
+  5. resolve dependencies on the final list (compatible + updated mods).
+- Best version choice: native loader first (Quilt before Fabric on a Quilt target), then
+  release > beta > alpha, then most recent; draft/unlisted versions are skipped.
+- Alternatives (max 3 by default, `maxAlternatives: 0` disables them). First a name search
+  (catches ports and forks), keeping only hits that share a significant word with the original
+  title. Then a search in the same Modrinth categories, sorted by downloads. Both are filtered on
+  the target loader, Minecraft version and `project_type:mod`. Projects already in the pack are
+  excluded. Every alternative carries `note: "suggestion, to verify"`.
+- Dependencies: required dependencies (by `project_id`, or `version_id` resolved through
+  `GET /versions`) are added recursively in a target-compatible version
+  (`dependencies.added`, with `requiredBy`). Those without such a version are listed in
+  `dependencies.missing`. `incompatible` declarations between two projects of the final list are
+  reported in `conflicts`. `optional` and `embedded` dependencies are ignored.
+- Tests run the real `ModrinthClient` against an in-memory fake Modrinth
+  (`test/helpers/fakeModrinth.ts`) driven by `test/fixtures/modrinth/catalog.json` (fake data).
+
+Decisions:
+
+- Quilt targets accept Fabric versions. Forge and NeoForge are kept strictly separate, even though
+  NeoForge 1.20.1 could load some Forge mods; that case is rare and error-prone.
+- A mod whose current file already supports the target stays **compatible** even if a newer
+  version exists (minimal change); upgrading everything can be a later option.
+- Alternatives are not used for dependency resolution: the user must pick them first.
+- Dependencies declared only in jar metadata (unidentified jars) are not resolved; Modrinth
+  dependency data is the source of truth.
+
 ## Remaining
 
-- Phase 4: compatibility engine & dependency resolution.
 - Phase 5: `analyze` command and reports.
