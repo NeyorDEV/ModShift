@@ -1,4 +1,4 @@
-import type { FileHashes, Loader, ModEntry, ModPack } from '../types.js';
+import type { FileHashes, Loader, ModEntry, ModPack, PackIndexFile } from '../types.js';
 import { InputError } from './errors.js';
 import { modEntryFromJar } from './jar.js';
 import { MRPACK_LOADER_KEYS } from './loaderIds.js';
@@ -52,6 +52,7 @@ export function parseMrpack(data: Uint8Array, label = 'mrpack'): ModPack {
 
   const warnings: string[] = [];
   const mods: ModEntry[] = [];
+  const indexFiles: PackIndexFile[] = [];
 
   for (const rawFile of index.files) {
     const file = asRecord(rawFile);
@@ -64,26 +65,35 @@ export function parseMrpack(data: Uint8Array, label = 'mrpack'): ModPack {
       warnings.push(`${label}: ignoring unsafe path "${path}"`);
       continue;
     }
+    const rawHashes = asRecord(file.hashes);
+    const env = asRecord(file.env);
+    const hashes: FileHashes = {
+      sha1: asString(rawHashes?.sha1),
+      sha512: asString(rawHashes?.sha512),
+    };
+    const downloads = Array.isArray(file.downloads)
+      ? file.downloads.filter((d): d is string => typeof d === 'string')
+      : [];
+    const fileSize = typeof file.fileSize === 'number' ? file.fileSize : undefined;
+    const fileEnv = env
+      ? { client: asString(env.client), server: asString(env.server) }
+      : undefined;
+
     if (!isModJarPath(path)) {
+      // Fichier non-mod (resource pack, shader…) : conservé tel quel pour la migration.
       otherFiles.push(path);
+      indexFiles.push({ path, hashes, downloads, fileSize, env: fileEnv });
       continue;
     }
-    const hashes = asRecord(file.hashes);
-    const env = asRecord(file.env);
     mods.push({
       fileName: path.slice('mods/'.length),
       path,
       origin: 'index',
-      hashes: {
-        sha1: asString(hashes?.sha1),
-        sha512: asString(hashes?.sha512),
-      } satisfies FileHashes,
+      hashes,
       metadata: [],
-      downloads: Array.isArray(file.downloads)
-        ? file.downloads.filter((d): d is string => typeof d === 'string')
-        : undefined,
-      fileSize: typeof file.fileSize === 'number' ? file.fileSize : undefined,
-      env: env ? { client: asString(env.client), server: asString(env.server) } : undefined,
+      downloads,
+      fileSize,
+      env: fileEnv,
     });
   }
 
@@ -116,6 +126,7 @@ export function parseMrpack(data: Uint8Array, label = 'mrpack'): ModPack {
     loaderVersion,
     mods,
     otherFiles: otherFiles.sort(),
+    indexFiles,
     warnings,
   };
 }

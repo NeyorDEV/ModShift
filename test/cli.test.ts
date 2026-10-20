@@ -3,54 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildProgram } from '../src/cli.js';
-import type { CliIo } from '../src/commands/analyze.js';
 import { parseTarget } from '../src/commands/analyze.js';
-import { ModrinthClient } from '../src/modrinth/client.js';
 import { MODSHIFT_VERSION } from '../src/version.js';
-import { fakeModrinthHandler, loadCatalog } from './helpers/fakeModrinth.js';
+import { createIo, run } from './helpers/cli.js';
 import { packFixture } from './helpers/fixtures.js';
-import { createMockFetch } from './helpers/mockFetch.js';
-
-interface TestIo extends CliIo {
-  out: string;
-  err: string;
-  exitCode: number | undefined;
-  requests: number;
-}
-
-// IO de test : sorties capturées, client Modrinth branché sur le faux serveur.
-function createIo(options: { networkDown?: boolean } = {}): TestIo {
-  const mock = createMockFetch((req) => {
-    if (options.networkDown) throw new TypeError('fetch failed');
-    return fakeModrinthHandler(loadCatalog())(req);
-  });
-  const io: TestIo = {
-    out: '',
-    err: '',
-    exitCode: undefined,
-    get requests() {
-      return mock.calls.length;
-    },
-    isTTY: false,
-    stdout: (text) => {
-      io.out += text;
-    },
-    stderr: (text) => {
-      io.err += text;
-    },
-    setExitCode: (code) => {
-      io.exitCode = code;
-    },
-    createApi: (clientOptions) =>
-      new ModrinthClient({
-        ...clientOptions,
-        fetch: mock.fetch,
-        sleep: async () => undefined,
-        maxRetries: 1,
-      }),
-  };
-  return io;
-}
 
 let dir: string;
 let packPath: string;
@@ -62,10 +18,6 @@ beforeEach(async () => {
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true });
 });
-
-async function run(io: CliIo, ...args: string[]): Promise<void> {
-  await buildProgram(io).parseAsync(args, { from: 'user' });
-}
 
 describe('cli', () => {
   it('exposes name and version', () => {

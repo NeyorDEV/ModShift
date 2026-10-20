@@ -52,6 +52,14 @@ export interface Alternative {
   note: typeof ALTERNATIVE_NOTE;
 }
 
+// Alternative retenue automatiquement (option --include-alternatives) : toujours une suggestion.
+export interface AdoptedAlternative {
+  project: ProjectRef;
+  version: VersionRef;
+  reason: Alternative['reason'];
+  note: typeof ALTERNATIVE_NOTE;
+}
+
 export interface ModAnalysis {
   fileName: string;
   path: string;
@@ -62,6 +70,7 @@ export interface ModAnalysis {
   currentVersion?: VersionRef;
   targetVersion?: VersionRef;
   alternatives: Alternative[];
+  adoptedAlternative?: AdoptedAlternative;
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }

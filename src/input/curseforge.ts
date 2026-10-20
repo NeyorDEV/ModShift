@@ -85,6 +85,7 @@ export function parseCurseForgeZip(data: Uint8Array, label = 'curseforge zip'): 
 
   return {
     source: 'curseforge',
+    overridesDir: overridesDir.slice(0, -1),
     name: asString(manifest.name),
     version: asString(manifest.version),
     minecraftVersion: asString(minecraft.version),

@@ -1,0 +1,47 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`migration report > lists included and excluded mods with alternatives and warnings 1`] = `
+"# Migration report: Fixture Fabric Pack
+
+- **Source:** 1.20.1 fabric (mrpack)
+- **Target:** Minecraft 1.21.1, fabric 0.16.5 (from --loader-version)
+- **Generated pack:** \`out.mrpack\`
+- **Mods:** 5 included, 3 excluded from 6 analysed
+
+> **1 alternative(s) were included automatically** (\`--include-alternatives\`). They are **suggestions, to verify**: they are not equivalent to the mods they replace, and worlds or configs may not carry over.
+
+## Included mods
+
+| Mod | Version | Status | Origin |
+| --- | --- | --- | --- |
+| Sodium | 0.6.0 | updated | replaces sodium-fabric-0.5.8.jar |
+| Fabric API | 0.104.0 | updated | replaces fabric-api-0.92.0.jar |
+| Mod Menu | 7.2.2 | kept (already compatible) | same version as the source pack |
+| Xaero's Minimap | 24.5.0 | alternative — suggestion, to verify | replaces old-minimap-1.0.jar |
+| Cloth Config API | 15.0.0 | added dependency | required by Sodium |
+
+## Excluded mods
+
+These mods have no compatible version and are **not** in the generated pack.
+
+| Mod | File | Reason | Suggested alternatives (to verify) |
+| --- | --- | --- | --- |
+| Old Minimap | old-minimap-1.0.jar | No version for Minecraft 1.21.1 / fabric. Alternatives are suggestions, to verify. | [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap), [Just Enough Items](https://modrinth.com/mod/jei), [JourneyMap](https://modrinth.com/mod/journeymap) **Included: Xaero's Minimap.** |
+| mystery-mod.jar | mystery-mod.jar | Unknown file hash on Modrinth. | — |
+| local-mod.jar | local-mod.jar | Unknown file hash on Modrinth and no Modrinth project matches mod id "localmod". | — |
+
+## Missing dependencies
+
+Required by included mods but not available for the target: those mods may not load.
+
+- **Text Lib** (required by Mod Menu): No version for Minecraft 1.21.1 / fabric
+
+## Other files
+
+- \`resourcepacks/faithful.zip\`: kept unchanged (not checked for the target)
+
+## Warnings
+
+- fixture.mrpack: ignoring unsafe path "../escape.jar"
+"
+`;

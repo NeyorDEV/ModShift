@@ -55,6 +55,15 @@ export interface ModEntry {
   env?: { client?: string; server?: string };
 }
 
+// Entrée brute de modrinth.index.json pour un fichier non-mod (resource pack, shader…).
+export interface PackIndexFile {
+  path: string;
+  hashes: FileHashes;
+  downloads: string[];
+  fileSize?: number;
+  env?: { client?: string; server?: string };
+}
+
 export interface ModPack {
   source: PackSource;
   name?: string;
@@ -65,6 +74,10 @@ export interface ModPack {
   mods: ModEntry[];
   // Fichiers non-mods (resource packs, shaders, configs…) conservés tels quels.
   otherFiles: string[];
+  // Fichiers non-mods listés dans l'index d'un .mrpack (repris tels quels par `migrate`).
+  indexFiles?: PackIndexFile[];
+  // Dossier d'overrides déclaré par un manifest CurseForge (« overrides » par défaut).
+  overridesDir?: string;
   warnings: string[];
 }
 

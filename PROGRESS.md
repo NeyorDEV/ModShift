@@ -158,21 +158,96 @@ Decisions:
   never hides it.
 - Colors use raw ANSI codes (no `chalk`/`picocolors` dependency).
 
-## Remaining (not started, per the phase plan)
+## Phase 6 — `migrate` command ✅
 
-- **Phase 6, `migrate`:** build a new `.mrpack` from the analysis (compatible + updated mods +
-  added dependencies, `dependencies` set to the target loader/version, overrides copied, user
-  choice for alternatives).
-- Possible follow-ups:
-  - analyse resource packs and shaders (Modrinth loaders `minecraft`, `iris`, `optifine`);
-  - optional parallel requests;
-  - a `--fail-on` exit-code policy;
-  - a `--upgrade-all` option to update mods even when the current file is already compatible;
-  - CurseForge API support (needs an API key provided by the user, never stored in the repo).
-- Not verified against the live Modrinth API from this environment (network blocked). Request and
-  response shapes follow the official OpenAPI spec; a manual run against the real API is
-  recommended.
+Done:
+
+- `modshift migrate <pack> --mc <v> --loader <l> --out <file.mrpack>` with `--loader-version`,
+  `--include-alternatives`, `--dry-run`, `--force` and the shared options (`--offline`,
+  `--no-cache`, `--cache-dir`, `--max-alternatives`, `--quiet`).
+- `src/migrate/`:
+  - `mrpackSpec.ts`: format rules and validators (`validateMrpackIndex`, `validateMrpackArchive`);
+  - `plan.ts`: `buildMigrationPlan` (pure) turns an `AnalysisResult` into the new index plus
+    included and excluded mods; `resolveLoaderVersion`;
+  - `writer.ts`: `collectOverrides` (copies `overrides/`, `client-overrides/` and
+    `server-overrides/`; CurseForge overrides become `overrides/`; mod jars are never copied) and
+    `buildMrpackArchive`, which re-validates the archive and throws `InvalidMrpackError`;
+  - `report.ts`: `MIGRATION_REPORT.md` and the console plan.
+- The pack contains:
+  - compatible mods (same file) and updated mods, with their Modrinth file;
+  - added dependencies;
+  - adopted alternatives (only with `--include-alternatives`, flagged "suggestion, to verify");
+  - non-mod index files from the source `.mrpack` (resource packs…), kept unchanged when they
+    still satisfy the format;
+  - overrides.
+- Excluded mods (no compatible version) are listed in `MIGRATION_REPORT.md` with their reason and
+  alternatives. The report is written next to `--out`.
+- Engine: new `adoptAlternatives` option. It takes the first alternative (in relevance order) that
+  has a target version, adds it to dependency resolution, and records it in
+  `ModAnalysis.adoptedAlternative`. The mod's status stays `alternative-suggested`.
+- Input: `ModPack.indexFiles` (raw non-mod index entries) and `ModPack.overridesDir`
+  (CurseForge).
+
+Format rules (see `docs/mrpack-format.md`, with sources):
+
+- The public docs (`support.modrinth.com`, `docs.modrinth.com`) are blocked here, so the rules
+  were read from Modrinth's own source code on raw.githubusercontent.com: the labrinth validator,
+  `PackFormat`, `SafeRelativeUtf8UnixPathBuf` and `WHITELISTED_MODPACK_DOMAINS`.
+- `sha1` **and** `sha512` are mandatory for every file. Allowed download domains:
+  `cdn.modrinth.com`, `github.com`, `raw.githubusercontent.com`. `fileSize` is a u32. Paths are
+  strict (no `..`, backslash, drive prefix or Windows device names). The installer requires
+  `dependencies.minecraft`.
+
+Decisions:
+
+- **Loader version:** the official loader metadata services (meta.fabricmc.net, meta.quiltmc.org,
+  maven.neoforged.net, files.minecraftforge.net) are blocked here, so their formats cannot be
+  verified. `migrate` therefore needs `--loader-version`, except when the source pack already uses
+  the same loader and Minecraft version (its version is reused). The check runs before any API
+  request, and the error message points to the loader's website. `--dry-run` only warns.
+- Mods that are not identified or have no compatible version are never copied, even when they
+  were local jars in `overrides/mods/`: an old jar would probably crash the game.
+- A Modrinth file whose URL is not on an allowed domain (theoretical) is excluded with a warning,
+  never written.
+- The pack is always built and validated, even in `--dry-run`, so format problems show up early.
+- `--out` must end with `.mrpack`, must differ from the input, and is never overwritten without
+  `--force`.
+- Generated metadata: `name` = `<source name> (<mc> <loader>)`; `versionId` =
+  `<source version>+<loader>-<mc>`; `summary` mentions ModShift and the source/target.
+- `MIGRATION_REPORT.md` has a fixed name (as requested): two migrations into the same folder
+  overwrite each other's report.
+
+## Next steps
+
+Work plan agreed with the user (phases 7 → 16, in order; push after every phase; the PR stays a
+draft until the end):
+
+- **Phase 7, E2E tests.** Planned:
+  - `test/e2e/` scenarios on fixtures: Forge 1.20.1 → NeoForge 1.21.1 (needs a new Forge
+    `.mrpack` fixture plus Forge/NeoForge versions in `test/fixtures/modrinth/catalog.json`, which
+    is generated by a script, see below), Fabric → Quilt, a pack with unknown mods, and a pack
+    with a missing dependency;
+  - JSON Schema `schemas/modrinth.index.schema.json` (already referenced by
+    `docs/mrpack-format.md`) validated with `ajv` (dev dependency only), plus a hash-coherence
+    check against the fake catalog;
+  - coverage with `@vitest/coverage-v8` (≥ 80 % on `src/core` and `src/input`).
+- **Phase 8, robustness:** actionable error messages (network, invalid pack, rate limit, mod not
+  identifiable), a progress bar and `--verbose`, and conflict explanations in the reports.
+- **Phases 9–16** (user request, second message): cache commands and TTL, CurseForge API
+  (`CURSEFORGE_API_KEY` only), `modshift.config.json`, security review (zip-slip, size limits),
+  npm/release packaging, loader registry and fallback loaders, interactive mode, local web UI,
+  and final docs.
+
+Pitfalls:
+
+- `test/fixtures/modrinth/catalog.json` was generated by a throw-away script (not committed). Edit
+  the JSON directly; keep IDs and hashes fake and hashes as hex of the right length (40 / 128), or
+  the `.mrpack` validator rejects them.
+- npm 10 crashes when resolving new dev dependencies from scratch (`edgesOut`). Use
+  `npx -y npm@11 install -D <pkg>`; `npm ci` with npm 10 then works.
+- Prettier formats `docs/` and `PROGRESS.md`: run `npx prettier --write .` before committing.
+- Not verified against the live Modrinth API (network blocked here): do a manual run.
 
 ## Known issues
 
-- None blocking. No test needed more than one fix attempt.
+- None blocking. No problem needed more than one fix attempt.

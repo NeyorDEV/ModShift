@@ -4,11 +4,22 @@ import { findAlternatives } from './alternatives.js';
 import { resolveDependencies, type SelectedVersion } from './dependencies.js';
 import { acceptedLoaders, pickBestVersion, versionSupportsTarget } from './loaders.js';
 import { type ModrinthApi, toProjectRef, toVersionRef } from './refs.js';
-import { type AnalysisResult, type ModAnalysis, MOD_STATUSES, type ModStatus } from './types.js';
+import {
+  type AdoptedAlternative,
+  ALTERNATIVE_NOTE,
+  type Alternative,
+  type AnalysisResult,
+  type ModAnalysis,
+  MOD_STATUSES,
+  type ModStatus,
+} from './types.js';
 
 export interface AnalyzeOptions {
   // Nombre maximal d'alternatives proposées par mod introuvable (0 pour désactiver).
   maxAlternatives?: number;
+  // Adopte la meilleure alternative (la première ayant une version pour la cible) :
+  // elle entre dans la liste finale et ses dépendances sont résolues. Reste une suggestion.
+  adoptAlternatives?: boolean;
   onProgress?: (message: string) => void;
 }
 
@@ -177,10 +188,14 @@ export async function analyzePack(
       excludeProjectIds: packProjectIds,
     });
     const noVersion = `${idNote}No version for Minecraft ${target.minecraftVersion} / ${target.loader}.`;
+    const adopted = options.adoptAlternatives
+      ? await adoptAlternative(api, alternatives, target, selected)
+      : undefined;
     mods.push({
       ...common,
       status: alternatives.length > 0 ? 'alternative-suggested' : 'not-found',
       alternatives,
+      adoptedAlternative: adopted,
       reason:
         alternatives.length > 0
           ? `${noVersion} Alternatives are suggestions, to verify.`
@@ -212,6 +227,31 @@ export async function analyzePack(
     otherFilesCount: pack.otherFiles.length,
     warnings,
   };
+}
+
+// Retient la première alternative (ordre de pertinence) qui a une version pour la cible.
+async function adoptAlternative(
+  api: ModrinthApi,
+  alternatives: Alternative[],
+  target: MigrationTarget,
+  selected: Map<string, SelectedVersion>,
+): Promise<AdoptedAlternative | undefined> {
+  for (const alternative of alternatives) {
+    const versions = await api.getProjectVersions(alternative.project.id, {
+      loaders: acceptedLoaders(target.loader),
+      gameVersions: [target.minecraftVersion],
+    });
+    const best = pickBestVersion(versions, target);
+    if (!best) continue;
+    selected.set(alternative.project.id, { project: alternative.project, version: best });
+    return {
+      project: alternative.project,
+      version: toVersionRef(best),
+      reason: alternative.reason,
+      note: ALTERNATIVE_NOTE,
+    };
+  }
+  return undefined;
 }
 
 function unidentifiedReason(entry: ModEntry): string {

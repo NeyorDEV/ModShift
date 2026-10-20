@@ -3,7 +3,9 @@ import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
 import { type CliIo, runAnalyze, UsageError } from './commands/analyze.js';
+import { runMigrate } from './commands/migrate.js';
 import { InputError } from './input/errors.js';
+import { InvalidMrpackError } from './migrate/writer.js';
 import { ModrinthClient } from './modrinth/client.js';
 import {
   ModrinthApiError,
@@ -28,6 +30,7 @@ function isKnownError(error: unknown): error is Error {
   return (
     error instanceof UsageError ||
     error instanceof InputError ||
+    error instanceof InvalidMrpackError ||
     error instanceof OfflineCacheMissError ||
     error instanceof ModrinthNetworkError ||
     error instanceof ModrinthApiError
@@ -46,31 +49,62 @@ export function buildProgram(io: CliIo = defaultIo): Command {
       writeErr: (text) => io.stderr(text),
     });
 
-  program
-    .command('analyze')
-    .description('Check, mod by mod, whether a modpack can move to a target version/loader')
-    .argument('<pack>', '.mrpack file, CurseForge export .zip, or folder of .jar files')
-    .requiredOption('--mc <version>', 'target Minecraft version (e.g. 1.21.1)')
-    .requiredOption('--loader <loader>', `target mod loader (${LOADERS.join(', ')})`)
-    .option('-f, --format <format>', 'report format: table, json or markdown', 'table')
-    .option('-o, --output <file>', 'write the report to a file instead of stdout')
-    .option('--offline', 'use only cached API responses (no network)', false)
-    .option('--no-cache', 'do not read or write the local API cache')
-    .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
-    .option('--max-alternatives <n>', 'alternatives suggested per missing mod (0 to disable)', '3')
-    .option('-q, --quiet', 'no progress messages on stderr', false)
-    .option('--no-color', 'disable colors in the table report')
-    .action(async (pack: string, options) => {
+  // Exécute une commande en affichant les erreurs attendues sans pile d'appels.
+  const guarded =
+    <A extends unknown[]>(fn: (...args: A) => Promise<unknown>) =>
+    async (...args: A) => {
       try {
-        await runAnalyze(pack, options, io);
+        await fn(...args);
       } catch (error) {
         if (!isKnownError(error)) throw error;
         io.stderr(`error: ${error.message}\n`);
         io.setExitCode(1);
       }
-    });
+    };
+
+  withCommonOptions(
+    program
+      .command('analyze')
+      .description('Check, mod by mod, whether a modpack can move to a target version/loader'),
+  )
+    .option('-f, --format <format>', 'report format: table, json or markdown', 'table')
+    .option('-o, --output <file>', 'write the report to a file instead of stdout')
+    .option('--no-color', 'disable colors in the table report')
+    .action(guarded((pack: string, options) => runAnalyze(pack, options, io)));
+
+  withCommonOptions(
+    program
+      .command('migrate')
+      .description('Build a new .mrpack for the target, with a MIGRATION_REPORT.md next to it'),
+  )
+    .requiredOption('--out <file>', 'output .mrpack file')
+    .option(
+      '--loader-version <version>',
+      'target loader version (required unless the source pack uses the same loader and Minecraft version)',
+    )
+    .option(
+      '--include-alternatives',
+      'include the best alternative for mods without a compatible version (suggestions, to verify)',
+      false,
+    )
+    .option('--dry-run', 'show what would be done without writing any file', false)
+    .option('--force', 'overwrite the output file if it exists', false)
+    .action(guarded((pack: string, options) => runMigrate(pack, options, io)));
 
   return program;
+}
+
+// Options communes à analyze et migrate.
+function withCommonOptions(command: Command): Command {
+  return command
+    .argument('<pack>', '.mrpack file, CurseForge export .zip, or folder of .jar files')
+    .requiredOption('--mc <version>', 'target Minecraft version (e.g. 1.21.1)')
+    .requiredOption('--loader <loader>', `target mod loader (${LOADERS.join(', ')})`)
+    .option('--offline', 'use only cached API responses (no network)', false)
+    .option('--no-cache', 'do not read or write the local API cache')
+    .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
+    .option('--max-alternatives <n>', 'alternatives suggested per missing mod (0 to disable)', '3')
+    .option('-q, --quiet', 'no progress messages on stderr', false);
 }
 
 // Point d'entrée uniquement quand le fichier est exécuté directement

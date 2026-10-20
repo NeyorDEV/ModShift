@@ -63,7 +63,7 @@ function parseFormat(format: string): ReportFormat {
   return alias as ReportFormat;
 }
 
-function parseMaxAlternatives(value: string): number {
+export function parseMaxAlternatives(value: string): number {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 0 || n > 20) {
     throw new UsageError(
