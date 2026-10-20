@@ -749,12 +749,26 @@ Done (branch `docs/vitepress-site`):
   (manual action).
 - README / CONTRIBUTING / CHANGELOG updated.
 
+## Real-world test and fixes ✅
+
+On 2026-10-20 the maintainer ran ModShift against the **real Modrinth API**: Fabulously Optimized
+6.5.0 (48 mods, Fabric 1.21.1) analysed and migrated to Minecraft **26.3** (new year-based
+numbering), Fabric Loader 0.19.5. The migrated `.mrpack` imported in a launcher and the world
+started. The run found four bugs, each fixed in its own PR:
+
+- NeyorDEV/ModShift#17: unrelated alternatives (Xaero's Minimap for CIT Resewn…) because a broad
+  category plus popularity was enough; a candidate now needs a similar name or a shared keyword;
+- NeyorDEV/ModShift#18: KotlinLangForge reported missing for Fabric (declared by Zoomify's single
+  Fabric + NeoForge file); now a warning;
+- NeyorDEV/ModShift#19: one generic shared keyword ("screen") still enough; two are now required;
+- NeyorDEV/ModShift#20 and NeyorDEV/ModShift#21: placeholders (`<version>`, `X.Y.Z`) accepted as
+  loader versions; the format is now checked and must contain a digit.
+
 ## Known limitations
 
-- **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
-  loader metadata services are blocked from the development environment. Contracts were checked
-  against Modrinth's OpenAPI spec and source code, and against packwiz and Prism Launcher. A
-  manual run with real packs is needed before a release.
+- **Live APIs:** the real Modrinth API was tested by the maintainer on one Fabric pack (see
+  above). CurseForge (with a real key), GitHub Releases, Forge/NeoForge packs and the GitHub
+  Action have still not been run against the real services.
 - `migrate` needs a loader version (`--loader-version` or `target.loaderVersion`), except when the
   source pack already uses the same loader and Minecraft version.
 - Only `mods/*.jar` and plugins are analysed. Resource packs and shaders are copied unchanged
@@ -822,42 +836,39 @@ the previous one, with its own draft PR whose base is the previous branch:
 
 ## Manual actions for the maintainer
 
-- **Delete the remote branch `claude/great-galileo-gi0422`** (GitHub → Branches). The session's git
-  proxy refuses to delete it, and its PR #1 is already closed.
-- Run ModShift once against the real Modrinth API (blocked from the cloud environment).
-- **Enable GitHub Pages** for the documentation site: Settings → Pages → Source: **GitHub
-  Actions**. The `Docs` workflow then deploys on the next push to `main` (or run it by hand from
-  the Actions tab). Site URL: https://neyordev.github.io/ModShift/.
+- Done by the maintainer: GitHub Pages enabled, merged branches deleted, a real run with a
+  Fabric pack (see "Real-world test and fixes").
 - **Try the GitHub Action** on a test pull request (workflow example in `action/README.md`, with
   `permissions: pull-requests: write`). Publishing it on the **Marketplace** is optional and
   manual (it needs `action.yml` at the root of a dedicated public repository, or a release from
   this one: decide first).
-- **npm publish (when ready):**
-  1. check that the `modshift` name is still free (`npm view modshift`);
-  2. merge the PRs;
-  3. move `CHANGELOG.md` `Unreleased` to a version and bump `package.json` + `src/version.ts`;
-  4. push the `vX.Y.Z` tag (the release workflow creates the GitHub release);
-  5. run `npm publish` from a clean checkout of the tag.
+- **Release 0.1.0** (the name `modshift` was free on npm on 2026-10-20):
+  1. merge the release PR (`chore/release-0.1.0`: CHANGELOG dated, `Unreleased` folded into
+     `0.1.0`; `package.json` and `src/version.ts` already at `0.1.0`);
+  2. `git checkout main && git pull && git tag v0.1.0 && git push origin v0.1.0`: the
+     `Release` workflow re-runs the checks and creates the GitHub release from the CHANGELOG;
+  3. `npm login` (account with 2FA), then from the tag: `git checkout v0.1.0 && npm ci &&
+npm publish`;
+  4. check: `npx modshift --version` prints `0.1.0`.
+- Next releases: add entries under `Unreleased`, then move them to a new version heading and bump
+  `package.json` and `src/version.ts` together (the release workflow checks the tag against
+  `package.json`).
 - Optional: try CurseForge resolution with a real key (`CURSEFORGE_API_KEY=… modshift analyze
 export.zip …`), which could not be done from here.
 
 ## Next steps
 
-**All phases (1–22) are done.** Every phase has its own branch and pull request, stacked
-(see "Branches & PRs"); they were taken out of draft at the end.
+**All phases (1–22) are merged**, and ModShift passed a real-world run (see above). Next:
 
-To resume locally:
-
-1. Review and merge the PRs in order: NeyorDEV/ModShift#2 into `main`, then each next one
-   (GitHub retargets it to `main` when the previous branch is deleted after its merge).
-2. Do the manual actions above (live API runs, Pages, the Action on a real PR, npm publish).
-3. Then pick from "Ideas for later". Natural follow-ups of phases 17–22:
+1. Release 0.1.0 (manual actions above), then announce it if wanted.
+2. Real runs still missing: a Forge or NeoForge pack (cross-loader, compatibility layers), a
+   CurseForge export with a real key, the GitHub Action on a real pull request.
+3. Then pick from "Ideas for later". Natural follow-ups:
    - `--side` in `interactive` and the web UI; the source registry in the web UI;
    - a `--no-compat-layers` CLI flag if users find the hints noisy;
    - downloading and hashing GitHub release assets on explicit request, so they could enter a
      `.mrpack` (today they are suggestions only);
-   - publish the action under a tag once ModShift is on npm, and install it with `npx` instead
-     of building it on each run;
+   - once on npm, install the action with `npx` instead of building it on each run;
    - move to VitePress 2 stable when it is released.
 
 Pitfalls:
@@ -870,7 +881,10 @@ Pitfalls:
 - Prettier formats `docs/` and `PROGRESS.md`: run `npx prettier --write .` before committing.
 - The test CLI IO (`test/helpers/cli.ts`) uses a fake clock. A client built with the real clock
   but a no-op `sleep` busy-waits on rate-limit pauses (a test once took 37 s).
-- Not verified against the live Modrinth API (network blocked here): do a manual run.
+- The cloud development environment cannot reach Modrinth: real runs are done by the
+  maintainer, whose output is the reference for real-world bugs.
+- Placeholders in instructions (`<version>`, `X.Y.Z`) get copied as-is: give concrete values or
+  say how to find them.
 - Site pages under `docs/guide/` are generated: edit the README and run `npm run docs:pages`
   (CI fails otherwise). VitePress interprets `{{ }}` in Markdown: the generator wraps such
   pages in `::: v-pre`.
