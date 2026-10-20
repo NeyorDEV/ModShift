@@ -1,10 +1,13 @@
 // Types partagés du domaine ModShift.
 
-export const LOADERS = ['forge', 'neoforge', 'fabric', 'quilt'] as const;
-export type Loader = (typeof LOADERS)[number];
+import { isLoaderId, LOADER_IDS, type LoaderId } from './loaders/registry.js';
+
+// Les loaders sont définis dans le registre src/loaders/registry.ts.
+export const LOADERS = LOADER_IDS;
+export type Loader = LoaderId;
 
 export function isLoader(value: string): value is Loader {
-  return (LOADERS as readonly string[]).includes(value);
+  return isLoaderId(value);
 }
 
 export interface FileHashes {

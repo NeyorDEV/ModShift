@@ -25,7 +25,9 @@ describe('npm package', () => {
     ]) {
       expect(typeof (api as Record<string, unknown>)[name], name).toBe('function');
     }
-    expect(api.LOADERS).toEqual(['forge', 'neoforge', 'fabric', 'quilt']);
+    expect(api.LOADERS).toEqual(
+      expect.arrayContaining(['forge', 'neoforge', 'fabric', 'quilt', 'paper']),
+    );
   });
 
   it('declares the metadata needed to publish', () => {

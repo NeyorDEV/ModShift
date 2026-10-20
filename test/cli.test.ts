@@ -153,7 +153,7 @@ describe('cli', () => {
   });
 
   it.each([
-    [['--loader', 'rift'], /Invalid loader "rift"/],
+    [['--loader', 'not-a-loader'], /Invalid loader "not-a-loader"/],
     [['--loader', 'fabric', '--format', 'xml'], /Invalid format "xml"/],
     [['--loader', 'fabric', '--max-alternatives', '-1'], /Invalid --max-alternatives/],
     [['--loader', 'fabric', '--offline', '--no-cache'], /--offline needs the cache/],
