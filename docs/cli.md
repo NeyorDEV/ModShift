@@ -47,6 +47,8 @@ Options:
                           legacy-fabric, ornithe, bukkit, spigot, paper, purpur,
                           sponge, bungeecord, waterfall, velocity (or "target"
                           in the config)
+  --side <side>           installation the pack is for: client, server or both
+                          (or "target.side" in the config)
   --config <file>         configuration file (default: ./modshift.config.json if
                           present)
   --no-config             ignore modshift.config.json
@@ -87,6 +89,8 @@ Options:
                               legacy-fabric, ornithe, bukkit, spigot, paper,
                               purpur, sponge, bungeecord, waterfall, velocity
                               (or "target" in the config)
+  --side <side>               installation the pack is for: client, server or
+                              both (or "target.side" in the config)
   --config <file>             configuration file (default:
                               ./modshift.config.json if present)
   --no-config                 ignore modshift.config.json
