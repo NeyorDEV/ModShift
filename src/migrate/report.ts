@@ -18,7 +18,12 @@ function cell(text: string): string {
 function loaderLine(plan: MigrationPlan): string {
   const { loader } = plan.target;
   if (!plan.loaderVersion) return `${loader} (version unknown)`;
-  const from = plan.loaderVersionSource === 'option' ? '--loader-version' : 'source pack';
+  const from =
+    plan.loaderVersionSource === 'option'
+      ? '--loader-version'
+      : plan.loaderVersionSource === 'config'
+        ? 'modshift.config.json'
+        : 'source pack';
   return `${loader} ${plan.loaderVersion} (from ${from})`;
 }
 
@@ -128,6 +133,16 @@ export function renderMigrationReport(
     }
   }
 
+  if (analysis.ignored.length > 0) {
+    lines.push('', '## Ignored mods', '');
+    lines.push('Left out on purpose by the `ignore` list of `modshift.config.json`:', '');
+    for (const mod of analysis.ignored) {
+      lines.push(
+        `- ${mod.project?.title ?? mod.fileName} (\`${mod.fileName}\`), rule \`${mod.rule}\``,
+      );
+    }
+  }
+
   const warnings = [...analysis.warnings, ...plan.warnings];
   if (warnings.length > 0) {
     lines.push('', '## Warnings', '');
@@ -178,6 +193,9 @@ export function renderPlanText(
     out.push(
       `  - ${mod.project?.title ?? mod.fileName}: ${mod.reason ?? 'no compatible version'}${alts ? ` ${alts}` : ''}`,
     );
+  }
+  for (const mod of analysis.ignored) {
+    out.push(`  · ignored ${mod.project?.title ?? mod.fileName} (rule ${mod.rule})`);
   }
   for (const dep of analysis.dependencies.missing) {
     out.push(

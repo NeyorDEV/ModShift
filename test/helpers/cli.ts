@@ -22,6 +22,8 @@ export interface TestIoOptions {
   stderrIsTTY?: boolean;
   // Variables d'environnement vues par la CLI (jamais process.env en test).
   env?: NodeJS.ProcessEnv;
+  // Dossier courant vu par la CLI (recherche de modshift.config.json).
+  cwd?: string;
 }
 
 // IO de test : sorties capturées, client Modrinth branché sur le faux serveur.
@@ -52,6 +54,8 @@ export function createIo(options: TestIoOptions = {}): TestIo {
       io.exitCode = code;
     },
     env: options.env ?? {},
+    // Par défaut un dossier inexistant : aucun modshift.config.json local ne fuit dans les tests.
+    cwd: options.cwd ?? '/nonexistent-modshift-test-cwd',
     // Faux serveur CurseForge : n'est utilisé que si env.CURSEFORGE_API_KEY est défini.
     createCurseForgeApi: (cfOptions) =>
       new CurseForgeClient({

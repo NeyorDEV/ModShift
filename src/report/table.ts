@@ -126,6 +126,11 @@ export function renderTable(result: AnalysisResult, options: TableOptions = {}):
       `${result.otherFilesCount} non-mod file(s) (resource packs, configs…) were not analysed.`,
     );
   }
+  if (result.ignored.length > 0) {
+    out.push(
+      `Ignored by modshift.config.json: ${result.ignored.map((m) => m.project?.title ?? m.fileName).join(', ')}`,
+    );
+  }
   if (result.warnings.length > 0) {
     out.push('', c(ANSI.bold, 'Warnings:'));
     for (const w of result.warnings) out.push(c(ANSI.dim, `  - ${w}`));

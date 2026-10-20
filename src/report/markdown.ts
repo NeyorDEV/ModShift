@@ -111,6 +111,15 @@ export function renderMarkdown(result: AnalysisResult): string {
     }
   }
 
+  if (result.ignored.length > 0) {
+    lines.push('', '## Ignored (modshift.config.json)', '');
+    for (const mod of result.ignored) {
+      lines.push(
+        `- ${mod.project?.title ?? mod.fileName} (\`${mod.fileName}\`), rule \`${mod.rule}\``,
+      );
+    }
+  }
+
   if (result.warnings.length > 0) {
     lines.push('', '## Warnings', '');
     for (const w of result.warnings) lines.push(`- ${w}`);

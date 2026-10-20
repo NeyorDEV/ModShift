@@ -10,14 +10,15 @@ import type { Loader } from '../types.js';
 import {
   type CliIo,
   createSession,
+  loadSettings,
   parseMaxAlternatives,
-  parseTarget,
   UsageError,
 } from './analyze.js';
 
 export interface MigrateCommandOptions {
-  mc: string;
-  loader: string;
+  mc?: string;
+  loader?: string;
+  config?: string | false;
   out: string;
   loaderVersion?: string;
   includeAlternatives: boolean;
@@ -61,7 +62,6 @@ export async function runMigrate(
   options: MigrateCommandOptions,
   io: CliIo,
 ): Promise<MigrateResult> {
-  const target = parseTarget(options.mc, options.loader);
   const maxAlternatives = parseMaxAlternatives(options.maxAlternatives);
   if (options.includeAlternatives && maxAlternatives === 0) {
     throw new UsageError('--include-alternatives needs --max-alternatives greater than 0');
@@ -79,26 +79,41 @@ export async function runMigrate(
   const reportPath = join(dirname(outPath), MIGRATION_REPORT_FILE);
 
   const session = createSession(options, io);
+  const { config, target } = await loadSettings(options, session.logger, io);
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
-  await session.prepare(pack);
 
-  // Vérifié avant toute requête : sans version de loader, le pack généré serait inutilisable.
-  const loaderVersion = resolveLoaderVersion(pack, target, options.loaderVersion);
+  // Vérifié avant toute requête (y compris CurseForge) : sans version de loader, le pack
+  // généré serait inutilisable.
+  const explicitLoaderVersion = options.loaderVersion ?? config.target?.loaderVersion;
+  const loaderVersionSource = options.loaderVersion ? 'option' : 'config';
+  const loaderVersion = resolveLoaderVersion(
+    pack,
+    target,
+    explicitLoaderVersion,
+    loaderVersionSource,
+  );
   if (!loaderVersion.version && !options.dryRun) {
     throw new UsageError(
       `Cannot determine the ${target.loader} version for Minecraft ${target.minecraftVersion}: ` +
-        `pass --loader-version <version> (see ${LOADER_VERSION_HELP[target.loader]}).`,
+        `pass --loader-version <version> or set "target.loaderVersion" in modshift.config.json ` +
+        `(see ${LOADER_VERSION_HELP[target.loader]}).`,
     );
   }
+  await session.prepare(pack);
 
   const analysis = await analyzePack(pack, target, session.api, {
     maxAlternatives,
     adoptAlternatives: options.includeAlternatives,
+    ignore: config.ignore,
+    mappings: config.mappings,
     ...session.progress,
   });
   session.logger.endProgress();
-  const plan = buildMigrationPlan(pack, analysis, { loaderVersion: options.loaderVersion });
+  const plan = buildMigrationPlan(pack, analysis, {
+    loaderVersion: explicitLoaderVersion,
+    loaderVersionSource,
+  });
 
   const isArchive = pack.source !== 'folder';
   const overrides = collectOverrides(
