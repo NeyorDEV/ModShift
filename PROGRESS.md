@@ -726,6 +726,29 @@ Done (branch `feat/github-action`):
 - **Not run on GitHub yet** (it needs a real pull request and the real Modrinth API): manual
   action below. Not published on the Marketplace (manual decision).
 
+## Phase 22 — Documentation site ✅ (Pages not enabled)
+
+Done (branch `docs/vitepress-site`):
+
+- VitePress **2.0.0-alpha.20**, pinned exactly. Choice: the stable 1.6.4 pulls Vite/esbuild
+  versions with open advisories (dev server only, no fix available); this release (published
+  2026-09-04) has 0 advisories (`npm audit`). Revisit when VitePress 2 is stable.
+- `docs/.vitepress/config.mts` (base `/ModShift/`, clean URLs, local search, nav + sidebar),
+  `docs/index.md` (home). Reference pages reused as they are: `cli.md` (generated),
+  `loaders.md`, `plugins.md`, `mrpack-format.md`, `curseforge-api.md`.
+- Guide pages (`docs/guide/*`, `docs/faq.md`, `docs/limitations.md`) are **generated** from the
+  README sections, `action/README.md` and `bench/README.md` by `scripts/gen-site-pages.mjs`
+  (`npm run docs:pages`): repository links rewritten for the site, images kept relative so
+  they are bundled, pages containing `{{` wrapped in `::: v-pre` (GitHub Actions expressions).
+- CI: `docs:pages` must leave `docs/` unchanged and `docs:build` must pass (VitePress also fails on
+  dead links). Checked locally, plus screenshots of three pages in headless Chromium, no JS
+  error.
+- `.github/workflows/docs.yml`: build, `actions/upload-pages-artifact@v3`,
+  `actions/deploy-pages@v4` (versions and `pages: write` / `id-token: write` taken from their
+  READMEs), on `main` pushes touching the docs, or by hand. **GitHub Pages is not enabled**
+  (manual action).
+- README / CONTRIBUTING / CHANGELOG updated.
+
 ## Known limitations
 
 - **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
@@ -771,23 +794,23 @@ Done (branch `feat/github-action`):
 At the user's request, every phase now has its own branch, named after its task and stacked on
 the previous one, with its own draft PR whose base is the previous branch:
 
-| Branch                        | Content              | PR                           |
-| ----------------------------- | -------------------- | ---------------------------- |
-| `feat/modpack-migration-cli`  | phases 1–8           | NeyorDEV/ModShift#2 → `main` |
-| `feat/offline-cache`          | phase 9              | NeyorDEV/ModShift#3 → #2     |
-| `feat/curseforge-api`         | phase 10             | NeyorDEV/ModShift#4 → #3     |
-| `feat/config-and-security`    | phase 11             | NeyorDEV/ModShift#5 → #4     |
-| `chore/release-readiness`     | phase 12             | NeyorDEV/ModShift#6 → #5     |
-| `feat/loader-registry`        | phase 13             | NeyorDEV/ModShift#7 → #6     |
-| `feat/interactive-mode`       | phase 14             | NeyorDEV/ModShift#8 → #7     |
-| `feat/web-ui`                 | phase 15             | NeyorDEV/ModShift#9 → #8     |
-| `docs/finishing-touches`      | phase 16             | NeyorDEV/ModShift#10 → #9    |
-| `feat/cross-loader-migration` | phase 17             | NeyorDEV/ModShift#11 → #10   |
-| `feat/client-server-sides`    | phase 18             | NeyorDEV/ModShift#12 → #11   |
-| `perf/concurrent-requests`    | phase 19             | NeyorDEV/ModShift#13 → #12   |
-| `feat/source-plugins`         | phase 20             | NeyorDEV/ModShift#14 → #13   |
-| `feat/github-action`          | phase 21             | draft PR → #14               |
-| next phases                   | one branch per phase | one draft PR each            |
+| Branch                        | Content    | PR                           |
+| ----------------------------- | ---------- | ---------------------------- |
+| `feat/modpack-migration-cli`  | phases 1–8 | NeyorDEV/ModShift#2 → `main` |
+| `feat/offline-cache`          | phase 9    | NeyorDEV/ModShift#3 → #2     |
+| `feat/curseforge-api`         | phase 10   | NeyorDEV/ModShift#4 → #3     |
+| `feat/config-and-security`    | phase 11   | NeyorDEV/ModShift#5 → #4     |
+| `chore/release-readiness`     | phase 12   | NeyorDEV/ModShift#6 → #5     |
+| `feat/loader-registry`        | phase 13   | NeyorDEV/ModShift#7 → #6     |
+| `feat/interactive-mode`       | phase 14   | NeyorDEV/ModShift#8 → #7     |
+| `feat/web-ui`                 | phase 15   | NeyorDEV/ModShift#9 → #8     |
+| `docs/finishing-touches`      | phase 16   | NeyorDEV/ModShift#10 → #9    |
+| `feat/cross-loader-migration` | phase 17   | NeyorDEV/ModShift#11 → #10   |
+| `feat/client-server-sides`    | phase 18   | NeyorDEV/ModShift#12 → #11   |
+| `perf/concurrent-requests`    | phase 19   | NeyorDEV/ModShift#13 → #12   |
+| `feat/source-plugins`         | phase 20   | NeyorDEV/ModShift#14 → #13   |
+| `feat/github-action`          | phase 21   | NeyorDEV/ModShift#15 → #14   |
+| `docs/vitepress-site`         | phase 22   | NeyorDEV/ModShift#16 → #15   |
 
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
   #2.
@@ -802,6 +825,9 @@ the previous one, with its own draft PR whose base is the previous branch:
 - **Delete the remote branch `claude/great-galileo-gi0422`** (GitHub → Branches). The session's git
   proxy refuses to delete it, and its PR #1 is already closed.
 - Run ModShift once against the real Modrinth API (blocked from the cloud environment).
+- **Enable GitHub Pages** for the documentation site: Settings → Pages → Source: **GitHub
+  Actions**. The `Docs` workflow then deploys on the next push to `main` (or run it by hand from
+  the Actions tab). Site URL: https://neyordev.github.io/ModShift/.
 - **Try the GitHub Action** on a test pull request (workflow example in `action/README.md`, with
   `permissions: pull-requests: write`). Publishing it on the **Marketplace** is optional and
   manual (it needs `action.yml` at the root of a dedicated public repository, or a release from
@@ -817,25 +843,22 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Phases 1–21 are done. Then phase 22, on its own branch and draft PR (base = `feat/github-action`).
-At the end, take every PR out of draft with a summary.
+**All phases (1–22) are done.** Every phase has its own branch and pull request, stacked
+(see "Branches & PRs"); they were taken out of draft at the end.
 
-- **Phase 22, documentation site** (branch `docs/vitepress-site`):
-  - VitePress in `docs/` (dev dependency `vitepress`, exact version, installed with
-    `npx -y npm@11 install -D`; check its advisories). `docs/.vitepress/config.mts` with nav and
-    sidebar; `base: '/ModShift/'` for project Pages;
-  - pages: install, getting started, every command (reuse the generated `docs/cli.md`), config
-    formats (`modshift.config.json`, `.mrpack` → `docs/mrpack-format.md`, CurseForge →
-    `docs/curseforge-api.md`), loaders (`docs/loaders.md`), plugins (`docs/plugins.md`), GitHub
-    Action (`action/README.md` content), FAQ, known limitations; keep README as the short entry
-    point and link the site;
-  - `npm run docs:build` must succeed in CI (add a step or a job), without network at build time;
-  - `.github/workflows/docs.yml`: build + `actions/upload-pages-artifact` + `actions/deploy-pages`
-    on `main` pushes, with `pages: write` and `id-token: write`. **Do not enable Pages**: manual
-    action (Settings → Pages → Source: GitHub Actions);
-  - careful: Prettier formats `docs/`; `.vitepress/cache` and `dist` must be ignored (git,
-    Prettier, ESLint); `scripts/gen-cli-docs.mjs` writes `docs/cli.md` (keep its path or update
-    the CI check).
+To resume locally:
+
+1. Review and merge the PRs in order: NeyorDEV/ModShift#2 into `main`, then each next one
+   (GitHub retargets it to `main` when the previous branch is deleted after its merge).
+2. Do the manual actions above (live API runs, Pages, the Action on a real PR, npm publish).
+3. Then pick from "Ideas for later". Natural follow-ups of phases 17–22:
+   - `--side` in `interactive` and the web UI; the source registry in the web UI;
+   - a `--no-compat-layers` CLI flag if users find the hints noisy;
+   - downloading and hashing GitHub release assets on explicit request, so they could enter a
+     `.mrpack` (today they are suggestions only);
+   - publish the action under a tag once ModShift is on npm, and install it with `npx` instead
+     of building it on each run;
+   - move to VitePress 2 stable when it is released.
 
 Pitfalls:
 
@@ -848,6 +871,9 @@ Pitfalls:
 - The test CLI IO (`test/helpers/cli.ts`) uses a fake clock. A client built with the real clock
   but a no-op `sleep` busy-waits on rate-limit pauses (a test once took 37 s).
 - Not verified against the live Modrinth API (network blocked here): do a manual run.
+- Site pages under `docs/guide/` are generated: edit the README and run `npm run docs:pages`
+  (CI fails otherwise). VitePress interprets `{{ }}` in Markdown: the generator wraps such
+  pages in `::: v-pre`.
 - Search fixtures: the fake `/search` uses project-level `loaders` and `game_versions`, so a new
   project in `catalog.json` can change alternatives in other tests (snapshots). Check
   `npx vitest run -u` diffs before accepting them.

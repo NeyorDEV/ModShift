@@ -3,3 +3,5 @@ coverage
 node_modules
 package-lock.json
 test/fixtures
+docs/.vitepress/cache
+docs/.vitepress/dist

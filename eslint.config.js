@@ -19,7 +19,15 @@ const browserGlobals = Object.fromEntries(
 );
 
 export default tseslint.config(
-  { ignores: ['dist/', 'coverage/', 'node_modules/'] },
+  {
+    ignores: [
+      'dist/',
+      'coverage/',
+      'node_modules/',
+      'docs/.vitepress/cache/',
+      'docs/.vitepress/dist/',
+    ],
+  },
   eslint.configs.recommended,
   ...tseslint.configs.strict,
   prettier,
@@ -33,9 +41,9 @@ export default tseslint.config(
     files: ['src/ui/public/**/*.js'],
     languageOptions: { globals: browserGlobals },
   },
-  // Scripts Node (benchmarks, action GitHub) : globales Web standard disponibles dans Node 20+.
+  // Scripts Node (benchmarks, action GitHub, scripts) : globales Web standard disponibles dans Node 20+.
   {
-    files: ['bench/**/*.mjs', 'action/**/*.mjs'],
+    files: ['bench/**/*.mjs', 'action/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: Object.fromEntries(
         ['Response', 'URL', 'setTimeout', 'fetch'].map((name) => [name, 'readonly']),

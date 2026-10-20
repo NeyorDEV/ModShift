@@ -59,7 +59,10 @@
     "prepack": "npm run clean && npm run build",
     "prepublishOnly": "npm run lint && npm run typecheck && npm test",
     "docs:cli": "node scripts/gen-cli-docs.mjs",
-    "bench": "npm run build && node bench/run.mjs"
+    "bench": "npm run build && node bench/run.mjs",
+    "docs:pages": "node scripts/gen-site-pages.mjs && prettier --write --log-level warn docs/guide docs/faq.md docs/limitations.md",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs"
   },
   "dependencies": {
     "@inquirer/prompts": "8.7.3",
@@ -78,6 +81,7 @@
     "prettier": "^3.6.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.0",
+    "vitepress": "2.0.0-alpha.20",
     "vitest": "^4.1.12"
   }
 }
