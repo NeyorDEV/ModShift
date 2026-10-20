@@ -1,0 +1,10 @@
+{
+  "id": "proxychat",
+  "name": "ProxyChat",
+  "version": "1.4.0",
+  "main": "org.example.proxychat.ProxyChat",
+  "dependencies": [
+    { "id": "luckperms", "optional": true },
+    { "id": "signedvelocity", "optional": false }
+  ]
+}
