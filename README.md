@@ -94,19 +94,19 @@ detected from the archive's content, not its extension.
 
 ### Common to `analyze` and `migrate`
 
-| Option                   | Description                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------ |
-| `--mc <version>`         | Target Minecraft version (e.g. `1.21.1`). Required unless set in the config.   |
-| `--loader <loader>`      | `forge`, `neoforge`, `fabric` or `quilt`. Required unless set in the config.   |
-| `--config <file>`        | Configuration file (default: `./modshift.config.json` if it exists).           |
-| `--no-config`            | Ignore `modshift.config.json`.                                                 |
-| `--offline`              | Only use cached API responses; never touch the network.                        |
-| `--no-cache`             | Do not read or write the cache.                                                |
-| `--cache-dir <dir>`      | Cache directory (default below).                                               |
-| `--cache-ttl <duration>` | How long cached responses stay valid: `30m`, `12h`, `7d`, `0` (default `24h`). |
-| `--max-alternatives <n>` | Alternatives suggested per missing mod, `0`–`20` (default `3`).                |
-| `-q, --quiet`            | No progress output on stderr.                                                  |
-| `-v, --verbose`          | Log every API request, cache hit and retry on stderr.                          |
+| Option                   | Description                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `--mc <version>`         | Target Minecraft version (e.g. `1.21.1`). Required unless set in the config.                                         |
+| `--loader <loader>`      | Target loader, e.g. `neoforge`, `fabric`, `paper` ([full list](docs/loaders.md)). Required unless set in the config. |
+| `--config <file>`        | Configuration file (default: `./modshift.config.json` if it exists).                                                 |
+| `--no-config`            | Ignore `modshift.config.json`.                                                                                       |
+| `--offline`              | Only use cached API responses; never touch the network.                                                              |
+| `--no-cache`             | Do not read or write the cache.                                                                                      |
+| `--cache-dir <dir>`      | Cache directory (default below).                                                                                     |
+| `--cache-ttl <duration>` | How long cached responses stay valid: `30m`, `12h`, `7d`, `0` (default `24h`).                                       |
+| `--max-alternatives <n>` | Alternatives suggested per missing mod, `0`–`20` (default `3`).                                                      |
+| `-q, --quiet`            | No progress output on stderr.                                                                                        |
+| `-v, --verbose`          | Log every API request, cache hit and retry on stderr.                                                                |
 
 ### `analyze`
 
@@ -255,8 +255,19 @@ hint: Check your internet connection, proxy or firewall (api.modrinth.com must b
 5. **Resolve** required dependencies recursively, and detect conflicts.
 6. **Migrate** (optional): build and validate the new `.mrpack`, and copy overrides.
 
-Loader rules: a Quilt target accepts Fabric versions (Quilt loads Fabric mods). Forge and NeoForge
-are treated as separate loaders.
+### Loaders
+
+Targets can be mod loaders (`forge`, `neoforge`, `fabric`, `quilt`, plus older ones such as
+`legacy-fabric` or `rift`), server plugin platforms (`bukkit`, `spigot`, `paper`, `purpur`,
+`sponge`) or proxies (`bungeecord`, `waterfall`, `velocity`). `migrate` only targets the four loaders
+the `.mrpack` format supports; `analyze` works for all of them, for example on a server's `plugins/`
+folder.
+
+When a mod has no version for the target loader, ModShift also accepts a version for a loader the
+target is **officially documented** to run: Quilt ← Fabric, Paper ← Spigot/Bukkit,
+Purpur ← Paper/Spigot/Bukkit, Waterfall ← BungeeCord. These are reported as
+**"fallback compatibility, to test"**. Forge and NeoForge stay separate. Sources and the rules
+deliberately left out are listed in [`docs/loaders.md`](docs/loaders.md).
 
 ## FAQ
 
