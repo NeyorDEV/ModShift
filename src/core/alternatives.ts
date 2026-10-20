@@ -15,6 +15,7 @@ function hitToProject(hit: ModrinthSearchHit): ProjectRef {
 }
 
 const LOADER_WORDS = new Set<string>(LOADERS);
+const MIN_SHARED_KEYWORDS = 2;
 
 // Poids du score de pertinence (sur 100).
 const WEIGHTS = { categories: 40, name: 30, keywords: 10, popularity: 20 };
@@ -69,7 +70,8 @@ export function scoreAlternative(
     score,
     explanation: parts.join(' · '),
     nameMatch: sharedTitle.length > 0,
-    keywordMatch: extraKeywords.length > 0,
+    // Un seul mot commun (ex. « screen ») est trop faible : deux au moins sans nom proche.
+    keywordMatch: extraKeywords.length >= MIN_SHARED_KEYWORDS,
   };
 }
 
