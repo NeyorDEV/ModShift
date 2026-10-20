@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -75,4 +75,67 @@ export class FileCache implements ResponseCache {
       throw error;
     }
   }
+
+  // Fichiers d'entrées présents dans le dossier (les fichiers étrangers sont ignorés).
+  private async entryFiles(): Promise<string[]> {
+    try {
+      return (await readdir(this.dir)).filter((name) => /^[0-9a-f]{64}\.json$/.test(name));
+    } catch {
+      return [];
+    }
+  }
+
+  // Statistiques du cache ; `ttlMs` permet de compter les entrées expirées.
+  async stats(ttlMs?: number): Promise<CacheStats> {
+    const stats: CacheStats = { dir: this.dir, entries: 0, bytes: 0, expired: 0, corrupted: 0 };
+    for (const name of await this.entryFiles()) {
+      const path = join(this.dir, name);
+      try {
+        const [info, text] = await Promise.all([stat(path), readFile(path, 'utf8')]);
+        stats.bytes += info.size;
+        const storedAt = (JSON.parse(text) as Partial<CacheEntry>).storedAt;
+        if (typeof storedAt !== 'number') throw new Error('invalid entry');
+        stats.entries++;
+        stats.oldest = Math.min(stats.oldest ?? storedAt, storedAt);
+        stats.newest = Math.max(stats.newest ?? storedAt, storedAt);
+        if (ttlMs !== undefined && this.now() - storedAt >= ttlMs) stats.expired++;
+      } catch {
+        stats.corrupted++;
+      }
+    }
+    return stats;
+  }
+
+  // Supprime les entrées (toutes, ou seulement les expirées/corrompues). Renvoie le nombre supprimé.
+  async clear(options: { olderThanMs?: number } = {}): Promise<number> {
+    let removed = 0;
+    for (const name of await this.entryFiles()) {
+      const path = join(this.dir, name);
+      if (options.olderThanMs !== undefined) {
+        try {
+          const storedAt = (JSON.parse(await readFile(path, 'utf8')) as Partial<CacheEntry>)
+            .storedAt;
+          if (typeof storedAt === 'number' && this.now() - storedAt < options.olderThanMs) {
+            continue;
+          }
+        } catch {
+          // Entrée corrompue : supprimée.
+        }
+      }
+      await rm(path, { force: true });
+      removed++;
+    }
+    return removed;
+  }
+}
+
+export interface CacheStats {
+  dir: string;
+  entries: number;
+  bytes: number;
+  // Horodatages (ms) de la plus ancienne et de la plus récente entrée.
+  oldest?: number;
+  newest?: number;
+  expired: number;
+  corrupted: number;
 }
