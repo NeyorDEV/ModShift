@@ -24,7 +24,7 @@ exports[`Markdown report > renders summary, mods, alternatives, dependencies and
 | ↑ update found | [Sodium](https://modrinth.com/mod/sodium) | sodium-fabric-0.5.8.jar | 0.5.8 | 0.6.0 |   |
 | ↑ update found | [Fabric API](https://modrinth.com/mod/fabric-api) | fabric-api-0.92.0.jar | 0.92.0 | 0.104.0 |   |
 | ✔ compatible | [Mod Menu](https://modrinth.com/mod/modmenu) | modmenu-7.2.2.jar | 7.2.2 | 7.2.2 |   |
-| ? alternative suggested | [Old Minimap](https://modrinth.com/mod/old-minimap) | old-minimap-1.0.jar | 1.0 | — | Suggestions (to verify): Xaero's Minimap, Just Enough Items, JourneyMap |
+| ? alternative suggested | [Old Minimap](https://modrinth.com/mod/old-minimap) | old-minimap-1.0.jar | 1.0 | — | Suggestions (to verify): Xaero's Minimap, JourneyMap, Just Enough Items |
 | ✘ not found | mystery-mod.jar | mystery-mod.jar | — | — | Unknown file hash on Modrinth. The file may come from another site (CurseForge, GitHub) or have been modified. |
 | ✘ not found | local-mod.jar | local-mod.jar | — | — | Unknown file hash on Modrinth and no Modrinth project matches mod id "localmod". The file may come from another site (CurseForge, GitHub) or have been modified. |
 
@@ -34,9 +34,9 @@ exports[`Markdown report > renders summary, mods, alternatives, dependencies and
 
 ### Old Minimap
 
-- [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) — similar name, 1,000,000 downloads
-- [Just Enough Items](https://modrinth.com/mod/jei) — same category, 9,000,000 downloads
-- [JourneyMap](https://modrinth.com/mod/journeymap) — same category, 500,000 downloads
+- [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) — relevance 79/100 — similar name (minimap) · same categories (adventure, utility) · keywords (fixture) · 1.0M downloads
+- [JourneyMap](https://modrinth.com/mod/journeymap) — relevance 60/100 — same categories (adventure, utility) · keywords (fixture) · 500k downloads
+- [Just Enough Items](https://modrinth.com/mod/jei) — relevance 43/100 — same categories (utility) · keywords (fixture) · 9.0M downloads
 
 ## Dependencies
 
@@ -66,7 +66,7 @@ Status                   Mod              Current  Target   Notes
 ↑ update found           Sodium           0.5.8    0.6.0
 ↑ update found           Fabric API       0.92.0   0.104.0
 ✔ compatible             Mod Menu         7.2.2    7.2.2
-? alternative suggested  Old Minimap      1.0      —        Suggestions (to verify): Xaero's Minimap, Just Enough Items, JourneyM…
+? alternative suggested  Old Minimap      1.0      —        Suggestions (to verify): Xaero's Minimap, JourneyMap, Just Enough Ite…
 ✘ not found              mystery-mod.jar  —        —        Unknown file hash on Modrinth. The file may come from another site (C…
 ✘ not found              local-mod.jar    —        —        Unknown file hash on Modrinth and no Modrinth project matches mod id …
 

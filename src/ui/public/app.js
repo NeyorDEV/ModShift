@@ -364,7 +364,7 @@ function showDetail(mod) {
               { href: modrinthUrl(a.project), target: '_blank', rel: 'noopener noreferrer' },
               a.project.title,
             ),
-            ` — ${a.reason === 'similar-name' ? 'similar name' : 'same category'}, ${a.downloads.toLocaleString('en-US')} downloads`,
+            ` — relevance ${a.score}/100 — ${a.explanation}`,
           ),
         ),
       ),

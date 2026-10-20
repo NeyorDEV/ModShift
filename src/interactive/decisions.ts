@@ -56,7 +56,7 @@ export function optionsFor(mod: ModAnalysis): DecisionOption[] {
     options.push({
       label: `Use ${alternative.project.title} instead (suggestion, to verify)`,
       value: { action: 'alternative', project: alternative.project },
-      description: `${alternative.reason === 'similar-name' ? 'Similar name' : 'Same category'}, ${alternative.downloads.toLocaleString('en-US')} downloads.`,
+      description: `Relevance ${alternative.score}/100: ${alternative.explanation}.`,
     });
   }
   options.push({

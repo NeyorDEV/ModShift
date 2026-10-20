@@ -1,4 +1,10 @@
-import type { ConflictKind, ModAnalysis, ModStatus, VersionRef } from '../core/types.js';
+import type {
+  Alternative,
+  ConflictKind,
+  ModAnalysis,
+  ModStatus,
+  VersionRef,
+} from '../core/types.js';
 
 export const STATUS_LABELS: Record<ModStatus, string> = {
   compatible: 'compatible',
@@ -41,4 +47,9 @@ export function alternativesLabel(mod: ModAnalysis): string {
 export function modNotes(mod: ModAnalysis): string {
   if (mod.status === 'alternative-suggested') return alternativesLabel(mod);
   return mod.reason ?? '';
+}
+
+// Explication d'une alternative : pourquoi elle est proposée et son score de pertinence.
+export function alternativeWhy(alt: Alternative): string {
+  return `relevance ${alt.score}/100 — ${alt.explanation}`;
 }

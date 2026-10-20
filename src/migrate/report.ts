@@ -1,5 +1,10 @@
 import type { AnalysisResult } from '../core/types.js';
-import { alternativesLabel, CONFLICT_LABELS, versionLabel } from '../report/labels.js';
+import {
+  alternativesLabel,
+  alternativeWhy,
+  CONFLICT_LABELS,
+  versionLabel,
+} from '../report/labels.js';
 import type { MigrationPlan, PlannedMod } from './plan.js';
 
 export const MIGRATION_REPORT_FILE = 'MIGRATION_REPORT.md';
@@ -95,6 +100,21 @@ export function renderMigrationReport(
             : '—',
         )} |`,
       );
+    }
+  }
+
+  const explained = plan.excluded.filter((m) => m.alternatives.length > 0);
+  if (explained.length > 0) {
+    lines.push('', '## Why these alternatives', '');
+    lines.push(
+      'Ranked by relevance: shared categories, similar name, keywords from the description and ' +
+        'popularity. ModShift does not convert mod code: an alternative is a different mod, to verify.',
+    );
+    for (const mod of explained) {
+      lines.push('', `**${mod.project?.title ?? mod.fileName}**`, '');
+      for (const alt of mod.alternatives) {
+        lines.push(`- ${alt.project.title}: ${alternativeWhy(alt)}`);
+      }
     }
   }
 

@@ -290,6 +290,7 @@ export async function analyzePack(
       alternatives = await findAlternatives(api, project, target, {
         max: maxAlternatives,
         excludeProjectIds: packProjectIds,
+        description: id.project.description,
       });
     } catch (error) {
       // Hors-ligne, une recherche absente du cache ne doit pas bloquer toute l'analyse.

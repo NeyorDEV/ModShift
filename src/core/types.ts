@@ -59,6 +59,9 @@ export interface Alternative {
   downloads: number;
   // similar-name : nom proche (portage, fork) ; same-category : même catégorie Modrinth.
   reason: 'similar-name' | 'same-category';
+  // Score de pertinence (0–100) et explication (catégories, nom, mots-clés, popularité).
+  score: number;
+  explanation: string;
   note: typeof ALTERNATIVE_NOTE;
 }
 
