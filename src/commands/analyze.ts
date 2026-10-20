@@ -27,6 +27,7 @@ export interface AnalyzeCommandOptions {
   offline: boolean;
   cache: boolean;
   cacheDir?: string;
+  cacheTtl?: string;
   maxAlternatives: string;
   quiet: boolean;
   verbose?: boolean;
@@ -211,8 +212,8 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
     isTTY: io.stderrIsTTY,
     width: io.columns,
   });
-  const cacheDir = options.cacheDir ?? defaultCacheDir();
   const env = io.env ?? process.env;
+  const cacheDir = options.cacheDir ?? defaultCacheDir(env);
   const cacheTtlMs = resolveCacheTtl(options.cacheTtl, env);
   if (options.cache) {
     logger.debug(`cache directory: ${cacheDir} (entries valid for ${formatDuration(cacheTtlMs)})`);

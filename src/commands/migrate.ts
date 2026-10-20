@@ -27,6 +27,7 @@ export interface MigrateCommandOptions {
   offline: boolean;
   cache: boolean;
   cacheDir?: string;
+  cacheTtl?: string;
   maxAlternatives: string;
   quiet: boolean;
   verbose?: boolean;
