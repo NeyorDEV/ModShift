@@ -388,6 +388,39 @@ Decisions:
 - Mappings are explicit user choices, so they are reported as replacements, not "suggestions".
 - Limits are generous (packs of a few hundred MB work) but bounded; they are not configurable yet.
 
+## Phase 12 — Release readiness ✅ (nothing published)
+
+Done:
+
+- **npm package** (`package.json`):
+  - `repository`, `homepage`, `bugs`, `author`, `main`/`types`/`exports`, `bin`;
+  - `files`: built `.js` and `.d.ts`, `schemas/`, `CHANGELOG.md` (README and LICENSE are added
+    by npm). Build without source maps (`tsconfig.build.json`);
+  - `prepack` = clean + build; `prepublishOnly` = lint + typecheck + tests;
+  - `npm pack --dry-run`: 93 files, about 55 kB.
+- **Public API** `src/index.ts` (`import { analyzePack, loadPack, ModrinthClient, … } from
+'modshift'`), with types.
+- `test/package.test.ts`: `src/version.ts` = `package.json` version, exports, and metadata.
+- **Release workflow** `.github/workflows/release.yml` on `v*.*.*` tags: checks that the tag
+  matches `package.json`, runs lint, format, typecheck and tests with coverage, then `npm pack`
+  and `gh release create` with notes extracted from `CHANGELOG.md`
+  (`scripts/release-notes.mjs`, tested) and the tarball attached. Pre-release when the tag has a
+  `-`. **No `npm publish`.**
+- `CHANGELOG.md` (Keep a Changelog), with section `[0.1.0]`.
+- Full `README.md`: features, installation, quick start, commands, option tables, environment
+  variables, exit codes, config, CurseForge, cache, real output, how it works, FAQ, limits,
+  programmatic API, contributing, security, licence.
+  - The example output was captured from the test fixtures with the mock API, and the README
+    says so.
+- `CONTRIBUTING.md`, and `.github/ISSUE_TEMPLATE/` (bug report, feature request, wrong
+  match/suggestion, security link).
+
+Decisions:
+
+- Release notes come from `CHANGELOG.md` rather than from commits: they are more readable and
+  checked by a test.
+- The `modshift` name was free on npm on 2026-10-20 (`npm view modshift` → 404), which may change.
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -412,24 +445,32 @@ the previous one, with its own draft PR whose base is the previous branch:
 - **Delete the remote branch `claude/great-galileo-gi0422`** (GitHub → Branches). The session's git
   proxy refuses to delete it, and its PR #1 is already closed.
 - Run ModShift once against the real Modrinth API (blocked from the cloud environment).
+- **npm publish (when ready):**
+  1. check that the `modshift` name is still free (`npm view modshift`);
+  2. merge the PRs;
+  3. move `CHANGELOG.md` `Unreleased` to a version and bump `package.json` + `src/version.ts`;
+  4. push the `vX.Y.Z` tag (the release workflow creates the GitHub release);
+  5. run `npm publish` from a clean checkout of the tag.
 - Optional: try CurseForge resolution with a real key (`CURSEFORGE_API_KEY=… modshift analyze
 export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phases 12 → 16, then phases 17 → 22, in order. One branch and one
+Work plan agreed with the user: phases 13 → 16, then phases 17 → 22, in order. One branch and one
 draft PR per phase; push after every commit group. Never change GitHub settings or publish
 anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 12, release readiness** (branch `chore/release-readiness`):
-  - `package.json` fields (repository, homepage, bugs, author, `files`, `types`/`exports`,
-    `prepublishOnly`), checked with `npm pack --dry-run`. **No publish.**
-  - `.github/workflows/release.yml` on `v*` tags: build, tests, then a GitHub release whose notes
-    come from `CHANGELOG.md`;
-  - full README (real output examples, options table, FAQ, contributing, MIT);
-  - CONTRIBUTING.md and `.github/ISSUE_TEMPLATE/*`.
-- **Phases 13–16:**
-  - loader registry and fallback loaders (only rules found in official docs);
+- **Phase 13, loaders** (branch `feat/loader-registry`):
+  - check the loaders and project types in Modrinth's official data (`GET /v2/tag/loader`; the
+    OpenAPI spec and `apps/labrinth` source on raw.githubusercontent.com are readable from here);
+  - replace the hard-coded `LOADERS` / `acceptedLoaders` / `LOADER_DEPENDENCY_KEY` /
+    `MRPACK_LOADER_KEYS` by an extensible registry (`src/loaders/registry.ts`);
+  - fallback loaders only where a loader's own docs/source confirm compatibility (Quilt → Fabric
+    is already assumed; verify it), reported as "fallback compatibility, to test";
+  - new loaders (e.g. server plugins: Paper/Spigot/Purpur) need care: a `.mrpack` can only declare
+    forge/neoforge/fabric-loader/quilt-loader, so they can be analysed but not migrated to a
+    `.mrpack`.
+- **Phases 14–16:**
   - interactive mode (maintained prompt library, decision logic kept testable);
   - `modshift ui` on 127.0.0.1;
   - final docs.
