@@ -144,3 +144,26 @@ export function sideSection(result: AnalysisResult): string[] {
   }
   return lines;
 }
+
+// Section « autres sources » : fichiers proposés hors Modrinth, jamais ajoutés au pack.
+export function externalSection(mods: ModAnalysis[]): string[] {
+  const found = mods.filter((m) => m.external && m.external.length > 0);
+  if (found.length === 0) return [];
+  const lines = [
+    '',
+    '## Other sources (to verify)',
+    '',
+    '> Files found outside Modrinth for mods without a compatible version. **External source, to ' +
+      'verify**: matched by file name only, never added to the migrated pack. Check the release ' +
+      'page before downloading.',
+    '',
+  ];
+  for (const mod of found) {
+    for (const c of mod.external ?? []) {
+      lines.push(
+        `- **${modDisplayName(mod)}**: [${c.fileName.replace(/[[\]]/g, '')}](${c.url.replace(/[()\s]/g, encodeURIComponent)}) (${c.version}${c.pageUrl ? `, [release page](${c.pageUrl})` : ''}) — ${c.reason}`,
+      );
+    }
+  }
+  return lines;
+}

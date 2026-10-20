@@ -349,6 +349,11 @@ function showDetail(mod) {
       'Compatibility layer',
       `${mod.compatLayer.runs} version ${mod.compatLayer.version.versionNumber} through ${mod.compatLayer.name}: experimental, not guaranteed, not added to the pack. Requires ${mod.compatLayer.requires.map((r) => r.title).join(', ')}.`,
     ]);
+  for (const c of mod.external ?? [])
+    rows.push([
+      'Other source',
+      `${c.fileName} (${c.version}): ${c.reason}. To verify, not added to the pack.`,
+    ]);
   if (mod.reason) rows.push(['Why', mod.reason]);
   const body = [el('dl', {}, ...rows.flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}, v)]))];
   if (mod.project) {

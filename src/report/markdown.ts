@@ -9,6 +9,7 @@ import {
   versionLabel,
   alternativeWhy,
   compatLayerSection,
+  externalSection,
   sideSection,
 } from './labels.js';
 
@@ -83,6 +84,7 @@ export function renderMarkdown(result: AnalysisResult): string {
   }
 
   lines.push(...compatLayerSection(result.mods));
+  lines.push(...externalSection(result.mods));
 
   const { added, missing } = result.dependencies;
   if (added.length > 0 || missing.length > 0) {

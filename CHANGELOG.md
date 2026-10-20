@@ -21,6 +21,10 @@ All notable changes to ModShift are documented here. The format follows
 - Concurrent Modrinth requests (`--concurrency <n>`, 1–16, default 4) within the client's rate
   limit, with identical parallel requests sent only once. Reports stay identical whatever the
   concurrency.
+- Mod source plugins: a `ModSource` contract and a registry (Modrinth primary, CurseForge,
+  GitHub Releases), a `sources` config key, a reusable contract test suite and
+  `docs/plugins.md`. Files found on other sources are reported "to verify" and never added to
+  migrated packs.
 - `bench/`: reproducible benchmarks on synthetic 200 and 500 mod packs against an in-memory fake
   Modrinth (`npm run bench`).
 

@@ -2,20 +2,23 @@ import { writeFile } from 'node:fs/promises';
 import { analyzePack } from '../core/engine.js';
 import type { ModrinthApi } from '../core/refs.js';
 import type { AnalysisResult } from '../core/types.js';
-import { loadConfig, type ModShiftConfig } from '../config/config.js';
+import { CONFIG_FILE, ConfigError, loadConfig, type ModShiftConfig } from '../config/config.js';
 import type { Prompter } from '../interactive/prompter.js';
 import { loadPack } from '../input/index.js';
 import { DEFAULT_CACHE_TTL_MS, defaultCacheDir, FileCache } from '../modrinth/cache.js';
 import { formatDuration, parseDuration } from '../duration.js';
-import type { ModrinthClientOptions } from '../modrinth/client.js';
+import type { FetchLike, ModrinthClientOptions } from '../modrinth/client.js';
 import { REPORT_FORMATS, renderReport, type ReportFormat } from '../report/index.js';
 import { createLogger, type Logger } from './logger.js';
+import { CurseForgeClient, type CurseForgeClientOptions } from '../curseforge/client.js';
 import {
-  CurseForgeClient,
-  type CurseForgeClientOptions,
-  curseForgeApiKey,
-} from '../curseforge/client.js';
-import { missingKeyWarning, resolveCurseForgeRefs } from '../curseforge/resolve.js';
+  createDefaultRegistry,
+  findExternalCandidates,
+  type ModSource,
+  prepareWithSources,
+  type SourceContext,
+  type SourceRegistry,
+} from '../sources/index.js';
 import { DEFAULT_CONCURRENCY, MAX_CONCURRENCY } from '../concurrency.js';
 import { TARGET_SIDES, type TargetSide } from '../core/sides.js';
 import { isLoader, LOADERS, type MigrationTarget, type ModPack } from '../types.js';
@@ -58,6 +61,8 @@ export interface CliIo {
   // Mode interactif : l'entrée standard est-elle un terminal, et comment poser les questions.
   stdinIsTTY?: boolean;
   createPrompter?: () => Promise<Prompter>;
+  // fetch des sources HTTP tierces (GitHub Releases) ; fetch global par défaut.
+  fetch?: FetchLike;
   setExitCode: (code: number) => void;
 }
 
@@ -131,10 +136,15 @@ export async function runAnalyze(
   const format = parseFormat(options.format);
   const maxAlternatives = parseMaxAlternatives(options.maxAlternatives);
   const session = createSession(options, io);
-  const { config, target, side } = await loadSettings(options, session.logger, io);
+  const { config, target, side } = await loadSettings(
+    options,
+    session.logger,
+    io,
+    session.registry,
+  );
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
-  await session.prepare(pack);
+  await session.prepare(pack, config);
 
   const result = await analyzePack(pack, target, session.api, {
     maxAlternatives,
@@ -145,6 +155,7 @@ export async function runAnalyze(
     ...session.progress,
   });
   session.logger.endProgress();
+  await session.findCandidates(result, pack, config);
 
   const color = options.color && io.isTTY && !options.output && !process.env.NO_COLOR;
   const report = renderReport(result, format, { color });
@@ -183,12 +194,20 @@ export async function loadSettings(
   options: { config?: string | false; mc?: string; loader?: string; side?: string },
   logger: Logger,
   io: CliIo,
+  registry?: SourceRegistry,
 ): Promise<Settings> {
   const { config, path } =
     options.config === false
       ? { config: {} as ModShiftConfig, path: undefined }
       : await loadConfig(options.config, io.cwd ?? process.cwd());
   if (path) logger.info(`Using configuration ${path}`);
+  if (registry && config.sources) {
+    try {
+      registry.validateOptions(config.sources);
+    } catch (error) {
+      throw new ConfigError(path ?? CONFIG_FILE, (error as Error).message);
+    }
+  }
   const mc = options.mc ?? config.target?.minecraftVersion;
   const loader = options.loader ?? config.target?.loader;
   if (!mc) {
@@ -213,8 +232,12 @@ export interface Session {
   progress: { onProgress: (message: string) => void; onProgressTick: Logger['progress'] };
   // Requêtes simultanées à passer à analyzePack.
   concurrency: number;
+  // Sources de mods (registre extensible).
+  registry: SourceRegistry;
   // Étapes à appliquer au pack chargé avant l'analyse (résolution CurseForge).
-  prepare: (pack: ModPack) => Promise<void>;
+  prepare: (pack: ModPack, config?: ModShiftConfig) => Promise<void>;
+  // Fichiers proposés par les autres sources pour les mods sans version Modrinth.
+  findCandidates: (result: AnalysisResult, pack: ModPack, config?: ModShiftConfig) => Promise<void>;
 }
 
 // Durée de validité du cache : option, puis variable d'environnement, puis 24 h par défaut.
@@ -262,33 +285,46 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
     onEvent: (event) => logger.clientEvent(event),
   });
   const cache = options.cache ? new FileCache(cacheDir) : undefined;
-  const prepare = async (pack: ModPack): Promise<void> => {
-    if (!pack.mods.some((m) => m.curseforge)) return;
-    const apiKey = curseForgeApiKey(env);
-    if (!apiKey) {
-      // Sans clé, la résolution CurseForge est simplement désactivée (pas une erreur).
-      const warning = missingKeyWarning(pack);
-      if (warning) pack.warnings.push(warning);
-      return;
-    }
-    const count = pack.mods.filter((m) => m.curseforge).length;
-    logger.info(`Resolving ${count} CurseForge file reference(s)…`);
-    const clientOptions: CurseForgeClientOptions = {
-      apiKey,
-      cache,
-      cacheTtlMs,
+  const registry = createDefaultRegistry({
+    fetch: io.fetch,
+    createCurseForgeClient: (apiKey) => {
+      const clientOptions: CurseForgeClientOptions = {
+        apiKey,
+        cache,
+        cacheTtlMs,
+        offline: options.offline,
+      };
+      return io.createCurseForgeApi
+        ? io.createCurseForgeApi(clientOptions)
+        : new CurseForgeClient(clientOptions);
+    },
+  });
+  const contextFor =
+    (config: ModShiftConfig, warnings: string[]) =>
+    (source: ModSource): SourceContext => ({
+      env,
+      options: config.sources?.[source.id],
       offline: options.offline,
-    };
-    const client = io.createCurseForgeApi
-      ? io.createCurseForgeApi(clientOptions)
-      : new CurseForgeClient(clientOptions);
-    const result = await resolveCurseForgeRefs(pack, client);
-    logger.debug(`CurseForge: ${result.resolved} resolved, ${result.unresolved} unresolved`);
-  };
+      warn: (message) => warnings.push(message),
+      log: (message) => logger.info(message),
+      debug: (message) => logger.debug(message),
+    });
+  // Sources de mods : CurseForge complète le pack avant l'analyse ; GitHub Releases (si
+  // configuré) propose ensuite des fichiers pour les mods introuvables.
+  const prepare = (pack: ModPack, config: ModShiftConfig = {}): Promise<void> =>
+    prepareWithSources(pack, registry, contextFor(config, pack.warnings));
+  const findCandidates = (
+    result: AnalysisResult,
+    pack: ModPack,
+    config: ModShiftConfig = {},
+  ): Promise<void> =>
+    findExternalCandidates(result, pack, registry, contextFor(config, result.warnings));
   return {
     logger,
     api,
+    registry,
     prepare,
+    findCandidates,
     concurrency,
     progress: {
       onProgress: (message) => logger.info(message),

@@ -671,6 +671,39 @@ Done (branch `perf/concurrent-requests`):
   requests/minute would impose (≈ 49 s for the 500-mod pack's 545 requests).
 - 366 tests.
 
+## Phase 20 — Mod source plugins ✅
+
+Done (branch `feat/source-plugins`):
+
+- **Contract** (`src/sources/types.ts`): `ModSource { id, name, description, primary?,
+validateOptions?, prepare?, findCandidates? }`, `SourceContext { env, options, offline, warn,
+log, debug }`, `CandidateRequest`, `SourceCandidate` (note "external source, to verify").
+  Simplest design that needs no engine rewrite: Modrinth stays the **primary** source queried by
+  the engine; plugins add `prepare` (before analysis) and `findCandidates` (after it, for
+  `not-found` / `alternative-suggested` mods).
+- **Registry** (`src/sources/registry.ts`): id pattern, no duplicates, a single primary source,
+  `validateOptions(config.sources)`; `createDefaultRegistry` registers `modrinth`, `curseforge`
+  (the former session code, unchanged behaviour) and `github-releases`.
+- **GitHub Releases** (`src/sources/githubReleases.ts`), contract verified in GitHub's OpenAPI
+  description (raw.githubusercontent.com `github/rest-api-description`) and `github/docs`
+  sources: `GET /repos/{owner}/{repo}/releases`, asset `name`, `browser_download_url`, `size`,
+  `state`, nullable `digest`; `User-Agent` required, `Accept: application/vnd.github+json`,
+  optional `Authorization: Bearer` from `GITHUB_TOKEN` only; no `X-GitHub-Api-Version` (the
+  default version is used; the current value could not be checked). Name matching by whole
+  tokens (1.21.1 ≠ 1.21.10, forge ≠ neoforge), documented fallbacks accepted.
+- Config key `sources` (structure checked by `validateConfig`, content by each source in
+  `loadSettings`), JSON Schema updated. `CliIo.fetch` lets tests inject a fake GitHub.
+- `ModAnalysis.external`; reports: "Other sources (to verify)" (Markdown, `MIGRATION_REPORT.md`),
+  a table line, UI detail rows. The plan **never** includes them.
+- Public API exports the registry, the contract and the built-in sources.
+- Tests: reusable `test/sources/contract.ts` (`describeSourceContract`), run for the 3 built-ins
+  and a third-party example; GitHub source, registry and CLI tests with fake release data
+  (`test/fixtures/github/releases.json`). 407 tests.
+- `docs/plugins.md`, README "Other sources (plugins)", SECURITY (GITHUB_TOKEN), CHANGELOG.
+- Not done (kept simple): the web UI does not use the registry (its CurseForge resolution is
+  unchanged, no GitHub source there); the CLI never loads third-party code (programmatic API
+  only, on purpose).
+
 ## Known limitations
 
 - **Never run against the live APIs.** Modrinth (`api.modrinth.com`, docs), CurseForge and the
@@ -697,6 +730,8 @@ Done (branch `perf/concurrent-requests`):
   dependencies.
 - Web UI: archives only (no folder upload), sessions in memory (lost on restart), English only.
 - `plugin.yml` is read with a minimal YAML reader (top-level keys only).
+- Other sources (GitHub Releases) only produce suggestions matched by file name; they never
+  enter the migrated pack (no SHA-1/SHA-512 from GitHub). Not tested against the live GitHub API.
 - npm publishing, GitHub Pages and the Marketplace are manual steps (see "Manual actions").
 
 ## Ideas for later
@@ -727,7 +762,8 @@ the previous one, with its own draft PR whose base is the previous branch:
 | `docs/finishing-touches`      | phase 16             | NeyorDEV/ModShift#10 → #9    |
 | `feat/cross-loader-migration` | phase 17             | NeyorDEV/ModShift#11 → #10   |
 | `feat/client-server-sides`    | phase 18             | NeyorDEV/ModShift#12 → #11   |
-| `perf/concurrent-requests`    | phase 19             | draft PR → #12               |
+| `perf/concurrent-requests`    | phase 19             | NeyorDEV/ModShift#13 → #12   |
+| `feat/source-plugins`         | phase 20             | draft PR → #13               |
 | next phases                   | one branch per phase | one draft PR each            |
 
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
@@ -754,29 +790,28 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Phases 1–19 are done. Then 20 → 22, in order, one branch and one draft PR per phase (base = the
+Phases 1–20 are done. Then 21 and 22, in order, one branch and one draft PR per phase (base = the
 previous phase's branch). At the end, take every PR out of draft with a summary.
 
-- **Phase 20, source plugins** (branch `feat/source-plugins`):
-  - today Modrinth is wired through `ModrinthApi` (`src/core/refs.ts`, used everywhere in the
-    engine) and CurseForge only resolves manifest references (`src/curseforge/resolve.ts`, called
-    from `createSession().prepare`). Keep the engine on Modrinth data and add a small
-    `ModSource` contract (`id`, `name`, `identify(mods)` returning project/version metadata
-    and download URLs, maybe `findVersions`) plus a registry (`registerSource`, built-ins
-    `modrinth`, `curseforge`), simplest design that does not require a massive refactor;
-  - example plugin: GitHub Releases (`GITHUB_TOKEN` optional, from the environment only; never in
-    tests or fixtures). api.github.com is blocked here: verify the REST contract from an official
-    source reachable through raw.githubusercontent.com (e.g. `github/rest-api-description`), and
-    test only with a mocked fetch;
-  - `.mrpack` download whitelist only allows cdn.modrinth.com, github.com,
-    raw.githubusercontent.com (`src/migrate/mrpackSpec.ts`): GitHub release asset URLs
-    (`https://github.com/<owner>/<repo>/releases/download/...`) are allowed;
-  - plugin docs (`docs/plugins.md`) and a reusable **contract test suite** that every source
-    (built-in or third-party) must pass.
-- **Phase 20:** source plugin system (Modrinth, CurseForge, GitHub Releases with an optional
-  `GITHUB_TOKEN`), docs and contract tests.
-- **Phase 21:** reusable GitHub Action in `action/` (check plus a PR comment or job summary),
-  README example, not published to the Marketplace.
+- **Phase 21, GitHub Action "ModShift Check"** (branch `feat/github-action`):
+  - `action/action.yml`, a **composite** action (simplest: no bundled JS, no new dependency):
+    `actions/setup-node`, install ModShift (from the action's own checkout:
+    `npm ci && npm run build` in `${{ github.action_path }}/..`, since nothing is published on
+    npm), run `analyze --format markdown` (and optionally `--format json` for a summary/exit
+    code) on the pack path given as input;
+  - inputs: `pack`, `mc`, `loader`, `side`, `config`, `fail-on` (e.g. `not-found`), `comment`
+    (`true` / `false`), `token` (default `${{ github.token }}`), `curseforge-api-key` (optional,
+    passed as env var only);
+  - outputs: report path, counts per status;
+  - write the report to `$GITHUB_STEP_SUMMARY`; PR comment via `gh api` with the token
+    (update one comment identified by a hidden marker instead of posting a new one each run);
+    permissions needed: `pull-requests: write` (document it);
+  - a workflow example in the README (`on: pull_request`, `paths: ['**/*.mrpack', ...]`), and a
+    test workflow in `.github/workflows/` that runs the action on a fixture pack **without**
+    network? Not possible: analyze needs Modrinth. Options: run with `--offline` and a cache
+    prepared from fixtures, or only lint `action.yml` (actionlint is not installed; keep a small
+    Node test that parses the YAML structure). Decide the simplest and note it;
+  - **do not publish on the Marketplace** (manual action).
 - **Phase 22:** VitePress docs site in `docs/` and a GitHub Pages deploy workflow (Pages **not**
   enabled: manual action). Careful: `docs/` already holds `mrpack-format.md`,
   `curseforge-api.md`, `loaders.md`, `cli.md` and `images/`; reuse them as pages.

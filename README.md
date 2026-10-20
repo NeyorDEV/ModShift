@@ -25,7 +25,7 @@ _Screenshot of the test suite's fixture pack (fake data), analysed in `modshift 
 - [Features](#features) · [Installation](#installation) · [Quick start](#quick-start)
 - [Commands](#commands) · [Interactive mode](#interactive-mode) · [Web interface](#web-interface)
 - [Options](#options) ([full reference](docs/cli.md)) · [Configuration file](#configuration-file)
-- [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
+- [Other sources](#other-sources-plugins) · [CurseForge packs](#curseforge-packs) · [Cache and offline mode](#cache-and-offline-mode)
 - [Changing loader](#changing-loader-eg-forge--fabric) · [Client and server](#client-and-server)
 - [Performance](#performance) · [Example output](#example-output)
 - [How it works](#how-it-works) · [FAQ](#faq)
@@ -197,6 +197,7 @@ The web interface uses the same cache and options as the CLI (`--offline`, `--ca
 | `MODSHIFT_CACHE_DIR` | Cache directory (else `$XDG_CACHE_HOME/modshift`, else `~/.cache/modshift`). |
 | `MODSHIFT_CACHE_TTL` | Default for `--cache-ttl`.                                                   |
 | `CURSEFORGE_API_KEY` | Enables CurseForge resolution (see below). Never stored by ModShift.         |
+| `GITHUB_TOKEN`       | Optional token for the GitHub Releases source. Never stored by ModShift.     |
 | `NO_COLOR`           | Disables colors.                                                             |
 
 ### Exit codes
@@ -228,7 +229,24 @@ network failure, offline cache miss…). Every error comes with a `hint:` line t
 - `mappings`: "this mod → that Modrinth project". A mapping is your explicit choice, so it is
   reported as a replacement, not a suggestion. It also works for files Modrinth does not know.
 
+- `sources`: options of [mod sources](docs/plugins.md), e.g. GitHub repositories to look at for
+  mods that are not on Modrinth.
+
 Unknown keys are rejected, so a typo cannot silently do nothing.
+
+## Other sources (plugins)
+
+Modrinth is the primary source. Other sources plug in through a small contract
+([`docs/plugins.md`](docs/plugins.md)): CurseForge resolves export references (below), and
+**GitHub Releases** looks for a matching `.jar` in repositories you list:
+
+```json
+{ "sources": { "github-releases": { "repositories": { "my-mod.jar": "someone/my-mod" } } } }
+```
+
+Files found this way are listed under "Other sources (to verify)" in the reports and are **never
+added to the migrated pack** (matched by file name only). Third-party sources can be registered
+through the programmatic API.
 
 ## CurseForge packs
 
