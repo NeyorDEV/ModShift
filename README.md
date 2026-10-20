@@ -85,6 +85,7 @@ modshift migrate my-pack.mrpack --mc 1.21.1 --loader neoforge --loader-version 2
 | `modshift analyze <pack> --mc <v> --loader <l>` | Reports, mod by mod, what is available for the target.              |
 | `modshift migrate <pack> … --out <file>`        | Writes a migrated `.mrpack` and a `MIGRATION_REPORT.md` next to it. |
 | `modshift interactive [pack]` (or `-i`)         | Guided mode: review each mod, save your choices, build the pack.    |
+| `modshift ui [--port <n>] [--no-open]`          | Local web interface on `http://127.0.0.1` (drag and drop a pack).   |
 | `modshift cache stats [--json]`                 | Shows the size and age of the local cache.                          |
 | `modshift cache clear [--expired]`              | Deletes cached API responses (all, or only expired ones).           |
 
@@ -114,6 +115,23 @@ modshift migrate my-pack.mrpack --out my-pack-1.21.1.mrpack   # uses modshift.co
 
 The interactive mode needs a terminal. In scripts it refuses to start; use `analyze` and `migrate`
 instead. Press Ctrl+C at any time to quit without saving (exit code 130).
+
+## Web interface
+
+```bash
+modshift ui            # opens http://127.0.0.1:<port>/ in your browser
+modshift ui --port 8123 --no-open
+```
+
+A small local page to drop a `.mrpack` or CurseForge `.zip`, choose the target, browse the results
+(sortable, filterable by status, with a detail view per mod: versions, alternatives,
+dependencies), then download the migrated `.mrpack`, the `MIGRATION_REPORT.md` and the JSON
+analysis. Light and dark themes follow your system, and a toggle overrides them.
+
+The server only listens on `127.0.0.1` and protects its API with a random token. Uploaded files
+stay in a temporary folder that is deleted when you stop it (Ctrl+C). See [SECURITY.md](SECURITY.md).
+The web interface uses the same cache and options as the CLI (`--offline`, `--cache-dir`,
+`--cache-ttl`).
 
 ## Options
 
