@@ -12,13 +12,18 @@ async function isDirectory(path: string): Promise<boolean> {
   }
 }
 
-// Lit un dossier de .jar. Si le dossier contient un sous-dossier `mods/`
-// (dossier d'instance), c'est celui-ci qui est analysé. Lecture non récursive.
+// Lit un dossier de .jar. Si le dossier contient un sous-dossier `mods/` (dossier d'instance)
+// ou `plugins/` (dossier de serveur), c'est celui-ci qui est analysé. Lecture non récursive.
 export async function parseModsFolder(dir: string): Promise<ModPack> {
   if (!(await isDirectory(dir))) {
     throw new InputError(`${dir} is not a directory`);
   }
-  const modsDir = (await isDirectory(join(dir, 'mods'))) ? join(dir, 'mods') : dir;
+  const subfolder = (await isDirectory(join(dir, 'mods')))
+    ? 'mods'
+    : (await isDirectory(join(dir, 'plugins')))
+      ? 'plugins'
+      : undefined;
+  const modsDir = subfolder ? join(dir, subfolder) : dir;
   const names = (await readdir(modsDir, { withFileTypes: true }))
     .filter((d) => d.isFile() && d.name.toLowerCase().endsWith('.jar'))
     .map((d) => d.name)
@@ -29,7 +34,7 @@ export async function parseModsFolder(dir: string): Promise<ModPack> {
   for (const name of names) {
     const { entry, warnings: jarWarnings } = await readJarFile(
       join(modsDir, name),
-      `mods/${name}`,
+      `${subfolder === 'plugins' ? 'plugins' : 'mods'}/${name}`,
       'folder',
     );
     mods.push(entry);

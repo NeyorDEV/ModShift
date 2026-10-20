@@ -4,6 +4,17 @@ import { parse as parseToml } from 'smol-toml';
 import type { JarDependency, JarMetadata, ModEntry, ModOrigin } from '../types.js';
 import { computeHashes } from './hash.js';
 import {
+  BUKKIT_PLUGIN_FILE,
+  BUNGEE_PLUGIN_FILE,
+  PAPER_PLUGIN_FILE,
+  parseBukkitPluginYml,
+  parseBungeeYml,
+  parsePaperPluginYml,
+  parseVelocityPluginJson,
+  PLUGIN_METADATA_FILES,
+  VELOCITY_PLUGIN_FILE,
+} from './plugin.js';
+import {
   asRecord,
   asString,
   METADATA_ZIP_LIMITS,
@@ -17,7 +28,14 @@ const QUILT_FILE = 'quilt.mod.json';
 const FORGE_FILE = 'META-INF/mods.toml';
 const NEOFORGE_FILE = 'META-INF/neoforge.mods.toml';
 const MANIFEST_FILE = 'META-INF/MANIFEST.MF';
-const METADATA_FILES = new Set([FABRIC_FILE, QUILT_FILE, FORGE_FILE, NEOFORGE_FILE, MANIFEST_FILE]);
+const METADATA_FILES = new Set([
+  FABRIC_FILE,
+  QUILT_FILE,
+  FORGE_FILE,
+  NEOFORGE_FILE,
+  MANIFEST_FILE,
+  ...PLUGIN_METADATA_FILES,
+]);
 
 // Identifiants de « plateforme » qui ne sont pas de vrais mods à résoudre.
 const PLATFORM_IDS = new Set([
@@ -35,7 +53,8 @@ export interface JarReadResult {
   warnings: string[];
 }
 
-// Lit les métadonnées d'un .jar (fabric.mod.json, quilt.mod.json, mods.toml, neoforge.mods.toml).
+// Lit les métadonnées d'un .jar : mods (fabric.mod.json, quilt.mod.json, mods.toml,
+// neoforge.mods.toml) et plugins (plugin.yml, paper-plugin.yml, bungee.yml, velocity-plugin.json).
 // Un jar sans métadonnées reconnues renvoie une liste vide (pas d'erreur).
 export function readJarMetadata(data: Uint8Array, label: string): JarReadResult {
   const entries = readZip(data, label, (name) => METADATA_FILES.has(name), METADATA_ZIP_LIMITS);
@@ -58,6 +77,11 @@ export function readJarMetadata(data: Uint8Array, label: string): JarReadResult 
   attempt(QUILT_FILE, (text) => parseQuiltModJson(text, label));
   attempt(NEOFORGE_FILE, (text) => parseModsToml(text, 'neoforge', manifestVersion));
   attempt(FORGE_FILE, (text) => parseModsToml(text, 'forge', manifestVersion));
+  // Plugins de serveur / proxy.
+  attempt(PAPER_PLUGIN_FILE, parsePaperPluginYml);
+  attempt(BUKKIT_PLUGIN_FILE, parseBukkitPluginYml);
+  attempt(BUNGEE_PLUGIN_FILE, parseBungeeYml);
+  attempt(VELOCITY_PLUGIN_FILE, (text) => parseVelocityPluginJson(text, label));
 
   return { metadata, warnings };
 }
