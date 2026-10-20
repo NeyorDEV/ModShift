@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { resolveCacheTtl, type CliIo, UsageError } from './analyze.js';
+import { parseConcurrency, resolveCacheTtl, type CliIo, UsageError } from './analyze.js';
 import { defaultCacheDir, FileCache } from '../modrinth/cache.js';
 import { startUiServer, type UiServer } from '../ui/server.js';
 
@@ -10,6 +10,7 @@ export interface UiCommandOptions {
   cache: boolean;
   cacheDir?: string;
   cacheTtl?: string;
+  concurrency?: string;
 }
 
 // Ouvre l'URL dans le navigateur par défaut. Aucun shell : la commande et l'URL (construite par
@@ -58,6 +59,7 @@ export async function runUi(
     cache: options.cache ? new FileCache(options.cacheDir ?? defaultCacheDir(env)) : undefined,
     cacheTtlMs: resolveCacheTtl(options.cacheTtl, env),
     offline: options.offline,
+    concurrency: parseConcurrency(options.concurrency),
     env,
   });
   io.stdout(`ModShift UI running at ${server.url}\n`);

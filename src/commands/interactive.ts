@@ -129,6 +129,7 @@ export async function runInteractive(
   //    visibles pour pouvoir changer d'avis).
   const analysis = await analyzePack(pack, target, session.api, {
     maxAlternatives,
+    concurrency: session.concurrency,
     mappings: existing.mappings,
     ...session.progress,
   });

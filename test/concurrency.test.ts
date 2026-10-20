@@ -4,6 +4,7 @@ import { analyzePack } from '../src/core/engine.js';
 import { parseMrpack } from '../src/input/mrpack.js';
 import { MemoryCache } from '../src/modrinth/cache.js';
 import { ModrinthClient } from '../src/modrinth/client.js';
+import type { FetchLike } from '../src/modrinth/client.js';
 import { RateLimiter } from '../src/modrinth/rateLimiter.js';
 import { fakeModrinthHandler, loadCatalog } from './helpers/fakeModrinth.js';
 import { packFixture } from './helpers/fixtures.js';
@@ -69,7 +70,7 @@ describe('analyzePack with concurrent requests', () => {
   function delayedClient() {
     const mock = createMockFetch(fakeModrinthHandler(loadCatalog()));
     const stats = { active: 0, peak: 0 };
-    const fetch: typeof globalThis.fetch = async (input, init) => {
+    const fetch: FetchLike = async (input, init) => {
       stats.active++;
       stats.peak = Math.max(stats.peak, stats.active);
       await tick();

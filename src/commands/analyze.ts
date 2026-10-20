@@ -16,6 +16,7 @@ import {
   curseForgeApiKey,
 } from '../curseforge/client.js';
 import { missingKeyWarning, resolveCurseForgeRefs } from '../curseforge/resolve.js';
+import { DEFAULT_CONCURRENCY, MAX_CONCURRENCY } from '../concurrency.js';
 import { TARGET_SIDES, type TargetSide } from '../core/sides.js';
 import { isLoader, LOADERS, type MigrationTarget, type ModPack } from '../types.js';
 
@@ -101,6 +102,17 @@ export function parseSide(value: string): TargetSide {
   return normalized as TargetSide;
 }
 
+export function parseConcurrency(value: string | undefined): number {
+  if (value === undefined) return DEFAULT_CONCURRENCY;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > MAX_CONCURRENCY) {
+    throw new UsageError(
+      `Invalid --concurrency "${value}" (expected an integer from 1 to ${MAX_CONCURRENCY})`,
+    );
+  }
+  return n;
+}
+
 export function parseMaxAlternatives(value: string): number {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 0 || n > 20) {
@@ -126,6 +138,7 @@ export async function runAnalyze(
 
   const result = await analyzePack(pack, target, session.api, {
     maxAlternatives,
+    concurrency: session.concurrency,
     side,
     ignore: config.ignore,
     mappings: config.mappings,
@@ -153,6 +166,8 @@ export interface SessionOptions {
   cacheDir?: string;
   // Durée de validité du cache (« 12h », « 7d », « 0 »…) ; sinon $MODSHIFT_CACHE_TTL, sinon 24 h.
   cacheTtl?: string;
+  // Requêtes simultanées (--concurrency) ; 4 par défaut.
+  concurrency?: string;
 }
 
 export interface Settings {
@@ -196,6 +211,8 @@ export interface Session {
   api: ModrinthApi;
   // Rappels de progression à passer à analyzePack.
   progress: { onProgress: (message: string) => void; onProgressTick: Logger['progress'] };
+  // Requêtes simultanées à passer à analyzePack.
+  concurrency: number;
   // Étapes à appliquer au pack chargé avant l'analyse (résolution CurseForge).
   prepare: (pack: ModPack) => Promise<void>;
 }
@@ -225,6 +242,7 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
   if (options.offline && !options.cache) {
     throw new UsageError('--offline needs the cache: remove --no-cache');
   }
+  const concurrency = parseConcurrency(options.concurrency);
   const logger = createLogger({
     write: io.stderr,
     level: options.quiet ? 'quiet' : options.verbose ? 'verbose' : 'normal',
@@ -271,6 +289,7 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
     logger,
     api,
     prepare,
+    concurrency,
     progress: {
       onProgress: (message) => logger.info(message),
       onProgressTick: (done, total, label) => logger.progress(done, total, label),
