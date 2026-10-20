@@ -290,22 +290,73 @@ Decisions:
   user's judgement (the interactive mode, phase 14, can ask).
 - `CliIo` gained `stderrIsTTY` and `columns`; test IOs set them explicitly.
 
+## Phase 9 — Offline mode & cache ✅
+
+Done:
+
+- `FileCache.stats(ttlMs?)` / `FileCache.clear({ olderThanMs? })` (`src/modrinth/cache.ts`).
+  They only touch files named like entries (`<sha256>.json`), so foreign files in the directory
+  are never deleted. Unreadable entries are counted, and removed by `clear --expired`.
+- `modshift cache stats [--cache-dir] [--cache-ttl] [--json]` and
+  `modshift cache clear [--cache-dir] [--expired [--cache-ttl]]` (`src/commands/cache.ts`).
+- Configurable lifetime: `--cache-ttl <duration>` on `analyze`/`migrate`, or `MODSHIFT_CACHE_TTL`.
+  Accepted values: `90s`, `30m`, `12h`, `7d`, `0` = always refresh; default `24h`.
+  - Parsing: `src/duration.ts`; resolution: `resolveCacheTtl()` in `src/commands/analyze.ts`.
+  - Invalid values are rejected before any request, and the error names their source (option or
+    env var).
+- Offline: `OfflineCacheMissError` now names the missing request, through `describeRequest()` in
+  `src/modrinth/errors.ts` (e.g. "the hash lookup of 6 file(s)", "versions of project X"). An
+  uncached alternatives **search** no longer aborts the analysis: it becomes a warning, and the
+  mod is reported without alternatives. Required lookups (hashes, versions, dependencies) still
+  stop with the hint "run once without --offline".
+
+Decisions:
+
+- Offline mode never reads expired entries any differently: any cached entry is used, whatever its
+  age (unchanged since Phase 3).
+- Durations without a unit are rejected (except `0`) to avoid ambiguity (seconds vs. hours).
+
+## Branches & PRs
+
+At the user's request, every phase now has its own branch, named after its task and stacked on
+the previous one, with its own draft PR whose base is the previous branch:
+
+| Branch                       | Content              | PR                           |
+| ---------------------------- | -------------------- | ---------------------------- |
+| `feat/modpack-migration-cli` | phases 1–8           | NeyorDEV/ModShift#2 → `main` |
+| `feat/offline-cache`         | phase 9              | NeyorDEV/ModShift#3 → #2     |
+| next phases                  | one branch per phase | one draft PR each            |
+
+- PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
+  #2.
+- Commits are authored as `NeyorDEV <180453958+NeyorDEV@users.noreply.github.com>` (repo-local git
+  config, unsigned), with no Claude trailer. All earlier commits were rewritten once to that
+  author, at the user's explicit request.
+- Merge order: #2 into `main`, then retarget each next PR to `main` (GitHub does this
+  automatically when the base branch is deleted after a merge) and merge it in turn.
+
+## Manual actions for the maintainer
+
+- **Delete the remote branch `claude/great-galileo-gi0422`** (GitHub → Branches). The session's git
+  proxy refuses to delete it, and its PR #1 is already closed.
+- Run ModShift once against the real Modrinth API (blocked from the cloud environment).
+
 ## Next steps
 
-Work plan agreed with the user: phases 9 → 16, then phases 17 → 22 (third message), in order.
-Push after every phase. The PR stays a draft until the end. Never change GitHub settings or
-publish anything (npm, Marketplace, Pages): list manual actions here instead.
+Work plan agreed with the user: phases 10 → 16, then phases 17 → 22, in order. One branch and one
+draft PR per phase; push after every commit group. Never change GitHub settings or publish
+anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 9, offline and cache:** `--offline` already exists (Phase 3). To do:
-  - `modshift cache clear` / `modshift cache stats` (count, size, oldest/newest entry);
-  - a configurable TTL (`--cache-ttl <duration>` and/or an env var). It is passed to
-    `ModrinthClient` through `createSession` in `src/commands/analyze.ts`
-    (`cacheTtlMs` already exists);
-  - offline cache misses should name the missing request kind.
-- **Phase 10, CurseForge API:** `CURSEFORGE_API_KEY` only; disabled with a clear message without a
-  key. Check the official docs (they will probably be blocked here, so document that).
+- **Phase 10, CurseForge API** (branch `feat/curseforge-api`):
+  - `CURSEFORGE_API_KEY` from the environment only; without it, the feature is disabled with a
+    clear message;
+  - check the official docs (docs.curseforge.com, probably blocked here: document what was
+    verified and how);
+  - resolve `manifest.json` `files[]` (projectID/fileID) to mod names, then try to find them on
+    Modrinth (by name/slug, marked unverified);
+  - fixtures and mocks only, never a key in code, tests or fixtures.
 - **Phase 11:** `modshift.config.json` (loader preferences, ignore list, manual mappings) and a
-  security review (zip-slip, size limits, jars never executed).
+  security review (zip-slip, archive size limits, jars never executed).
 - **Phase 12:** npm packaging (no publish), tag-triggered release workflow, full README,
   CONTRIBUTING.md, issue templates.
 - **Phases 13–16:**
@@ -329,8 +380,11 @@ Pitfalls:
 - npm 10 crashes when resolving new dev dependencies from scratch (`edgesOut`). Use
   `npx -y npm@11 install -D <pkg>`; `npm ci` with npm 10 then works.
 - Prettier formats `docs/` and `PROGRESS.md`: run `npx prettier --write .` before committing.
+- The test CLI IO (`test/helpers/cli.ts`) uses a fake clock. A client built with the real clock
+  but a no-op `sleep` busy-waits on rate-limit pauses (a test once took 37 s).
 - Not verified against the live Modrinth API (network blocked here): do a manual run.
 
 ## Known issues
 
-- None blocking. No problem needed more than one fix attempt.
+- The session's git proxy silently ignores deleting `claude/great-galileo-gi0422` (manual action
+  above). Otherwise none blocking.

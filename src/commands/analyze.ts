@@ -3,7 +3,8 @@ import { analyzePack } from '../core/engine.js';
 import type { ModrinthApi } from '../core/refs.js';
 import type { AnalysisResult } from '../core/types.js';
 import { loadPack } from '../input/index.js';
-import { defaultCacheDir, FileCache } from '../modrinth/cache.js';
+import { DEFAULT_CACHE_TTL_MS, defaultCacheDir, FileCache } from '../modrinth/cache.js';
+import { formatDuration, parseDuration } from '../duration.js';
 import type { ModrinthClientOptions } from '../modrinth/client.js';
 import { REPORT_FORMATS, renderReport, type ReportFormat } from '../report/index.js';
 import { createLogger, type Logger } from './logger.js';
@@ -115,6 +116,8 @@ export interface SessionOptions {
   offline: boolean;
   cache: boolean;
   cacheDir?: string;
+  // Durée de validité du cache (« 12h », « 7d », « 0 »…) ; sinon $MODSHIFT_CACHE_TTL, sinon 24 h.
+  cacheTtl?: string;
 }
 
 export interface Session {
@@ -122,6 +125,23 @@ export interface Session {
   api: ModrinthApi;
   // Rappels de progression à passer à analyzePack.
   progress: { onProgress: (message: string) => void; onProgressTick: Logger['progress'] };
+}
+
+// Durée de validité du cache : option, puis variable d'environnement, puis 24 h par défaut.
+export function resolveCacheTtl(
+  option: string | undefined,
+  env: NodeJS.ProcessEnv = process.env,
+): number {
+  const raw = option ?? env.MODSHIFT_CACHE_TTL;
+  if (raw === undefined || raw === '') return DEFAULT_CACHE_TTL_MS;
+  const ms = parseDuration(raw);
+  if (ms === undefined) {
+    const source = option !== undefined ? '--cache-ttl' : 'MODSHIFT_CACHE_TTL';
+    throw new UsageError(
+      `Invalid ${source} "${raw}" (expected a duration such as 30m, 12h, 7d, or 0 to always refresh)`,
+    );
+  }
+  return ms;
 }
 
 // Prépare le journal (quiet / normal / verbose) et le client Modrinth (cache, hors-ligne, logs).
@@ -139,9 +159,13 @@ export function createSession(options: SessionOptions, io: CliIo): Session {
     width: io.columns,
   });
   const cacheDir = options.cacheDir ?? defaultCacheDir();
-  if (options.cache) logger.debug(`cache directory: ${cacheDir}`);
+  const cacheTtlMs = resolveCacheTtl(options.cacheTtl);
+  if (options.cache) {
+    logger.debug(`cache directory: ${cacheDir} (entries valid for ${formatDuration(cacheTtlMs)})`);
+  }
   const api = io.createApi({
     cache: options.cache ? new FileCache(cacheDir) : undefined,
+    cacheTtlMs,
     offline: options.offline,
     onEvent: (event) => logger.clientEvent(event),
   });

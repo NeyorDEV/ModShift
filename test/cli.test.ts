@@ -138,7 +138,9 @@ describe('cli', () => {
       '--offline',
     );
     expect(io.exitCode).toBe(1);
-    expect(io.err).toMatch(/error: Offline mode: no cached response/);
+    expect(io.err).toMatch(
+      /error: Offline mode: the cache has no entry for the hash lookup of 6 file\(s\) \(https:\/\/api\.modrinth\.com\/v2\/version_files\)\nhint: Run the same command once without --offline/,
+    );
   });
 
   it('reports network failures without a stack trace', async () => {
