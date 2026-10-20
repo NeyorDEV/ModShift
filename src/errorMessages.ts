@@ -1,4 +1,5 @@
 import { UsageError } from './commands/analyze.js';
+import { ConfigError } from './config/config.js';
 import {
   CURSEFORGE_API_KEY_ENV,
   CurseForgeApiError,
@@ -24,6 +25,12 @@ export interface DescribedError {
 export function describeError(error: unknown): DescribedError | undefined {
   if (error instanceof UsageError) {
     return { message: error.message, hint: 'Run the command with --help to see every option.' };
+  }
+  if (error instanceof ConfigError) {
+    return {
+      message: error.message,
+      hint: 'Fix the file (see schemas/modshift.config.schema.json) or pass --no-config to ignore it.',
+    };
   }
   if (error instanceof InputError) {
     return {

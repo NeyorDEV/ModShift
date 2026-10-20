@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/NeyorDEV/ModShift/schemas/modshift.config.schema.json",
+  "title": "ModShift configuration (modshift.config.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "target": {
+      "description": "Default target used when --mc, --loader or --loader-version are not given.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minecraftVersion": { "type": "string", "minLength": 1, "examples": ["1.21.1"] },
+        "loader": { "enum": ["forge", "neoforge", "fabric", "quilt"] },
+        "loaderVersion": { "type": "string", "minLength": 1, "examples": ["21.1.77"] }
+      }
+    },
+    "ignore": {
+      "description": "Mods left out of the analysis and of migrated packs: file name (\"*\" wildcard allowed), Modrinth slug or project id.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "examples": [["optifine*.jar", "old-minimap"]]
+    },
+    "mappings": {
+      "description": "Manual replacements: source mod (file name, Modrinth slug or project id) → Modrinth project (slug or id) to use for the target.",
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 },
+      "examples": [{ "rubidium": "embeddium", "my-local-mod.jar": "sodium" }]
+    }
+  }
+}

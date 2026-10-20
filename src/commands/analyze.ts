@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { analyzePack } from '../core/engine.js';
 import type { ModrinthApi } from '../core/refs.js';
 import type { AnalysisResult } from '../core/types.js';
+import { loadConfig, type ModShiftConfig } from '../config/config.js';
 import { loadPack } from '../input/index.js';
 import { DEFAULT_CACHE_TTL_MS, defaultCacheDir, FileCache } from '../modrinth/cache.js';
 import { formatDuration, parseDuration } from '../duration.js';
@@ -17,8 +18,10 @@ import { missingKeyWarning, resolveCurseForgeRefs } from '../curseforge/resolve.
 import { isLoader, LOADERS, type MigrationTarget, type ModPack } from '../types.js';
 
 export interface AnalyzeCommandOptions {
-  mc: string;
-  loader: string;
+  mc?: string;
+  loader?: string;
+  // Chemin de modshift.config.json, ou false avec --no-config.
+  config?: string | false;
   format: string;
   output?: string;
   offline: boolean;
@@ -44,6 +47,8 @@ export interface CliIo {
   createCurseForgeApi?: (options: CurseForgeClientOptions) => CurseForgeClient;
   // Variables d'environnement (CURSEFORGE_API_KEY, MODSHIFT_CACHE_TTL) ; process.env par défaut.
   env?: NodeJS.ProcessEnv;
+  // Dossier courant (recherche de modshift.config.json) ; process.cwd() par défaut.
+  cwd?: string;
   setExitCode: (code: number) => void;
 }
 
@@ -95,16 +100,18 @@ export async function runAnalyze(
   options: AnalyzeCommandOptions,
   io: CliIo,
 ): Promise<AnalysisResult> {
-  const target = parseTarget(options.mc, options.loader);
   const format = parseFormat(options.format);
   const maxAlternatives = parseMaxAlternatives(options.maxAlternatives);
   const session = createSession(options, io);
+  const { config, target } = await loadSettings(options, session.logger, io);
   const pack = await loadPack(packPath);
   session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
   await session.prepare(pack);
 
   const result = await analyzePack(pack, target, session.api, {
     maxAlternatives,
+    ignore: config.ignore,
+    mappings: config.mappings,
     ...session.progress,
   });
   session.logger.endProgress();
@@ -129,6 +136,39 @@ export interface SessionOptions {
   cacheDir?: string;
   // Durée de validité du cache (« 12h », « 7d », « 0 »…) ; sinon $MODSHIFT_CACHE_TTL, sinon 24 h.
   cacheTtl?: string;
+}
+
+export interface Settings {
+  config: ModShiftConfig;
+  configPath?: string;
+  target: MigrationTarget;
+}
+
+// Charge modshift.config.json (sauf --no-config) et en déduit la cible : les options de la ligne
+// de commande l'emportent sur la configuration.
+export async function loadSettings(
+  options: { config?: string | false; mc?: string; loader?: string },
+  logger: Logger,
+  io: CliIo,
+): Promise<Settings> {
+  const { config, path } =
+    options.config === false
+      ? { config: {} as ModShiftConfig, path: undefined }
+      : await loadConfig(options.config, io.cwd ?? process.cwd());
+  if (path) logger.info(`Using configuration ${path}`);
+  const mc = options.mc ?? config.target?.minecraftVersion;
+  const loader = options.loader ?? config.target?.loader;
+  if (!mc) {
+    throw new UsageError(
+      'missing target Minecraft version: pass --mc <version> or set "target.minecraftVersion" in modshift.config.json',
+    );
+  }
+  if (!loader) {
+    throw new UsageError(
+      'missing target loader: pass --loader <loader> or set "target.loader" in modshift.config.json',
+    );
+  }
+  return { config, configPath: path, target: parseTarget(mc, loader) };
 }
 
 export interface Session {

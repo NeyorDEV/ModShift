@@ -5,6 +5,7 @@ import { Command } from 'commander';
 import { type CliIo, runAnalyze } from './commands/analyze.js';
 import { runCacheClear, runCacheStats } from './commands/cache.js';
 import { runMigrate } from './commands/migrate.js';
+import { CONFIG_FILE } from './config/config.js';
 import { describeError, formatError } from './errorMessages.js';
 import { ModrinthClient } from './modrinth/client.js';
 import { LOADERS } from './types.js';
@@ -100,8 +101,13 @@ export function buildProgram(io: CliIo = defaultIo): Command {
 function withCommonOptions(command: Command): Command {
   return command
     .argument('<pack>', '.mrpack file, CurseForge export .zip, or folder of .jar files')
-    .requiredOption('--mc <version>', 'target Minecraft version (e.g. 1.21.1)')
-    .requiredOption('--loader <loader>', `target mod loader (${LOADERS.join(', ')})`)
+    .option('--mc <version>', 'target Minecraft version, e.g. 1.21.1 (or "target" in the config)')
+    .option(
+      '--loader <loader>',
+      `target mod loader: ${LOADERS.join(', ')} (or "target" in the config)`,
+    )
+    .option('--config <file>', `configuration file (default: ./${CONFIG_FILE} if present)`)
+    .option('--no-config', `ignore ${CONFIG_FILE}`)
     .option('--offline', 'use only cached API responses (no network)', false)
     .option('--no-cache', 'do not read or write the local API cache')
     .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')

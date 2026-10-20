@@ -15,6 +15,9 @@ export { readJarMetadata } from './jar.js';
 
 export type PackFormat = 'mrpack' | 'curseforge';
 
+// Taille maximale d'une archive de pack lue en mémoire.
+export const MAX_PACK_FILE_BYTES = 1024 * 1024 * 1024;
+
 // Détecte le format d'une archive à partir des fichiers qu'elle contient.
 export function detectArchiveFormat(data: Uint8Array, label: string): PackFormat {
   const names = new Set<string>();
@@ -31,13 +34,20 @@ export function detectArchiveFormat(data: Uint8Array, label: string): PackFormat
 
 // Charge un modpack depuis un chemin : .mrpack, zip CurseForge ou dossier de .jar.
 export async function loadPack(path: string): Promise<ModPack> {
-  let isDir: boolean;
+  let info: Awaited<ReturnType<typeof stat>>;
   try {
-    isDir = (await stat(path)).isDirectory();
+    info = await stat(path);
   } catch (error) {
     throw new InputError(`Cannot access ${path}`, { cause: error });
   }
-  if (isDir) return parseModsFolder(path);
+  if (info.isDirectory()) return parseModsFolder(path);
+  if (!info.isFile()) throw new InputError(`${path} is not a regular file or a directory`);
+  // Évite de charger en mémoire un fichier démesuré (un modpack pèse rarement plus de 100 Mo).
+  if (info.size > MAX_PACK_FILE_BYTES) {
+    throw new InputError(
+      `${basename(path)} is ${Math.round(info.size / 1024 / 1024)} MiB, larger than the ${MAX_PACK_FILE_BYTES / 1024 / 1024} MiB limit`,
+    );
+  }
 
   const data = new Uint8Array(await readFile(path));
   const label = basename(path);

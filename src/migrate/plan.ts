@@ -28,7 +28,7 @@ export interface PlannedMod {
   unverified?: boolean;
 }
 
-export type LoaderVersionSource = 'option' | 'source-pack';
+export type LoaderVersionSource = 'option' | 'config' | 'source-pack';
 
 export interface MigrationPlan {
   target: MigrationTarget;
@@ -47,6 +47,8 @@ export interface MigrationPlan {
 
 export interface PlanOptions {
   loaderVersion?: string;
+  // Provenance de `loaderVersion` (--loader-version ou modshift.config.json).
+  loaderVersionSource?: 'option' | 'config';
 }
 
 // Version du loader cible : option explicite, sinon celle du pack source si le loader
@@ -55,8 +57,9 @@ export function resolveLoaderVersion(
   pack: ModPack,
   target: MigrationTarget,
   explicit?: string,
+  explicitSource: 'option' | 'config' = 'option',
 ): { version?: string; source?: LoaderVersionSource } {
-  if (explicit) return { version: explicit, source: 'option' };
+  if (explicit) return { version: explicit, source: explicitSource };
   if (
     pack.loaderVersion &&
     pack.loader === target.loader &&
@@ -125,6 +128,7 @@ export function buildMigrationPlan(
     pack,
     target,
     options.loaderVersion,
+    options.loaderVersionSource,
   );
   const warnings: string[] = [];
   const mods: PlannedMod[] = [];
