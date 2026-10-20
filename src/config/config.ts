@@ -21,6 +21,8 @@ export interface ModShiftConfig {
   exclude?: string[];
   // Correspondances manuelles : mod d'origine (fichier, slug ou id) → projet Modrinth (slug ou id).
   mappings?: Record<string, string>;
+  // Options des sources de mods (`sources.<id>`), validées par chaque source.
+  sources?: Record<string, unknown>;
 }
 
 export interface LoadedConfig {
@@ -39,7 +41,7 @@ export class ConfigError extends Error {
   }
 }
 
-const KNOWN_KEYS = new Set(['$schema', 'target', 'ignore', 'exclude', 'mappings']);
+const KNOWN_KEYS = new Set(['$schema', 'target', 'ignore', 'exclude', 'mappings', 'sources']);
 const TARGET_KEYS = new Set(['minecraftVersion', 'loader', 'loaderVersion', 'side']);
 // Un fichier de configuration raisonnable fait quelques kilo-octets.
 const MAX_CONFIG_BYTES = 1024 * 1024;
@@ -57,7 +59,7 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
     if (!KNOWN_KEYS.has(key)) {
       throw new ConfigError(
         path,
-        `unknown key "${key}" (expected: target, ignore, exclude, mappings)`,
+        `unknown key "${key}" (expected: target, ignore, exclude, mappings, sources)`,
       );
     }
   }
@@ -122,6 +124,13 @@ export function validateConfig(raw: unknown, path: string): ModShiftConfig {
     }
     config.mappings = mappings;
   }
+
+  // Structure seulement : le contenu de chaque source est validé par la source elle-même
+  // (SourceRegistry.validateOptions), au chargement des réglages.
+  if (raw.sources !== undefined) {
+    if (!isObject(raw.sources)) throw new ConfigError(path, '"sources" must be an object');
+    config.sources = raw.sources;
+  }
   return config;
 }
 
@@ -166,6 +175,7 @@ export async function writeConfig(path: string, config: ModShiftConfig): Promise
   if (config.exclude?.length) ordered.exclude = config.exclude;
   if (config.mappings && Object.keys(config.mappings).length > 0)
     ordered.mappings = config.mappings;
+  if (config.sources && Object.keys(config.sources).length > 0) ordered.sources = config.sources;
   // Validation avant écriture : on n'écrit jamais un fichier que loadConfig refuserait.
   validateConfig(ordered, path);
   await writeFile(path, `${JSON.stringify(ordered, null, 2)}\n`);

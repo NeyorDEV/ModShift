@@ -62,6 +62,37 @@
           "my-local-mod.jar": "sodium"
         }
       ]
+    },
+    "sources": {
+      "description": "Options of mod sources, by source id. Each source validates its own options.",
+      "type": "object",
+      "properties": {
+        "github-releases": {
+          "description": "Look for a matching .jar in the GitHub releases of these repositories (token from GITHUB_TOKEN, optional). Results are suggestions, to verify, never added to migrated packs.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repositories"],
+          "properties": {
+            "repositories": {
+              "description": "Mod (file name, Modrinth slug or project id, or the jar's mod id) \u2192 \"owner/repo\".",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}$"
+              },
+              "examples": [
+                {
+                  "my-private-mod.jar": "someone/my-private-mod"
+                }
+              ]
+            },
+            "prereleases": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
     }
   }
 }

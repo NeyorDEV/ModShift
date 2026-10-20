@@ -72,7 +72,12 @@ export async function runMigrate(
   const reportPath = join(dirname(outPath), MIGRATION_REPORT_FILE);
 
   const session = createSession(options, io);
-  const { config, target, side } = await loadSettings(options, session.logger, io);
+  const { config, target, side } = await loadSettings(
+    options,
+    session.logger,
+    io,
+    session.registry,
+  );
   if (!supportsMrpack(target.loader)) {
     const { name } = getLoader(target.loader);
     throw new UsageError(
@@ -99,7 +104,7 @@ export async function runMigrate(
         `(see ${getLoader(target.loader).website ?? 'the loader website'}).`,
     );
   }
-  await session.prepare(pack);
+  await session.prepare(pack, config);
 
   const analysis = await analyzePack(pack, target, session.api, {
     maxAlternatives,
@@ -111,6 +116,7 @@ export async function runMigrate(
     ...session.progress,
   });
   session.logger.endProgress();
+  await session.findCandidates(analysis, pack, config);
   const plan = buildMigrationPlan(pack, analysis, {
     loaderVersion: explicitLoaderVersion,
     loaderVersionSource,

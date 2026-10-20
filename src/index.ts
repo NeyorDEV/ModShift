@@ -43,6 +43,23 @@ export { renderMigrationReport } from './migrate/report.js';
 export { renderReport, renderJson, renderMarkdown, renderTable } from './report/index.js';
 export { loadConfig, validateConfig, type ModShiftConfig } from './config/config.js';
 
+// Sources de mods (plugins) : voir docs/plugins.md.
+export {
+  CANDIDATE_NOTE,
+  createDefaultRegistry,
+  curseForgeSource,
+  findExternalCandidates,
+  githubReleasesSource,
+  modrinthSource,
+  prepareWithSources,
+  SourceRegistry,
+  SourceRegistryError,
+  type CandidateRequest,
+  type ModSource,
+  type SourceCandidate,
+  type SourceContext,
+} from './sources/index.js';
+
 export type { Loader, MigrationTarget, ModEntry, ModPack } from './types.js';
 export { LOADERS } from './types.js';
 export { MODSHIFT_VERSION } from './version.js';

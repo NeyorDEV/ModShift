@@ -1,5 +1,6 @@
 import type { COMPAT_LAYER_NOTE } from '../loaders/compatLayers.js';
 import type { VersionType } from '../modrinth/types.js';
+import type { SourceCandidate } from '../sources/types.js';
 import type { ModSide, TargetSide } from './sides.js';
 import type { Loader, MigrationTarget, ModOrigin, PackSource } from '../types.js';
 
@@ -120,6 +121,9 @@ export interface ModAnalysis {
   compatLayer?: CompatLayerHint;
   // Côté client / serveur de la version retenue (présent quand une version cible existe).
   side?: ModSide;
+  // Fichiers proposés par d'autres sources (ex. GitHub Releases) : à vérifier, jamais ajoutés
+  // automatiquement au pack migré.
+  external?: SourceCandidate[];
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }
