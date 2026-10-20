@@ -38,6 +38,8 @@
   "files": [
     "dist/**/*.js",
     "dist/**/*.d.ts",
+    "dist/**/*.html",
+    "dist/**/*.css",
     "schemas",
     "CHANGELOG.md"
   ],
@@ -45,7 +47,7 @@
     "node": "^20.17.0 || >=22.13.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-ui-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
