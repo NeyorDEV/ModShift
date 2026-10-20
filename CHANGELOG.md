@@ -18,6 +18,11 @@ All notable changes to ModShift are documented here. The format follows
   `server_side`), `--side client|server|both` and `target.side` in the config. Client-only or
   server-only mods are listed, ambiguous ones flagged, and `.mrpack` `env` filled from Modrinth
   when the source pack has none.
+- Concurrent Modrinth requests (`--concurrency <n>`, 1–16, default 4) within the client's rate
+  limit, with identical parallel requests sent only once. Reports stay identical whatever the
+  concurrency.
+- `bench/`: reproducible benchmarks on synthetic 200 and 500 mod packs against an in-memory fake
+  Modrinth (`npm run bench`).
 
 ## [0.1.0]
 
