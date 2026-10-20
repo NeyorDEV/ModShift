@@ -58,4 +58,24 @@ describe('scoreAlternative', () => {
     expect(result.explanation).toBe('10 downloads');
     expect(result.nameMatch).toBe(false);
   });
+
+  it('finds no real link between mods that only share a broad category (real-run regression)', () => {
+    // Cas observé sur la vraie API : Xaero's Minimap proposé pour CIT Resewn (seule la catégorie
+    // « utility » et la popularité étaient communes).
+    const result = scoreAlternative(
+      hit({
+        title: "Xaero's Minimap",
+        description: 'Displays a minimap for Minecraft with waypoints, for Fabric.',
+        categories: ['fabric', 'utility', 'adventure'],
+        downloads: 90_000_000,
+      }),
+      {
+        title: 'CIT Resewn',
+        categories: ['fabric', 'utility', 'decoration'],
+        description: 'Re-implements custom item textures for Minecraft on Fabric.',
+      },
+    );
+    expect(result.nameMatch).toBe(false);
+    expect(result.keywordMatch).toBe(false);
+  });
 });

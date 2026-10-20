@@ -26,7 +26,7 @@ These mods have no compatible version and are **not** in the generated pack.
 
 | Mod | File | Reason | Suggested alternatives (to verify) |
 | --- | --- | --- | --- |
-| Old Minimap | old-minimap-1.0.jar | No version for Minecraft 1.21.1 / fabric. Alternatives are suggestions, to verify. | [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap), [JourneyMap](https://modrinth.com/mod/journeymap), [Just Enough Items](https://modrinth.com/mod/jei) **Included: Xaero's Minimap.** |
+| Old Minimap | old-minimap-1.0.jar | No version for Minecraft 1.21.1 / fabric. Alternatives are suggestions, to verify. | [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap), [JourneyMap](https://modrinth.com/mod/journeymap) **Included: Xaero's Minimap.** |
 | mystery-mod.jar | mystery-mod.jar | Unknown file hash on Modrinth. The file may come from another site (CurseForge, GitHub) or have been modified. | — |
 | local-mod.jar | local-mod.jar | Unknown file hash on Modrinth and no Modrinth project matches mod id "localmod". The file may come from another site (CurseForge, GitHub) or have been modified. | — |
 
@@ -36,9 +36,8 @@ Ranked by relevance: shared categories, similar name, keywords from the descript
 
 **Old Minimap**
 
-- Xaero's Minimap: relevance 79/100 — similar name (minimap) · same categories (adventure, utility) · keywords (fixture) · 1.0M downloads
-- JourneyMap: relevance 60/100 — same categories (adventure, utility) · keywords (fixture) · 500k downloads
-- Just Enough Items: relevance 43/100 — same categories (utility) · keywords (fixture) · 9.0M downloads
+- Xaero's Minimap: relevance 75/100 — similar name (minimap) · same categories (adventure, utility) · 1.0M downloads
+- JourneyMap: relevance 61/100 — same categories (adventure, utility) · keywords (minimap, screen) · 500k downloads
 
 ## Missing dependencies
 

@@ -68,7 +68,7 @@
       "id": "OLDMAP01",
       "slug": "old-minimap",
       "title": "Old Minimap",
-      "description": "Old Minimap (fixture)",
+      "description": "A small minimap in the corner of the screen.",
       "categories": [
         "adventure",
         "utility"
@@ -88,7 +88,7 @@
       "id": "XAEROMAP",
       "slug": "xaeros-minimap",
       "title": "Xaero's Minimap",
-      "description": "Xaero's Minimap (fixture)",
+      "description": "Displays a minimap with waypoints and entity radar.",
       "categories": [
         "adventure",
         "utility"
@@ -109,7 +109,7 @@
       "id": "JOURNEYM",
       "slug": "journeymap",
       "title": "JourneyMap",
-      "description": "JourneyMap (fixture)",
+      "description": "Real-time mapping with a minimap, waypoints and a full-screen map.",
       "categories": [
         "adventure",
         "utility"
@@ -189,7 +189,7 @@
       "id": "JEIJEIJE",
       "slug": "jei",
       "title": "Just Enough Items",
-      "description": "Just Enough Items (fixture)",
+      "description": "Item and recipe viewing.",
       "categories": [
         "utility"
       ],
