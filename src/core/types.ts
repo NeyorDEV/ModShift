@@ -71,6 +71,8 @@ export interface ModAnalysis {
   targetVersion?: VersionRef;
   alternatives: Alternative[];
   adoptedAlternative?: AdoptedAlternative;
+  // Remplacement imposé par une correspondance de modshift.config.json.
+  mapping?: { rule: string; original?: ProjectRef };
   // Explication lisible du statut (surtout pour not-found / alternative-suggested).
   reason?: string;
 }
@@ -103,6 +105,14 @@ export interface Conflict {
   explanation: string;
 }
 
+// Mod écarté par la liste « ignore » de modshift.config.json.
+export interface IgnoredMod {
+  fileName: string;
+  path: string;
+  project?: ProjectRef;
+  rule: string;
+}
+
 export interface AnalysisResult {
   pack: {
     name?: string;
@@ -118,6 +128,7 @@ export interface AnalysisResult {
     missing: MissingDependency[];
   };
   conflicts: Conflict[];
+  ignored: IgnoredMod[];
   summary: Record<ModStatus, number>;
   // Nombre de fichiers non-mods (resource packs, configs…) non analysés.
   otherFilesCount: number;

@@ -1,3 +1,4 @@
+import { matchesModRef } from '../config/config.js';
 import { OfflineCacheMissError } from '../modrinth/errors.js';
 import type { ModrinthProject, ModrinthVersion } from '../modrinth/types.js';
 import type { MigrationTarget, ModEntry, ModPack } from '../types.js';
@@ -11,6 +12,7 @@ import {
   type Alternative,
   type AnalysisResult,
   type Conflict,
+  type IgnoredMod,
   type ModAnalysis,
   type ProjectRef,
   MOD_STATUSES,
@@ -26,6 +28,9 @@ export interface AnalyzeOptions {
   onProgress?: (message: string) => void;
   // Avancement de l'étape la plus longue (une requête par projet), pour une barre de progression.
   onProgressTick?: (done: number, total: number, label: string) => void;
+  // Règles de modshift.config.json.
+  ignore?: string[];
+  mappings?: Record<string, string>;
 }
 
 interface Identified {
@@ -123,12 +128,46 @@ export async function analyzePack(
     }
   }
 
+  // Étape 2 bis : règles de modshift.config.json (mods ignorés, correspondances manuelles).
+  const ignored: IgnoredMod[] = [];
+  const ignoredEntries = new Set<ModEntry>();
+  const mapped = new Map<ModEntry, { rule: string; project: ModrinthProject }>();
+  const mappingRules = Object.entries(options.mappings ?? {});
+  for (const entry of pack.mods) {
+    const id = identified.get(entry);
+    const ref = { fileName: entry.fileName, slug: id?.project.slug, projectId: id?.project.id };
+    const ignoreRule = options.ignore?.find((pattern) => matchesModRef(pattern, ref));
+    if (ignoreRule) {
+      ignoredEntries.add(entry);
+      ignored.push({
+        fileName: entry.fileName,
+        path: entry.path,
+        project: id ? toProjectRef(id.project) : undefined,
+        rule: ignoreRule,
+      });
+      continue;
+    }
+    const mapping = mappingRules.find(([from]) => matchesModRef(from, ref));
+    if (!mapping) continue;
+    const [rule, to] = mapping;
+    const replacement = await api.getProject(to);
+    if (replacement) {
+      mapped.set(entry, { rule, project: replacement });
+    } else {
+      warnings.push(`Mapping "${rule}" → "${to}" ignored: no Modrinth project "${to}".`);
+    }
+  }
+
   // Étape 3 : versions disponibles pour la cible (une requête par projet distinct).
   progress(`Looking for versions for Minecraft ${target.minecraftVersion} / ${target.loader}…`);
   const bestByProject = new Map<string, ModrinthVersion | undefined>();
-  const distinctProjects = [
-    ...new Map([...identified.values()].map((i) => [i.project.id, i.project])).values(),
-  ];
+  // Projets à interroger : mods identifiés non ignorés (ou leur remplaçant configuré).
+  const lookedUp = pack.mods.flatMap((entry) => {
+    if (ignoredEntries.has(entry)) return [];
+    const project = mapped.get(entry)?.project ?? identified.get(entry)?.project;
+    return project ? [project] : [];
+  });
+  const distinctProjects = [...new Map(lookedUp.map((p) => [p.id, p])).values()];
   const tick = options.onProgressTick ?? (() => undefined);
   for (const [i, project] of distinctProjects.entries()) {
     tick(i, distinctProjects.length, project.title);
@@ -141,7 +180,7 @@ export async function analyzePack(
   tick(distinctProjects.length, distinctProjects.length, 'done');
 
   // Étape 4 : statut de chaque mod, et alternatives pour ceux sans version.
-  const packProjectIds = new Set([...identified.values()].map((i) => i.project.id));
+  const packProjectIds = new Set(lookedUp.map((p) => p.id));
   const selected = new Map<string, SelectedVersion>();
   const mods: ModAnalysis[] = [];
 
@@ -152,7 +191,39 @@ export async function analyzePack(
       origin: entry.origin,
       alternatives: [],
     };
+    if (ignoredEntries.has(entry)) continue;
     const id = identified.get(entry);
+
+    const map = mapped.get(entry);
+    if (map) {
+      // Remplacement choisi par l'utilisateur : ce n'est pas une suggestion.
+      const replacement = toProjectRef(map.project);
+      const best = bestByProject.get(replacement.id);
+      const mapping = { rule: map.rule, original: id ? toProjectRef(id.project) : undefined };
+      const common = {
+        ...base,
+        identification: id?.by ?? ('none' as const),
+        project: replacement,
+        currentVersion: id?.currentVersion ? toVersionRef(id.currentVersion) : undefined,
+        mapping,
+      };
+      if (best) {
+        mods.push({
+          ...common,
+          status: 'update-found',
+          targetVersion: toVersionRef(best),
+          reason: `Replaced by ${replacement.title} (mapping "${map.rule}" in modshift.config.json).`,
+        });
+        selected.set(replacement.id, { project: replacement, version: best });
+      } else {
+        mods.push({
+          ...common,
+          status: 'not-found',
+          reason: `Mapped to ${replacement.title} in modshift.config.json, but it has no version for Minecraft ${target.minecraftVersion} / ${target.loader}.`,
+        });
+      }
+      continue;
+    }
 
     if (!id) {
       mods.push({
@@ -249,6 +320,7 @@ export async function analyzePack(
     mods,
     dependencies: { added: deps.added, missing: deps.missing },
     conflicts,
+    ignored,
     summary,
     otherFilesCount: pack.otherFiles.length,
     warnings,
