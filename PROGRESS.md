@@ -352,6 +352,42 @@ Decisions:
   Launcher's approach for mods whose distribution is disabled.
 - `allowModDistribution` is not used (not confirmed by the reference clients).
 
+## Phase 11 — Configuration & security review ✅
+
+Done:
+
+- **`modshift.config.json`** (`src/config/config.ts`, schema in
+  `schemas/modshift.config.schema.json`):
+  - `target.minecraftVersion` / `target.loader` / `target.loaderVersion`: defaults for `--mc`,
+    `--loader`, `--loader-version` (command-line options win);
+  - `ignore`: file names (`*` wildcard, case-insensitive), Modrinth slugs or project ids; ignored
+    mods are skipped **before any lookup** and listed in every report (`AnalysisResult.ignored`);
+  - `mappings`: `"old mod" → "Modrinth slug or id"`. The match uses the file name, slug or id, and
+    also works for unidentified files. The mod becomes `update-found` with `mapping` and the
+    reason "Replaced by X (mapping … in modshift.config.json)", or `not-found` when the
+    replacement has no target version. An unknown replacement project gives a warning, and the mod
+    is analysed normally.
+  - Lookup: `--config <file>`, else `./modshift.config.json` if it exists; `--no-config` disables
+    it. Validation is strict (unknown keys rejected, 1 MiB max) and `ConfigError` comes with a
+    hint.
+  - `CliIo.cwd` is injectable; test IOs use a non-existent folder so no local config leaks into
+    tests.
+- **Security review** (`SECURITY.md`):
+  - zip bombs: `readZip` checks declared sizes and entry counts before inflating (fflate allocates
+    from the declared size); limits are in `DEFAULT_ZIP_LIMITS` / `METADATA_ZIP_LIMITS`; pack files
+    over 1 GiB are refused; `collectOverrides` uses the same bounded reader;
+  - zip slip: entries are never written by their archive name, and paths are validated (already
+    there since phases 2 and 6);
+  - jars are never executed (grep shows no `eval` / child process / dynamic import);
+  - symbolic links are skipped in folders; `loadPack` refuses non-regular files.
+- Fix: `migrate` now checks the loader version **before** CurseForge resolution (no request
+  before a usage error).
+
+Decisions:
+
+- Mappings are explicit user choices, so they are reported as replacements, not "suggestions".
+- Limits are generous (packs of a few hundred MB work) but bounded; they are not configurable yet.
+
 ## Branches & PRs
 
 At the user's request, every phase now has its own branch, named after its task and stacked on
@@ -381,17 +417,17 @@ export.zip …`), which could not be done from here.
 
 ## Next steps
 
-Work plan agreed with the user: phases 11 → 16, then phases 17 → 22, in order. One branch and one
+Work plan agreed with the user: phases 12 → 16, then phases 17 → 22, in order. One branch and one
 draft PR per phase; push after every commit group. Never change GitHub settings or publish
 anything (npm, Marketplace, Pages): list manual actions above instead.
 
-- **Phase 11, config and quality** (branch `feat/config-and-security`):
-  - optional `modshift.config.json` with loader preferences, an ignore list, and manual mappings
-    from an old mod to a new one;
-  - security review: input validation, zip-slip, archive and entry size limits (zip bombs), jars
-    only read as zip data and never executed.
-- **Phase 12:** npm packaging (no publish), tag-triggered release workflow, full README,
-  CONTRIBUTING.md, issue templates.
+- **Phase 12, release readiness** (branch `chore/release-readiness`):
+  - `package.json` fields (repository, homepage, bugs, author, `files`, `types`/`exports`,
+    `prepublishOnly`), checked with `npm pack --dry-run`. **No publish.**
+  - `.github/workflows/release.yml` on `v*` tags: build, tests, then a GitHub release whose notes
+    come from `CHANGELOG.md`;
+  - full README (real output examples, options table, FAQ, contributing, MIT);
+  - CONTRIBUTING.md and `.github/ISSUE_TEMPLATE/*`.
 - **Phases 13–16:**
   - loader registry and fallback loaders (only rules found in official docs);
   - interactive mode (maintained prompt library, decision logic kept testable);
@@ -416,6 +452,8 @@ Pitfalls:
 - The test CLI IO (`test/helpers/cli.ts`) uses a fake clock. A client built with the real clock
   but a no-op `sleep` busy-waits on rate-limit pauses (a test once took 37 s).
 - Not verified against the live Modrinth API (network blocked here): do a manual run.
+- `SECURITY.md` refers to the local web UI's own security section, which comes in phase 15:
+  write it then.
 
 ## Known issues
 
