@@ -15,6 +15,8 @@ interactive mode, or in a small local web page.
 
 ![ModShift web interface: a Forge 1.20.1 pack analysed for NeoForge 1.21.1](docs/images/ui-light.png)
 
+_Screenshot of the test suite's fixture pack (fake data), analysed in `modshift ui`._
+
 > ModShift does **not** convert mod code. It looks for versions or equivalents of your mods for
 > the target. A mod with no port stays a mod with no port.
 
