@@ -2,6 +2,7 @@ import type { ModrinthDependency, ModrinthVersion } from '../modrinth/types.js';
 import type { MigrationTarget } from '../types.js';
 import { acceptedLoaders, fallbackCompatibility, pickBestVersion } from './loaders.js';
 import { type ModrinthApi, toProjectRef, toVersionRef } from './refs.js';
+import { sideOf } from './sides.js';
 import type { AddedDependency, Conflict, MissingDependency, ProjectRef } from './types.js';
 
 export interface SelectedVersion {
@@ -86,9 +87,8 @@ export async function resolveDependencies(
     }
     if (needed.size === 0) continue;
 
-    const projects = new Map(
-      (await api.getProjects([...needed.keys()])).map((p) => [p.id, toProjectRef(p)]),
-    );
+    const raw = new Map((await api.getProjects([...needed.keys()])).map((p) => [p.id, p]));
+    const projects = new Map([...raw].map(([id, p]) => [id, toProjectRef(p)]));
     for (const [projectId, requiredBy] of needed) {
       const project = projects.get(projectId);
       if (!project) {
@@ -117,6 +117,7 @@ export async function resolveDependencies(
         version: toVersionRef(best),
         requiredBy,
         ...(fallback ? { fallback } : {}),
+        side: sideOf(raw.get(projectId), best),
       });
       queue.push(selection);
     }

@@ -16,6 +16,7 @@ import {
   versionSupportsTarget,
 } from './loaders.js';
 import { type ModrinthApi, toProjectRef, toVersionRef } from './refs.js';
+import { sideOf, type TargetSide } from './sides.js';
 import {
   type AdoptedAlternative,
   ALTERNATIVE_NOTE,
@@ -42,6 +43,8 @@ export interface AnalyzeOptions {
   // Règles de modshift.config.json.
   ignore?: string[];
   mappings?: Record<string, string>;
+  // Installation visée (client, serveur ou les deux) ; « both » par défaut.
+  side?: TargetSide;
   // Signale les mods qu'une couche de compatibilité pourrait charger (vrai par défaut).
   compatLayers?: boolean;
 }
@@ -342,6 +345,19 @@ export async function analyzePack(
     });
   }
 
+  // Côté client / serveur des versions retenues (environment de la version, sinon projet).
+  const projectData = new Map<string, ModrinthProject>();
+  for (const id of identified.values()) projectData.set(id.project.id, id.project);
+  for (const map of mapped.values()) projectData.set(map.project.id, map.project);
+  for (const mod of mods) {
+    if (mod.project && mod.targetVersion) {
+      mod.side = sideOf(projectData.get(mod.project.id), mod.targetVersion);
+    }
+    if (mod.adoptedAlternative) {
+      mod.adoptedAlternative.side = sideOf(undefined, mod.adoptedAlternative.version);
+    }
+  }
+
   // Étape 5 : dépendances requises et incompatibilités de la liste finale.
   progress('Resolving dependencies…');
   const deps = await resolveDependencies(api, [...selected.values()], target);
@@ -360,6 +376,7 @@ export async function analyzePack(
       loader: pack.loader,
     },
     target,
+    side: options.side ?? 'both',
     mods,
     dependencies: { added: deps.added, missing: deps.missing },
     conflicts,

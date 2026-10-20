@@ -33,6 +33,7 @@ export function toVersionRef(version: ModrinthVersion): VersionRef {
     gameVersions: version.game_versions,
     loaders: version.loaders,
     datePublished: version.date_published,
+    ...(version.environment ? { environment: version.environment } : {}),
     file: file
       ? {
           fileName: file.filename,

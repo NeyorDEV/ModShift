@@ -35,6 +35,8 @@ export interface ModrinthVersion {
   dependencies: ModrinthDependency[];
   files: ModrinthVersionFile[];
   status?: string;
+  // Environnement pris en charge (client_only, server_only…), voir src/core/sides.ts.
+  environment?: string;
 }
 
 export interface ModrinthProject {
