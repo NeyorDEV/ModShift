@@ -60,7 +60,8 @@ export async function resolveDependencies(
     const required = round.flatMap((s) =>
       s.version.dependencies
         .filter((d) => d.dependency_type === 'required')
-        .map((dep) => ({ dep, by: s.project.title })),
+        // Fichier publié pour plusieurs loaders : Modrinth ne dit pas pour lequel est la dépendance.
+        .map((dep) => ({ dep, by: s.project.title, multiLoader: s.version.loaders.length > 1 })),
     );
     const projectIds = await resolveProjectIds(
       api,
@@ -69,7 +70,9 @@ export async function resolveDependencies(
 
     // Regroupe les besoins par projet et note qui les demande.
     const needed = new Map<string, string[]>();
-    for (const { dep, by } of required) {
+    // Projets demandés uniquement par des fichiers multi-loaders.
+    const onlyMultiLoader = new Map<string, boolean>();
+    for (const { dep, by, multiLoader } of required) {
       const projectId = projectIds.get(dep);
       if (!projectId) {
         warnings.push(
@@ -86,6 +89,7 @@ export async function resolveDependencies(
       const list = needed.get(projectId) ?? [];
       if (!list.includes(by)) list.push(by);
       needed.set(projectId, list);
+      onlyMultiLoader.set(projectId, (onlyMultiLoader.get(projectId) ?? true) && multiLoader);
     }
     if (needed.size === 0) continue;
 
@@ -114,6 +118,22 @@ export async function resolveDependencies(
         continue;
       }
       const best = bests[i];
+      const projectLoaders = raw.get(projectId)?.loaders;
+      const accepted = acceptedLoaders(target.loader);
+      if (
+        !best &&
+        onlyMultiLoader.get(projectId) &&
+        projectLoaders !== undefined &&
+        projectLoaders.length > 0 &&
+        !projectLoaders.some((l) => accepted.includes(l))
+      ) {
+        // Ex. Zoomify (un fichier Fabric + NeoForge) déclare KotlinLangForge, publié pour NeoForge
+        // seulement : la dépendance concerne l'autre loader, elle n'est pas manquante pour la cible.
+        warnings.push(
+          `${project.title} (required by ${requiredBy.join(', ')}) ignored: only published for ${projectLoaders.join(', ')}, so probably needed by another loader of a multi-loader file.`,
+        );
+        continue;
+      }
       if (!best) {
         missing.set(projectId, {
           projectId,
