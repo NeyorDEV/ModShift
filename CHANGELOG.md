@@ -6,6 +6,12 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- A dependency published only for another loader (e.g. KotlinLangForge, NeoForge only, declared
+  by Zoomify's single Fabric + NeoForge file) is no longer reported as missing for the target;
+  a warning explains why it was ignored.
+
 ### Added
 
 - Cross-loader migration (e.g. Forge → Fabric): multi-loader mods keep the same Modrinth project
