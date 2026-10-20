@@ -79,6 +79,7 @@ function serverResetSeconds(headers: Headers): number | undefined {
 }
 
 export class ModrinthClient {
+  private readonly inFlight = new Map<string, Promise<unknown>>();
   readonly baseUrl: string;
   readonly userAgent: string;
   private readonly fetchImpl: FetchLike;
@@ -233,9 +234,21 @@ export class ModrinthClient {
       throw new OfflineCacheMissError(url, describeRequest(method, url, options.body));
     }
 
-    const body = await this.fetchWithRetries(method, url, bodyText, options.allowNotFound);
-    if (this.cache) await this.cache.set(cacheKey, body);
-    return body as T | null;
+    // Requêtes parallèles identiques (ex. deux recherches dans la même catégorie) : une seule part
+    // réellement, les autres attendent sa réponse, ce qui épargne le quota de Modrinth.
+    const pending = this.inFlight.get(cacheKey);
+    if (pending) return (await pending) as T | null;
+    const promise = (async () => {
+      const body = await this.fetchWithRetries(method, url, bodyText, options.allowNotFound);
+      if (this.cache) await this.cache.set(cacheKey, body);
+      return body;
+    })();
+    this.inFlight.set(cacheKey, promise);
+    try {
+      return (await promise) as T | null;
+    } finally {
+      this.inFlight.delete(cacheKey);
+    }
   }
 
   private async fetchWithRetries(

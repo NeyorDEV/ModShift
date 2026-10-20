@@ -111,3 +111,29 @@ describe('analyzePack with concurrent requests', () => {
     expect(three.stats.peak).toBeLessThanOrEqual(3);
   });
 });
+
+describe('ModrinthClient request coalescing', () => {
+  it('sends identical parallel requests only once', async () => {
+    const mock = createMockFetch(fakeModrinthHandler(loadCatalog()));
+    let sent = 0;
+    const fetch: FetchLike = async (input, init) => {
+      sent++;
+      await tick();
+      return mock.fetch(input, init);
+    };
+    const client = new ModrinthClient({
+      fetch,
+      cache: new MemoryCache(),
+      sleep: async () => undefined,
+    });
+    const [a, b, c] = await Promise.all([
+      client.getProject('sodium'),
+      client.getProject('sodium'),
+      client.getProject('modmenu'),
+    ]);
+    expect(a?.id).toBe('AANobbMI');
+    expect(b).toEqual(a);
+    expect(c?.slug).toBe('modmenu');
+    expect(sent).toBe(2);
+  });
+});
