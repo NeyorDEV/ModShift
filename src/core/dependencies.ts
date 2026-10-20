@@ -125,29 +125,56 @@ export async function resolveDependencies(
   };
 }
 
-// Détecte les paires (A déclare B incompatible) où A et B sont tous deux dans la liste finale.
+// Détecte, dans la liste finale :
+// - les paires (A déclare B incompatible) où A et B sont tous deux présents ;
+// - les dépendances requises épinglées sur une version précise (`version_id`) alors qu'une autre
+//   version de B a été retenue pour la cible.
 async function findConflicts(api: ModrinthApi, finalList: SelectedVersion[]): Promise<Conflict[]> {
   const byId = new Map(finalList.map((s) => [s.project.id, s]));
-  const incompatible = finalList.flatMap((s) =>
+  const relevant = finalList.flatMap((s) =>
     s.version.dependencies
-      .filter((d) => d.dependency_type === 'incompatible')
+      .filter(
+        (d) =>
+          d.dependency_type === 'incompatible' ||
+          (d.dependency_type === 'required' && d.version_id),
+      )
       .map((dep) => ({ dep, by: s })),
   );
-  if (incompatible.length === 0) return [];
+  if (relevant.length === 0) return [];
   const projectIds = await resolveProjectIds(
     api,
-    incompatible.map((i) => i.dep),
+    relevant.map((i) => i.dep),
   );
   const conflicts: Conflict[] = [];
   const seen = new Set<string>();
-  for (const { dep, by } of incompatible) {
+  for (const { dep, by } of relevant) {
     const projectId = projectIds.get(dep);
     const other = projectId ? byId.get(projectId) : undefined;
     if (!other || other.project.id === by.project.id) continue;
-    const key = `${by.project.id}->${other.project.id}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    conflicts.push({ project: other.project, declaredBy: by.project.title });
+    const a = by.project.title;
+    const b = other.project.title;
+
+    if (dep.dependency_type === 'incompatible') {
+      const key = `incompatible:${by.project.id}->${other.project.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      conflicts.push({
+        kind: 'incompatible',
+        project: other.project,
+        declaredBy: a,
+        explanation: `${a} declares ${b} as incompatible: they may crash or misbehave together. Keep only one of them (ModShift does not remove either automatically).`,
+      });
+    } else if (dep.version_id && dep.version_id !== other.version.id) {
+      const key = `pinned:${by.project.id}->${other.project.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      conflicts.push({
+        kind: 'pinned-version',
+        project: other.project,
+        declaredBy: a,
+        explanation: `${a} requires a specific version of ${b} (version id ${dep.version_id}), but ${b} ${other.version.version_number} was selected for the target. Check that ${a} works with it.`,
+      });
+    }
   }
   return conflicts;
 }

@@ -6,6 +6,7 @@ import { loadPack } from '../input/index.js';
 import { defaultCacheDir, FileCache } from '../modrinth/cache.js';
 import type { ModrinthClientOptions } from '../modrinth/client.js';
 import { REPORT_FORMATS, renderReport, type ReportFormat } from '../report/index.js';
+import { createLogger, type Logger } from './logger.js';
 import { isLoader, LOADERS, type MigrationTarget } from '../types.js';
 
 export interface AnalyzeCommandOptions {
@@ -18,6 +19,7 @@ export interface AnalyzeCommandOptions {
   cacheDir?: string;
   maxAlternatives: string;
   quiet: boolean;
+  verbose?: boolean;
   color: boolean;
 }
 
@@ -25,7 +27,11 @@ export interface AnalyzeCommandOptions {
 export interface CliIo {
   stdout: (text: string) => void;
   stderr: (text: string) => void;
+  // stdout est-il un terminal (couleurs du tableau) ?
   isTTY: boolean;
+  // stderr est-il un terminal (barre de progression) ?
+  stderrIsTTY: boolean;
+  columns?: number;
   createApi: (options: ModrinthClientOptions) => ModrinthApi;
   setExitCode: (code: number) => void;
 }
@@ -81,27 +87,70 @@ export async function runAnalyze(
   const target = parseTarget(options.mc, options.loader);
   const format = parseFormat(options.format);
   const maxAlternatives = parseMaxAlternatives(options.maxAlternatives);
-  if (options.offline && !options.cache) {
-    throw new UsageError('--offline needs the cache: remove --no-cache');
-  }
-
-  const log = options.quiet ? () => undefined : (message: string) => io.stderr(`${message}\n`);
+  const session = createSession(options, io);
   const pack = await loadPack(packPath);
-  log(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
+  session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
 
-  const api = io.createApi({
-    cache: options.cache ? new FileCache(options.cacheDir ?? defaultCacheDir()) : undefined,
-    offline: options.offline,
+  const result = await analyzePack(pack, target, session.api, {
+    maxAlternatives,
+    ...session.progress,
   });
-  const result = await analyzePack(pack, target, api, { maxAlternatives, onProgress: log });
+  session.logger.endProgress();
 
   const color = options.color && io.isTTY && !options.output && !process.env.NO_COLOR;
   const report = renderReport(result, format, { color });
   if (options.output) {
     await writeFile(options.output, report);
-    log(`Report written to ${options.output}`);
+    session.logger.info(`Report written to ${options.output}`);
   } else {
     io.stdout(report);
   }
   return result;
+}
+
+// Options communes aux commandes qui interrogent Modrinth.
+export interface SessionOptions {
+  quiet: boolean;
+  verbose?: boolean;
+  offline: boolean;
+  cache: boolean;
+  cacheDir?: string;
+}
+
+export interface Session {
+  logger: Logger;
+  api: ModrinthApi;
+  // Rappels de progression à passer à analyzePack.
+  progress: { onProgress: (message: string) => void; onProgressTick: Logger['progress'] };
+}
+
+// Prépare le journal (quiet / normal / verbose) et le client Modrinth (cache, hors-ligne, logs).
+export function createSession(options: SessionOptions, io: CliIo): Session {
+  if (options.quiet && options.verbose) {
+    throw new UsageError('--quiet and --verbose cannot be used together');
+  }
+  if (options.offline && !options.cache) {
+    throw new UsageError('--offline needs the cache: remove --no-cache');
+  }
+  const logger = createLogger({
+    write: io.stderr,
+    level: options.quiet ? 'quiet' : options.verbose ? 'verbose' : 'normal',
+    isTTY: io.stderrIsTTY,
+    width: io.columns,
+  });
+  const cacheDir = options.cacheDir ?? defaultCacheDir();
+  if (options.cache) logger.debug(`cache directory: ${cacheDir}`);
+  const api = io.createApi({
+    cache: options.cache ? new FileCache(cacheDir) : undefined,
+    offline: options.offline,
+    onEvent: (event) => logger.clientEvent(event),
+  });
+  return {
+    logger,
+    api,
+    progress: {
+      onProgress: (message) => logger.info(message),
+      onProgressTick: (done, total, label) => logger.progress(done, total, label),
+    },
+  };
 }

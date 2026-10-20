@@ -2,16 +2,10 @@
 import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
-import { type CliIo, runAnalyze, UsageError } from './commands/analyze.js';
+import { type CliIo, runAnalyze } from './commands/analyze.js';
 import { runMigrate } from './commands/migrate.js';
-import { InputError } from './input/errors.js';
-import { InvalidMrpackError } from './migrate/writer.js';
+import { describeError, formatError } from './errorMessages.js';
 import { ModrinthClient } from './modrinth/client.js';
-import {
-  ModrinthApiError,
-  ModrinthNetworkError,
-  OfflineCacheMissError,
-} from './modrinth/errors.js';
 import { LOADERS } from './types.js';
 import { MODSHIFT_VERSION } from './version.js';
 
@@ -19,23 +13,13 @@ const defaultIo: CliIo = {
   stdout: (text) => process.stdout.write(text),
   stderr: (text) => process.stderr.write(text),
   isTTY: Boolean(process.stdout.isTTY),
+  stderrIsTTY: Boolean(process.stderr.isTTY),
+  columns: process.stderr.columns,
   createApi: (options) => new ModrinthClient(options),
   setExitCode: (code) => {
     process.exitCode = code;
   },
 };
-
-// Erreurs « attendues » : affichées sans pile d'appels.
-function isKnownError(error: unknown): error is Error {
-  return (
-    error instanceof UsageError ||
-    error instanceof InputError ||
-    error instanceof InvalidMrpackError ||
-    error instanceof OfflineCacheMissError ||
-    error instanceof ModrinthNetworkError ||
-    error instanceof ModrinthApiError
-  );
-}
 
 // Construit le programme CLI (exporté pour pouvoir le tester sans lancer de processus).
 export function buildProgram(io: CliIo = defaultIo): Command {
@@ -56,8 +40,9 @@ export function buildProgram(io: CliIo = defaultIo): Command {
       try {
         await fn(...args);
       } catch (error) {
-        if (!isKnownError(error)) throw error;
-        io.stderr(`error: ${error.message}\n`);
+        const described = describeError(error);
+        if (!described) throw error;
+        io.stderr(formatError(described));
         io.setExitCode(1);
       }
     };
@@ -104,7 +89,8 @@ function withCommonOptions(command: Command): Command {
     .option('--no-cache', 'do not read or write the local API cache')
     .option('--cache-dir <dir>', 'cache directory (default: ~/.cache/modshift)')
     .option('--max-alternatives <n>', 'alternatives suggested per missing mod (0 to disable)', '3')
-    .option('-q, --quiet', 'no progress messages on stderr', false);
+    .option('-q, --quiet', 'no progress messages on stderr', false)
+    .option('-v, --verbose', 'log every API request, cache hit and retry on stderr', false);
 }
 
 // Point d'entrée uniquement quand le fichier est exécuté directement

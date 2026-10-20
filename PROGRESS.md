@@ -251,17 +251,75 @@ Decisions:
 - Mods identified only by their mod id are included when a target version exists, but the
   report marks them as unverified (`PlannedMod.unverified`).
 
+## Phase 8 — Robustness ✅
+
+Done:
+
+- **Actionable errors** (`src/errorMessages.ts`): `describeError()` turns each known error into
+  `error: <message>` plus `hint: <what to do>`. Unknown errors still crash with a stack trace (they
+  are bugs).
+  - network: check the connection/proxy, or use `--offline`;
+  - invalid pack: the formats ModShift accepts;
+  - rate limit (new `RateLimitError`, thrown when `429` persists after retries): wait N s, cached
+    responses are reused;
+  - offline cache miss: run once online;
+  - Modrinth 5xx: retry later (status page);
+  - other 4xx and `InvalidMrpackError`: open an issue.
+- Unidentifiable mods: the reason now says the file may come from another site or have been
+  modified.
+- **Logs** (`src/commands/logger.ts`): three levels (`--quiet`, normal, `-v/--verbose`), always on
+  stderr.
+  - The progress bar (per-project version lookup, `onProgressTick` in the engine) is drawn only
+    when stderr is a TTY and is cleared before any other line.
+  - `--verbose` logs every request (method, path, status, duration), cache hits and retries,
+    through the new `ModrinthClientOptions.onEvent`.
+  - Rate-limit pauses of 2 s or more are always announced (`RateLimiter` `onWait`).
+- `createSession()` (`src/commands/analyze.ts`) is shared by `analyze` and `migrate`: logger,
+  client (cache, offline, events) and the option checks (`--quiet` + `--verbose`, `--offline` +
+  `--no-cache`).
+- **Conflicts** now have a `kind` and an `explanation` (with the recommended action), shown in
+  every report and in `MIGRATION_REPORT.md`:
+  - `incompatible`: A declares B incompatible and both are in the final list;
+  - `pinned-version`: A requires a specific `version_id` of B, but another B version was
+    selected for the target;
+  - `duplicate`: the same project appears in several files of the source pack.
+
+Decisions:
+
+- Conflicts are reported, never resolved automatically: picking which mod to drop needs the
+  user's judgement (the interactive mode, phase 14, can ask).
+- `CliIo` gained `stderrIsTTY` and `columns`; test IOs set them explicitly.
+
 ## Next steps
 
-Work plan agreed with the user (phases 8 → 16, in order; push after every phase; the PR stays a
-draft until the end):
+Work plan agreed with the user: phases 9 → 16, then phases 17 → 22 (third message), in order.
+Push after every phase. The PR stays a draft until the end. Never change GitHub settings or
+publish anything (npm, Marketplace, Pages): list manual actions here instead.
 
-- **Phase 8, robustness:** actionable error messages (network, invalid pack, rate limit, mod not
-  identifiable), a progress bar and `--verbose`, and conflict explanations in the reports.
-- **Phases 9–16** (user request, second message): cache commands and TTL, CurseForge API
-  (`CURSEFORGE_API_KEY` only), `modshift.config.json`, security review (zip-slip, size limits),
-  npm/release packaging, loader registry and fallback loaders, interactive mode, local web UI,
-  and final docs.
+- **Phase 9, offline and cache:** `--offline` already exists (Phase 3). To do:
+  - `modshift cache clear` / `modshift cache stats` (count, size, oldest/newest entry);
+  - a configurable TTL (`--cache-ttl <duration>` and/or an env var). It is passed to
+    `ModrinthClient` through `createSession` in `src/commands/analyze.ts`
+    (`cacheTtlMs` already exists);
+  - offline cache misses should name the missing request kind.
+- **Phase 10, CurseForge API:** `CURSEFORGE_API_KEY` only; disabled with a clear message without a
+  key. Check the official docs (they will probably be blocked here, so document that).
+- **Phase 11:** `modshift.config.json` (loader preferences, ignore list, manual mappings) and a
+  security review (zip-slip, size limits, jars never executed).
+- **Phase 12:** npm packaging (no publish), tag-triggered release workflow, full README,
+  CONTRIBUTING.md, issue templates.
+- **Phases 13–16:**
+  - loader registry and fallback loaders (only rules found in official docs);
+  - interactive mode (maintained prompt library, decision logic kept testable);
+  - `modshift ui` on 127.0.0.1;
+  - final docs.
+- **Phases 17–22:**
+  - cross-loader migration and Sinytra Connector hints (experimental, never auto-included);
+  - `--side client|server`;
+  - concurrency and benchmarks;
+  - source plugin system with a GitHub Releases source;
+  - reusable GitHub Action;
+  - VitePress docs site with a Pages deploy workflow (not enabled).
 
 Pitfalls:
 

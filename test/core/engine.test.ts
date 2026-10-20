@@ -57,7 +57,8 @@ describe('analyzePack — 1.20.1 Fabric → 1.21.1 Fabric', () => {
     expect(byFile(result, 'mystery-mod.jar')).toMatchObject({
       status: 'not-found',
       identification: 'none',
-      reason: 'Unknown file hash on Modrinth.',
+      reason:
+        'Unknown file hash on Modrinth. The file may come from another site (CurseForge, GitHub) or have been modified.',
     });
     expect(byFile(result, 'local-mod.jar')?.reason).toContain('mod id "localmod"');
   });
@@ -193,7 +194,60 @@ describe('analyzePack — conflicts', () => {
       client,
     );
     expect(result.conflicts).toEqual([
-      { project: expect.objectContaining({ id: 'AANobbMI' }), declaredBy: 'Fabric API' },
+      {
+        kind: 'incompatible',
+        project: expect.objectContaining({ id: 'AANobbMI' }),
+        declaredBy: 'Fabric API',
+        explanation:
+          'Fabric API declares Sodium as incompatible: they may crash or misbehave together. Keep only one of them (ModShift does not remove either automatically).',
+      },
+    ]);
+  });
+
+  it('explains pinned dependency versions that differ from the selected one', async () => {
+    const catalog: Catalog = structuredClone(loadCatalog());
+    // Mod Menu exige une version précise de Fabric API (celle de 1.20.1).
+    const menu = catalog.versions.find((v) => v.id === 'v1menu');
+    menu?.dependencies.splice(0, 1, {
+      version_id: 'v1fapi',
+      project_id: 'P7dR8mSH',
+      file_name: null,
+      dependency_type: 'required',
+    });
+    const { client } = createFakeClient(catalog);
+    const result = await analyzePack(
+      fabricPack(),
+      { minecraftVersion: '1.21.1', loader: 'fabric' },
+      client,
+    );
+    expect(result.conflicts).toEqual([
+      expect.objectContaining({
+        kind: 'pinned-version',
+        declaredBy: 'Mod Menu',
+        explanation: expect.stringContaining(
+          'Mod Menu requires a specific version of Fabric API (version id v1fapi), but Fabric API 0.104.0 was selected',
+        ),
+      }),
+    ]);
+  });
+
+  it('reports the same project present twice', async () => {
+    const pack = fabricPack();
+    const sodium = pack.mods[0];
+    if (sodium)
+      pack.mods.push({ ...sodium, fileName: 'sodium-copy.jar', path: 'mods/sodium-copy.jar' });
+    const { client } = createFakeClient();
+    const result = await analyzePack(
+      pack,
+      { minecraftVersion: '1.21.1', loader: 'fabric' },
+      client,
+    );
+    expect(result.conflicts).toEqual([
+      expect.objectContaining({
+        kind: 'duplicate',
+        declaredBy: 'sodium-fabric-0.5.8.jar, sodium-copy.jar',
+        explanation: expect.stringContaining('Sodium is present 2 times'),
+      }),
     ]);
   });
 });

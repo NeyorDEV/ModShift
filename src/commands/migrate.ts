@@ -6,9 +6,14 @@ import { loadPack } from '../input/index.js';
 import { buildMigrationPlan, type MigrationPlan, resolveLoaderVersion } from '../migrate/plan.js';
 import { MIGRATION_REPORT_FILE, renderMigrationReport, renderPlanText } from '../migrate/report.js';
 import { buildMrpackArchive, collectOverrides } from '../migrate/writer.js';
-import { defaultCacheDir, FileCache } from '../modrinth/cache.js';
 import type { Loader } from '../types.js';
-import { type CliIo, parseMaxAlternatives, parseTarget, UsageError } from './analyze.js';
+import {
+  type CliIo,
+  createSession,
+  parseMaxAlternatives,
+  parseTarget,
+  UsageError,
+} from './analyze.js';
 
 export interface MigrateCommandOptions {
   mc: string;
@@ -23,6 +28,7 @@ export interface MigrateCommandOptions {
   cacheDir?: string;
   maxAlternatives: string;
   quiet: boolean;
+  verbose?: boolean;
 }
 
 export interface MigrateResult {
@@ -57,9 +63,6 @@ export async function runMigrate(
 ): Promise<MigrateResult> {
   const target = parseTarget(options.mc, options.loader);
   const maxAlternatives = parseMaxAlternatives(options.maxAlternatives);
-  if (options.offline && !options.cache) {
-    throw new UsageError('--offline needs the cache: remove --no-cache');
-  }
   if (options.includeAlternatives && maxAlternatives === 0) {
     throw new UsageError('--include-alternatives needs --max-alternatives greater than 0');
   }
@@ -75,9 +78,9 @@ export async function runMigrate(
   }
   const reportPath = join(dirname(outPath), MIGRATION_REPORT_FILE);
 
-  const log = options.quiet ? () => undefined : (message: string) => io.stderr(`${message}\n`);
+  const session = createSession(options, io);
   const pack = await loadPack(packPath);
-  log(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
+  session.logger.info(`Loaded ${pack.mods.length} mod(s) from ${packPath} (${pack.source}).`);
 
   // Vérifié avant toute requête : sans version de loader, le pack généré serait inutilisable.
   const loaderVersion = resolveLoaderVersion(pack, target, options.loaderVersion);
@@ -88,15 +91,12 @@ export async function runMigrate(
     );
   }
 
-  const api = io.createApi({
-    cache: options.cache ? new FileCache(options.cacheDir ?? defaultCacheDir()) : undefined,
-    offline: options.offline,
-  });
-  const analysis = await analyzePack(pack, target, api, {
+  const analysis = await analyzePack(pack, target, session.api, {
     maxAlternatives,
     adoptAlternatives: options.includeAlternatives,
-    onProgress: log,
+    ...session.progress,
   });
+  session.logger.endProgress();
   const plan = buildMigrationPlan(pack, analysis, { loaderVersion: options.loaderVersion });
 
   const isArchive = pack.source !== 'folder';

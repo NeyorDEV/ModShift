@@ -8,6 +8,8 @@ export interface RateLimiterOptions {
   windowMs?: number;
   now?: () => number;
   sleep?: Sleep;
+  // Appelé avant chaque attente (pour informer l'utilisateur d'une pause due au quota).
+  onWait?: (ms: number) => void;
 }
 
 // Limiteur de débit côté client :
@@ -19,6 +21,7 @@ export class RateLimiter {
   private readonly windowMs: number;
   private readonly now: () => number;
   private readonly sleep: Sleep;
+  private readonly onWait: (ms: number) => void;
   private readonly timestamps: number[] = [];
   private blockedUntil = 0;
   // Chaîne de promesses : sérialise les appels à acquire() pour éviter les courses.
@@ -29,6 +32,7 @@ export class RateLimiter {
     this.windowMs = options.windowMs ?? 60_000;
     this.now = options.now ?? Date.now;
     this.sleep = options.sleep ?? defaultSleep;
+    this.onWait = options.onWait ?? (() => undefined);
   }
 
   // Attend qu'une requête puisse être envoyée, puis la comptabilise.
@@ -52,6 +56,7 @@ export class RateLimiter {
         this.timestamps.push(now);
         return;
       }
+      this.onWait(waitMs);
       await this.sleep(waitMs);
     }
   }

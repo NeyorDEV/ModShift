@@ -88,11 +88,19 @@ export interface MissingDependency {
   reason: string;
 }
 
+// incompatible : A déclare B incompatible et les deux sont dans la liste finale ;
+// pinned-version : A exige une version précise de B, mais une autre a été retenue pour la cible ;
+// duplicate : le même projet apparaît plusieurs fois dans le pack d'origine.
+export type ConflictKind = 'incompatible' | 'pinned-version' | 'duplicate';
+
 export interface Conflict {
-  // Projet présent dans la liste finale et déclaré incompatible…
+  kind: ConflictKind;
+  // Projet concerné (déclaré incompatible, version imposée, ou dupliqué)…
   project: ProjectRef;
-  // … par ce projet.
+  // … par ce projet (titre), ou les fichiers en double pour « duplicate ».
   declaredBy: string;
+  // Explication lisible et action recommandée.
+  explanation: string;
 }
 
 export interface AnalysisResult {

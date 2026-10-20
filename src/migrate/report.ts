@@ -1,5 +1,5 @@
 import type { AnalysisResult } from '../core/types.js';
-import { alternativesLabel, versionLabel } from '../report/labels.js';
+import { alternativesLabel, CONFLICT_LABELS, versionLabel } from '../report/labels.js';
 import type { MigrationPlan, PlannedMod } from './plan.js';
 
 export const MIGRATION_REPORT_FILE = 'MIGRATION_REPORT.md';
@@ -109,10 +109,12 @@ export function renderMigrationReport(
 
   if (analysis.conflicts.length > 0) {
     lines.push('', '## Conflicts', '');
+    lines.push(
+      'ModShift reports these problems but does not resolve them automatically: review them before playing.',
+      '',
+    );
     for (const conflict of analysis.conflicts) {
-      lines.push(
-        `- **${conflict.declaredBy}** declares **${conflict.project.title}** as incompatible`,
-      );
+      lines.push(`- **${CONFLICT_LABELS[conflict.kind]}:** ${conflict.explanation}`);
     }
   }
 
@@ -183,7 +185,7 @@ export function renderPlanText(
     );
   }
   for (const conflict of analysis.conflicts) {
-    out.push(`  ✘ conflict: ${conflict.declaredBy} is incompatible with ${conflict.project.title}`);
+    out.push(`  ✘ ${CONFLICT_LABELS[conflict.kind]}: ${conflict.explanation}`);
   }
   return `${out.join('\n')}\n`;
 }

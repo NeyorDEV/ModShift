@@ -1,4 +1,4 @@
-import type { ModAnalysis, ModStatus, VersionRef } from '../core/types.js';
+import type { ConflictKind, ModAnalysis, ModStatus, VersionRef } from '../core/types.js';
 
 export const STATUS_LABELS: Record<ModStatus, string> = {
   compatible: 'compatible',
@@ -12,6 +12,12 @@ export const STATUS_ICONS: Record<ModStatus, string> = {
   'update-found': '↑',
   'alternative-suggested': '?',
   'not-found': '✘',
+};
+
+export const CONFLICT_LABELS: Record<ConflictKind, string> = {
+  incompatible: 'Incompatible mods',
+  'pinned-version': 'Pinned dependency version',
+  duplicate: 'Duplicate mod',
 };
 
 export function modDisplayName(mod: ModAnalysis): string {

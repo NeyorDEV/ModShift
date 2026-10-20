@@ -2,7 +2,7 @@ import { buildProgram } from '../../src/cli.js';
 import type { CliIo } from '../../src/commands/analyze.js';
 import { ModrinthClient } from '../../src/modrinth/client.js';
 import { type Catalog, fakeModrinthHandler, loadCatalog } from './fakeModrinth.js';
-import { createMockFetch, type MockHandler } from './mockFetch.js';
+import { createFakeClock, createMockFetch, type MockHandler } from './mockFetch.js';
 
 export interface TestIo extends CliIo {
   out: string;
@@ -17,6 +17,7 @@ export interface TestIoOptions {
   // Remplace entièrement le faux serveur (ex. pour simuler un rate limit).
   handler?: MockHandler;
   isTTY?: boolean;
+  stderrIsTTY?: boolean;
 }
 
 // IO de test : sorties capturées, client Modrinth branché sur le faux serveur.
@@ -26,6 +27,7 @@ export function createIo(options: TestIoOptions = {}): TestIo {
     if (options.networkDown) throw new TypeError('fetch failed');
     return fake(req);
   });
+  const clock = createFakeClock();
   const io: TestIo = {
     out: '',
     err: '',
@@ -34,6 +36,7 @@ export function createIo(options: TestIoOptions = {}): TestIo {
       return mock.calls.length;
     },
     isTTY: options.isTTY ?? false,
+    stderrIsTTY: options.stderrIsTTY ?? false,
     stdout: (text) => {
       io.out += text;
     },
@@ -47,7 +50,9 @@ export function createIo(options: TestIoOptions = {}): TestIo {
       new ModrinthClient({
         ...clientOptions,
         fetch: mock.fetch,
-        sleep: async () => undefined,
+        // Horloge virtuelle : les attentes (backoff, rate limit) sont instantanées.
+        now: clock.now,
+        sleep: clock.sleep,
         maxRetries: 1,
       }),
   };

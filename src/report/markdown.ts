@@ -1,6 +1,13 @@
 import type { AnalysisResult } from '../core/types.js';
 import { MOD_STATUSES } from '../core/types.js';
-import { modDisplayName, modNotes, STATUS_ICONS, STATUS_LABELS, versionLabel } from './labels.js';
+import {
+  CONFLICT_LABELS,
+  modDisplayName,
+  modNotes,
+  STATUS_ICONS,
+  STATUS_LABELS,
+  versionLabel,
+} from './labels.js';
 
 // Échappe les caractères qui casseraient un tableau Markdown.
 function cell(text: string): string {
@@ -100,7 +107,7 @@ export function renderMarkdown(result: AnalysisResult): string {
   if (result.conflicts.length > 0) {
     lines.push('', '## Conflicts', '');
     for (const c of result.conflicts) {
-      lines.push(`- **${c.declaredBy}** declares **${c.project.title}** as incompatible`);
+      lines.push(`- **${CONFLICT_LABELS[c.kind]}:** ${c.explanation}`);
     }
   }
 

@@ -130,7 +130,9 @@ describe('E2E: pack with unidentifiable mods', () => {
     );
     expect(index.files.map((f) => f.path)).toEqual(['mods/v1jei.jar']);
     expect(report).toContain('replaces jei-local.jar (identified by mod id only, unverified)');
-    expect(report).toContain('| library.jar | library.jar | Unknown file hash on Modrinth. | — |');
+    expect(report).toContain(
+      '| library.jar | library.jar | Unknown file hash on Modrinth. The file may come from another site (CurseForge, GitHub) or have been modified. | — |',
+    );
     expect(report).toContain('no Modrinth project matches mod id "example_quilt"');
     expect(io.out).toContain('Excluded:');
   });

@@ -9,7 +9,9 @@ import {
   ALTERNATIVE_NOTE,
   type Alternative,
   type AnalysisResult,
+  type Conflict,
   type ModAnalysis,
+  type ProjectRef,
   MOD_STATUSES,
   type ModStatus,
 } from './types.js';
@@ -21,6 +23,8 @@ export interface AnalyzeOptions {
   // elle entre dans la liste finale et ses dépendances sont résolues. Reste une suggestion.
   adoptAlternatives?: boolean;
   onProgress?: (message: string) => void;
+  // Avancement de l'étape la plus longue (une requête par projet), pour une barre de progression.
+  onProgressTick?: (done: number, total: number, label: string) => void;
 }
 
 interface Identified {
@@ -115,14 +119,19 @@ export async function analyzePack(
   // Étape 3 : versions disponibles pour la cible (une requête par projet distinct).
   progress(`Looking for versions for Minecraft ${target.minecraftVersion} / ${target.loader}…`);
   const bestByProject = new Map<string, ModrinthVersion | undefined>();
-  for (const { project } of identified.values()) {
-    if (bestByProject.has(project.id)) continue;
+  const distinctProjects = [
+    ...new Map([...identified.values()].map((i) => [i.project.id, i.project])).values(),
+  ];
+  const tick = options.onProgressTick ?? (() => undefined);
+  for (const [i, project] of distinctProjects.entries()) {
+    tick(i, distinctProjects.length, project.title);
     const versions = await api.getProjectVersions(project.id, {
       loaders: acceptedLoaders(target.loader),
       gameVersions: [target.minecraftVersion],
     });
     bestByProject.set(project.id, pickBestVersion(versions, target));
   }
+  tick(distinctProjects.length, distinctProjects.length, 'done');
 
   // Étape 4 : statut de chaque mod, et alternatives pour ceux sans version.
   const packProjectIds = new Set([...identified.values()].map((i) => i.project.id));
@@ -207,6 +216,7 @@ export async function analyzePack(
   progress('Resolving dependencies…');
   const deps = await resolveDependencies(api, [...selected.values()], target);
   warnings.push(...deps.warnings);
+  const conflicts = [...findDuplicates(mods), ...deps.conflicts];
 
   const summary = emptySummary();
   for (const mod of mods) summary[mod.status]++;
@@ -222,11 +232,32 @@ export async function analyzePack(
     target,
     mods,
     dependencies: { added: deps.added, missing: deps.missing },
-    conflicts: deps.conflicts,
+    conflicts,
     summary,
     otherFilesCount: pack.otherFiles.length,
     warnings,
   };
+}
+
+// Le même projet présent dans plusieurs fichiers (ex. deux versions d'un même mod).
+function findDuplicates(mods: ModAnalysis[]): Conflict[] {
+  const byProject = new Map<string, ModAnalysis[]>();
+  for (const mod of mods) {
+    if (!mod.project) continue;
+    byProject.set(mod.project.id, [...(byProject.get(mod.project.id) ?? []), mod]);
+  }
+  return [...byProject.values()]
+    .filter((list) => list.length > 1)
+    .map((list) => {
+      const project = list[0]?.project as ProjectRef;
+      const files = list.map((m) => m.fileName).join(', ');
+      return {
+        kind: 'duplicate' as const,
+        project,
+        declaredBy: files,
+        explanation: `${project.title} is present ${list.length} times (${files}). Only one copy is kept in a migrated pack; remove the others from the source pack.`,
+      };
+    });
 }
 
 // Retient la première alternative (ordre de pertinence) qui a une version pour la cible.
@@ -259,7 +290,9 @@ function unidentifiedReason(entry: ModEntry): string {
     return `CurseForge file (project ${entry.curseforge.projectId}, file ${entry.curseforge.fileId}) cannot be resolved without the CurseForge API.`;
   }
   const modIds = [...new Set(entry.metadata.map((m) => m.modId))];
+  // Piste concrète : le fichier vient souvent d'un autre site, ou a été modifié/recompilé.
+  const hint = 'The file may come from another site (CurseForge, GitHub) or have been modified.';
   return modIds.length > 0
-    ? `Unknown file hash on Modrinth and no Modrinth project matches mod id "${modIds.join('", "')}".`
-    : 'Unknown file hash on Modrinth.';
+    ? `Unknown file hash on Modrinth and no Modrinth project matches mod id "${modIds.join('", "')}". ${hint}`
+    : `Unknown file hash on Modrinth. ${hint}`;
 }

@@ -1,6 +1,11 @@
 import { MODSHIFT_VERSION } from '../version.js';
 import { DEFAULT_CACHE_TTL_MS, type ResponseCache } from './cache.js';
-import { ModrinthApiError, ModrinthNetworkError, OfflineCacheMissError } from './errors.js';
+import {
+  ModrinthApiError,
+  ModrinthNetworkError,
+  OfflineCacheMissError,
+  RateLimitError,
+} from './errors.js';
 import { defaultSleep, RateLimiter, type Sleep } from './rateLimiter.js';
 import type {
   HashAlgorithm,
@@ -35,7 +40,15 @@ export interface ModrinthClientOptions {
   timeoutMs?: number;
   now?: () => number;
   sleep?: Sleep;
+  // Événements de transport (requêtes, cache, tentatives, attentes) pour les logs --verbose.
+  onEvent?: (event: ClientEvent) => void;
 }
+
+export type ClientEvent =
+  | { type: 'request'; method: string; url: string; status: number; durationMs: number }
+  | { type: 'cache-hit'; method: string; url: string }
+  | { type: 'retry'; url: string; reason: string; delayMs: number }
+  | { type: 'rate-limit-wait'; waitMs: number };
 
 interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined>;
@@ -77,6 +90,7 @@ export class ModrinthClient {
   private readonly timeoutMs: number;
   private readonly now: () => number;
   private readonly sleep: Sleep;
+  private readonly emit: (event: ClientEvent) => void;
   // Nombre de requêtes réellement envoyées (utile pour les statistiques et les tests).
   requestCount = 0;
 
@@ -89,7 +103,14 @@ export class ModrinthClient {
     this.offline = options.offline ?? false;
     this.now = options.now ?? Date.now;
     this.sleep = options.sleep ?? defaultSleep;
-    this.rateLimiter = options.rateLimiter ?? new RateLimiter({ now: this.now, sleep: this.sleep });
+    this.emit = options.onEvent ?? (() => undefined);
+    this.rateLimiter =
+      options.rateLimiter ??
+      new RateLimiter({
+        now: this.now,
+        sleep: this.sleep,
+        onWait: (waitMs) => this.emit({ type: 'rate-limit-wait', waitMs }),
+      });
     this.maxRetries = options.maxRetries ?? 3;
     this.retryBaseDelayMs = options.retryBaseDelayMs ?? 1000;
     this.timeoutMs = options.timeoutMs ?? 30_000;
@@ -203,6 +224,7 @@ export class ModrinthClient {
     if (this.cache) {
       const cached = await this.cache.get(cacheKey);
       if (cached && (this.offline || this.now() - cached.storedAt < this.cacheTtlMs)) {
+        this.emit({ type: 'cache-hit', method, url });
         return cached.body as T | null;
       }
     }
@@ -231,6 +253,7 @@ export class ModrinthClient {
       await this.rateLimiter.acquire();
 
       let response: Response;
+      const startedAt = this.now();
       try {
         this.requestCount++;
         response = await this.fetchImpl(url, {
@@ -242,9 +265,18 @@ export class ModrinthClient {
       } catch (error) {
         // Erreur réseau (DNS, connexion, délai dépassé) : nouvelle tentative avec backoff exponentiel.
         if (!canRetry) throw new ModrinthNetworkError(url, { cause: error });
+        const reason = error instanceof Error ? error.message : String(error);
+        this.emit({ type: 'retry', url, reason, delayMs: backoffMs });
         await this.sleep(backoffMs);
         continue;
       }
+      this.emit({
+        type: 'request',
+        method,
+        url,
+        status: response.status,
+        durationMs: this.now() - startedAt,
+      });
 
       this.rateLimiter.update(response.headers);
 
@@ -254,13 +286,22 @@ export class ModrinthClient {
       if (response.status === 404 && allowNotFound) {
         return null;
       }
-      if (response.status === 429 && canRetry) {
+      if (response.status === 429) {
         // Quota dépassé : on attend la fin de la fenêtre annoncée par le serveur.
         const resetSeconds = serverResetSeconds(response.headers);
+        if (!canRetry) {
+          const limit = Number(response.headers.get('x-ratelimit-limit'));
+          throw new RateLimitError(
+            url,
+            resetSeconds,
+            Number.isFinite(limit) && limit > 0 ? limit : undefined,
+          );
+        }
         this.rateLimiter.blockUntilReset(resetSeconds ?? backoffMs / 1000);
         continue;
       }
       if (response.status >= 500 && canRetry) {
+        this.emit({ type: 'retry', url, reason: `HTTP ${response.status}`, delayMs: backoffMs });
         await this.sleep(backoffMs);
         continue;
       }

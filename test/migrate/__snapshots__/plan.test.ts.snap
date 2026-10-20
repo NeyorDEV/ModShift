@@ -27,8 +27,8 @@ These mods have no compatible version and are **not** in the generated pack.
 | Mod | File | Reason | Suggested alternatives (to verify) |
 | --- | --- | --- | --- |
 | Old Minimap | old-minimap-1.0.jar | No version for Minecraft 1.21.1 / fabric. Alternatives are suggestions, to verify. | [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap), [Just Enough Items](https://modrinth.com/mod/jei), [JourneyMap](https://modrinth.com/mod/journeymap) **Included: Xaero's Minimap.** |
-| mystery-mod.jar | mystery-mod.jar | Unknown file hash on Modrinth. | — |
-| local-mod.jar | local-mod.jar | Unknown file hash on Modrinth and no Modrinth project matches mod id "localmod". | — |
+| mystery-mod.jar | mystery-mod.jar | Unknown file hash on Modrinth. The file may come from another site (CurseForge, GitHub) or have been modified. | — |
+| local-mod.jar | local-mod.jar | Unknown file hash on Modrinth and no Modrinth project matches mod id "localmod". The file may come from another site (CurseForge, GitHub) or have been modified. | — |
 
 ## Missing dependencies
 

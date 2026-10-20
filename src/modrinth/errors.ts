@@ -22,6 +22,21 @@ export class ModrinthNetworkError extends Error {
   }
 }
 
+// Quota de requêtes Modrinth dépassé, même après les tentatives prévues.
+export class RateLimitError extends Error {
+  constructor(
+    readonly url: string,
+    // Délai annoncé par le serveur avant la réinitialisation du quota, en secondes.
+    readonly resetSeconds: number | undefined,
+    readonly limit: number | undefined,
+  ) {
+    super(
+      `Modrinth rate limit reached${limit ? ` (${limit} requests per minute)` : ''} while calling ${url}`,
+    );
+    this.name = 'RateLimitError';
+  }
+}
+
 // Requête impossible en mode hors-ligne : la réponse n'est pas dans le cache.
 export class OfflineCacheMissError extends Error {
   constructor(readonly url: string) {

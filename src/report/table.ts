@@ -1,6 +1,13 @@
 import type { AnalysisResult, ModStatus } from '../core/types.js';
 import { MOD_STATUSES } from '../core/types.js';
-import { modDisplayName, modNotes, STATUS_ICONS, STATUS_LABELS, versionLabel } from './labels.js';
+import {
+  CONFLICT_LABELS,
+  modDisplayName,
+  modNotes,
+  STATUS_ICONS,
+  STATUS_LABELS,
+  versionLabel,
+} from './labels.js';
 
 export interface TableOptions {
   color?: boolean;
@@ -103,9 +110,7 @@ export function renderTable(result: AnalysisResult, options: TableOptions = {}):
   if (result.conflicts.length > 0) {
     out.push('', c(ANSI.bold, 'Conflicts:'));
     for (const conflict of result.conflicts) {
-      out.push(
-        c(ANSI.red, `  ✘ ${conflict.declaredBy} is incompatible with ${conflict.project.title}`),
-      );
+      out.push(`${c(ANSI.red, `  ✘ ${CONFLICT_LABELS[conflict.kind]}:`)} ${conflict.explanation}`);
     }
   }
 
