@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>ModShift</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">⇄</span>
+        <div>
+          <h1>ModShift</h1>
+          <p class="tagline">Migrate a Minecraft modpack to another version or loader</p>
+        </div>
+      </div>
+      <button id="theme-toggle" class="ghost" type="button" aria-label="Toggle dark mode">
+        ◐ Theme
+      </button>
+    </header>
+
+    <main>
+      <section class="card" aria-labelledby="step-pack">
+        <h2 id="step-pack"><span class="step">1</span> Pack and target</h2>
+        <label id="dropzone" class="dropzone" for="file-input">
+          <input id="file-input" type="file" accept=".mrpack,.zip" hidden />
+          <span class="dropzone-icon" aria-hidden="true">⬆</span>
+          <span id="dropzone-text"
+            >Drop a <strong>.mrpack</strong> or CurseForge <strong>.zip</strong> here, or click to
+            choose a file</span
+          >
+        </label>
+        <form id="target-form" class="target-form">
+          <label>
+            Minecraft version
+            <input id="mc" name="mc" required placeholder="1.21.1" autocomplete="off" />
+          </label>
+          <label>
+            Loader
+            <select id="loader" name="loader" required></select>
+          </label>
+          <label>
+            Alternatives
+            <input
+              id="max-alternatives"
+              name="maxAlternatives"
+              type="number"
+              min="0"
+              max="20"
+              value="3"
+            />
+          </label>
+          <button id="analyze" type="submit" class="primary" disabled>Analyze</button>
+        </form>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="results" class="card" hidden aria-labelledby="step-results">
+        <h2 id="step-results"><span class="step">2</span> Results</h2>
+        <p id="results-title" class="muted"></p>
+        <div id="summary" class="chips" role="group" aria-label="Filter by status"></div>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search mods…" aria-label="Search mods" />
+          <select id="status-filter" aria-label="Status filter">
+            <option value="">All statuses</option>
+            <option value="compatible">Compatible</option>
+            <option value="update-found">Update found</option>
+            <option value="alternative-suggested">Alternative suggested</option>
+            <option value="not-found">Not found</option>
+          </select>
+          <a id="download-analysis" class="button ghost" href="#" download
+            >Download analysis (JSON)</a
+          >
+        </div>
+        <div class="table-wrap">
+          <table id="mods-table">
+            <thead>
+              <tr>
+                <th><button type="button" data-sort="status">Status</button></th>
+                <th><button type="button" data-sort="name">Mod</button></th>
+                <th><button type="button" data-sort="current">Current</button></th>
+                <th><button type="button" data-sort="target">Target</button></th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="empty" class="muted" hidden>No mod matches the current filters.</p>
+        <div id="extras"></div>
+      </section>
+
+      <section id="migrate" class="card" hidden aria-labelledby="step-migrate">
+        <h2 id="step-migrate"><span class="step">3</span> Migrated pack</h2>
+        <p id="migrate-unsupported" class="muted" hidden></p>
+        <form id="migrate-form" class="target-form">
+          <label>
+            Loader version
+            <input
+              id="loader-version"
+              name="loaderVersion"
+              placeholder="e.g. 21.1.77"
+              autocomplete="off"
+            />
+          </label>
+          <label class="checkbox">
+            <input id="include-alternatives" type="checkbox" />
+            Include the best alternatives (suggestions, to verify)
+          </label>
+          <button id="build" type="submit" class="primary">Build .mrpack</button>
+        </form>
+        <div id="downloads" class="downloads" hidden>
+          <a id="download-mrpack" class="button primary" href="#" download>Download .mrpack</a>
+          <a id="download-report" class="button ghost" href="#" download
+            >Download MIGRATION_REPORT.md</a
+          >
+        </div>
+        <p id="migrate-status" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <dialog id="detail" aria-labelledby="detail-title">
+      <form method="dialog" class="dialog-close">
+        <button class="ghost" aria-label="Close">✕</button>
+      </form>
+      <h3 id="detail-title"></h3>
+      <div id="detail-body"></div>
+    </dialog>
+
+    <footer class="footer muted">
+      ModShift <span id="version"></span> · runs locally on 127.0.0.1 · alternatives are
+      suggestions, to verify
+    </footer>
+  </body>
+</html>
