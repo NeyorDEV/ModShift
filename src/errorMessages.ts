@@ -1,4 +1,9 @@
 import { UsageError } from './commands/analyze.js';
+import {
+  CURSEFORGE_API_KEY_ENV,
+  CurseForgeApiError,
+  CurseForgeNetworkError,
+} from './curseforge/client.js';
 import { InputError } from './input/errors.js';
 import { InvalidMrpackError } from './migrate/writer.js';
 import {
@@ -56,6 +61,21 @@ export function describeError(error: unknown): DescribedError | undefined {
           message: error.message,
           hint: 'This request was rejected by Modrinth. Please open an issue with the command you ran.',
         };
+  }
+  if (error instanceof CurseForgeApiError) {
+    return {
+      message: error.message,
+      hint:
+        error.status === 401 || error.status === 403
+          ? `Check the key in ${CURSEFORGE_API_KEY_ENV} (from https://console.curseforge.com), or unset it to skip CurseForge resolution.`
+          : 'Try again later, or unset CURSEFORGE_API_KEY to skip CurseForge resolution.',
+    };
+  }
+  if (error instanceof CurseForgeNetworkError) {
+    return {
+      message: error.message,
+      hint: 'Check that api.curseforge.com is reachable, or unset CURSEFORGE_API_KEY to skip CurseForge resolution.',
+    };
   }
   if (error instanceof InvalidMrpackError) {
     return {
