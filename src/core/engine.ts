@@ -328,6 +328,7 @@ export async function analyzePack(
         reason: joinReasons(
           idNote,
           change && loaderChangeReason(change),
+          current && rebuildReason(current, best, target),
           fallback && fallbackReason(fallback, target),
         ),
       });
@@ -494,6 +495,18 @@ async function searchReplacements(
     }
   }
   return result;
+}
+
+// Même numéro de version, autre fichier : l'auteur publie un fichier par version de Minecraft
+// (ex. 1.13.2 pour 26.2 puis 1.13.2 pour 26.3). Sans cette précision, « 1.13.2 → 1.13.2 »
+// ressemble à une erreur.
+function rebuildReason(
+  current: ModrinthVersion,
+  best: ModrinthVersion,
+  target: MigrationTarget,
+): string | undefined {
+  if (current.id === best.id || current.version_number !== best.version_number) return undefined;
+  return `Same version number, file built for Minecraft ${target.minecraftVersion}.`;
 }
 
 function compatLayerReason(hint: CompatLayerHint): string {
