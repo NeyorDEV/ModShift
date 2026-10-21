@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <!-- Image « social preview » du dépôt (Settings → General). Source de social-preview.png. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <g font-family="Inter, sans-serif" fill="#f8fafc">
+    <text x="96" y="210" font-size="104" font-weight="800" letter-spacing="-2">Mod<tspan fill="#4ade80">Shift</tspan></text>
+    <text x="96" y="280" font-size="32" fill="#cbd5e1">Migrate a Minecraft modpack to another</text>
+    <text x="96" y="326" font-size="32" fill="#cbd5e1">Minecraft version and/or mod loader.</text>
+    <g font-size="24" font-weight="600">
+      <rect x="96" y="380" width="128" height="44" rx="22" fill="#334155"/>
+      <text x="160" y="410" text-anchor="middle">Fabric</text>
+      <rect x="236" y="380" width="128" height="44" rx="22" fill="#334155"/>
+      <text x="300" y="410" text-anchor="middle">Forge</text>
+      <rect x="376" y="380" width="160" height="44" rx="22" fill="#334155"/>
+      <text x="456" y="410" text-anchor="middle">NeoForge</text>
+      <rect x="548" y="380" width="120" height="44" rx="22" fill="#334155"/>
+      <text x="608" y="410" text-anchor="middle">Quilt</text>
+    </g>
+    <text x="96" y="536" font-size="26" fill="#94a3b8">Modrinth · CurseForge · .mrpack · CLI, web UI and GitHub Action</text>
+  </g>
+  <g font-family="DejaVu Sans Mono, monospace" font-size="21">
+    <rect x="800" y="150" width="400" height="300" rx="16" fill="#020617" stroke="#334155" stroke-width="2"/>
+    <circle cx="830" cy="178" r="7" fill="#f87171"/>
+    <circle cx="854" cy="178" r="7" fill="#fbbf24"/>
+    <circle cx="878" cy="178" r="7" fill="#4ade80"/>
+    <text x="824" y="232" fill="#e2e8f0"><tspan fill="#4ade80">$</tspan> npx modshift analyze</text>
+    <text x="824" y="266" fill="#94a3b8">  pack.mrpack --mc 26.3</text>
+    <text x="824" y="318" fill="#4ade80">✔ 46 updates found</text>
+    <text x="824" y="352" fill="#60a5fa">✔  8 compatible</text>
+    <text x="824" y="386" fill="#fbbf24">➜  2 alternatives</text>
+    <text x="824" y="420" fill="#f87171">✖ 12 not found</text>
+  </g>
+</svg>
