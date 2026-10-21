@@ -6,6 +6,10 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-21
+
+Fixes found while testing a real CurseForge pack (SkyBlock Enhanced 5.4.1, Fabric 26.2 â†’ 26.3).
+
 ### Fixed
 
 - An update that keeps the same version number (a file rebuilt for the target Minecraft
@@ -100,5 +104,6 @@ Found while testing against the real Modrinth API (Fabulously Optimized 1.21.1 â
   by Zoomify's single Fabric + NeoForge file) is no longer reported as missing for the target;
   a warning explains why it was ignored.
 
-[Unreleased]: https://github.com/NeyorDEV/ModShift/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/NeyorDEV/ModShift/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/NeyorDEV/ModShift/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/NeyorDEV/ModShift/releases/tag/v0.1.0

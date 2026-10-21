@@ -1,6 +1,6 @@
 {
   "name": "modshift",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Migrate a Minecraft modpack to another Minecraft version and/or mod loader (Forge, NeoForge, Fabric, Quilt).",
   "keywords": [
     "minecraft",

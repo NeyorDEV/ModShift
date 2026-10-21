@@ -1,6 +1,6 @@
 # Command-line reference
 
-Generated from `modshift <command> --help` (ModShift 0.1.0). Regenerate with
+Generated from `modshift <command> --help` (ModShift 0.1.1). Regenerate with
 `npm run build && npm run docs:cli`. Explanations and examples are in the README.
 
 ## `modshift`

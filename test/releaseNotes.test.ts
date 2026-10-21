@@ -36,6 +36,9 @@ describe('extractReleaseNotes', () => {
     const pkg = JSON.parse(
       readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8'),
     ) as { version: string };
-    expect(extractReleaseNotes(real, pkg.version)).toContain('modshift analyze');
+    // Sans section pour la version de package.json, le workflow de release échouerait.
+    const notes = extractReleaseNotes(real, pkg.version);
+    expect(notes).toBeDefined();
+    expect(notes).toMatch(/^### (Added|Changed|Fixed|Security)/m);
   });
 });
