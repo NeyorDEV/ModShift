@@ -44,8 +44,13 @@ export function loaderChangeReason(change: LoaderChange): string {
   return `Same project: its ${to} version replaces the ${from} one (multi-loader mod).`;
 }
 
-export function versionSupportsTarget(version: ModrinthVersion, target: MigrationTarget): boolean {
-  const loaders = acceptedLoaders(target.loader);
+// `loaders` : loaders acceptés (ceux de la cible par défaut ; « minecraft » pour un pack de
+// ressources, voir src/core/contentTypes.ts).
+export function versionSupportsTarget(
+  version: ModrinthVersion,
+  target: MigrationTarget,
+  loaders: string[] = acceptedLoaders(target.loader),
+): boolean {
   return (
     version.game_versions.includes(target.minecraftVersion) &&
     version.loaders.some((l) => loaders.includes(l))
@@ -59,10 +64,11 @@ const VERSION_TYPE_RANK: Record<VersionType, number> = { release: 0, beta: 1, al
 export function pickBestVersion(
   versions: ModrinthVersion[],
   target: MigrationTarget,
+  loaders?: string[],
 ): ModrinthVersion | undefined {
   const native = (v: ModrinthVersion) => (v.loaders.includes(target.loader) ? 0 : 1);
   return versions
-    .filter((v) => versionSupportsTarget(v, target))
+    .filter((v) => versionSupportsTarget(v, target, loaders))
     .filter((v) => v.status === undefined || v.status === 'listed' || v.status === 'archived')
     .sort(
       (a, b) =>

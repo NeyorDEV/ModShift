@@ -19,6 +19,10 @@ export function toProjectRef(project: ModrinthProject): ProjectRef {
     slug: project.slug,
     title: project.title,
     categories: project.categories ?? [],
+    // Seulement pour les packs de ressources, shaders… (page Modrinth et dossier différents).
+    ...(project.project_type && project.project_type !== 'mod'
+      ? { projectType: project.project_type }
+      : {}),
   };
 }
 

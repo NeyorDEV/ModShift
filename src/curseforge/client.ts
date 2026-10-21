@@ -34,6 +34,9 @@ export interface CurseForgeMod {
   name: string;
   slug: string;
   summary?: string;
+  // Classe CurseForge : 6 mod, 12 pack de ressources, 6552 shader, 17 monde (Prism Launcher,
+  // FlameAPI.cpp ; packwiz, curseforge.go).
+  classId?: number;
   links?: { websiteUrl?: string };
 }
 

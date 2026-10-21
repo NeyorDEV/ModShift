@@ -25,6 +25,8 @@ export interface ProjectRef {
   slug: string;
   title: string;
   categories: string[];
+  // Type de projet Modrinth quand ce n'est pas un mod (« resourcepack », « shader »…).
+  projectType?: string;
 }
 
 export interface VersionRef {

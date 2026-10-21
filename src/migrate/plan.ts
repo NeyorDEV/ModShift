@@ -1,3 +1,4 @@
+import { CONTENT_FOLDERS, contentTypeOf } from '../core/contentTypes.js';
 import { mrpackEnv, type ModSide, neededOn, type TargetSide } from '../core/sides.js';
 import type { AnalysisResult, LoaderChange, ModAnalysis, VersionRef } from '../core/types.js';
 import { sideLabel } from '../report/labels.js';
@@ -29,6 +30,8 @@ export interface PlannedMod {
   requiredBy?: string[];
   // Mod identifié seulement par son mod id (le fichier d'origine n'est pas connu de Modrinth).
   unverified?: boolean;
+  // Type de projet Modrinth quand ce n'est pas un mod (dossier du fichier dans le pack).
+  projectType?: string;
   // Version retenue pour un loader de repli (« fallback compatibility, to test »).
   fallbackLoader?: string;
   // Même projet, version d'un autre loader (mod multi-loader), ex. { from: 'forge', to: 'fabric' }.
@@ -90,10 +93,12 @@ function normalizeEnv(env: ModPack['mods'][number]['env']): MrpackFile['env'] {
 function fileFromVersion(
   version: VersionRef,
   env: MrpackFile['env'],
+  projectType?: string,
 ): MrpackFile | { error: string } {
   const file = version.file;
   if (!file) return { error: 'the Modrinth version has no file' };
-  const path = `mods/${file.fileName}`;
+  // Packs de ressources et shaders vont dans leur propre dossier, pas dans mods/.
+  const path = `${CONTENT_FOLDERS[contentTypeOf(projectType)]}/${file.fileName}`;
   if (!isSpecSafePath(path) || file.fileName.includes('/')) {
     return { error: `unsafe file name "${file.fileName}"` };
   }
@@ -156,7 +161,7 @@ export function buildMigrationPlan(
   // Ajoute un mod s'il n'est pas déjà présent (même projet ou même chemin).
   const add = (mod: Omit<PlannedMod, 'file'>, env: MrpackFile['env']): boolean => {
     if (projectIds.has(mod.projectId)) return true;
-    const file = fileFromVersion(mod.version, env);
+    const file = fileFromVersion(mod.version, env, mod.projectType);
     if ('error' in file) {
       warnings.push(`${mod.title}: not included, ${file.error}`);
       return false;
@@ -222,6 +227,7 @@ export function buildMigrationPlan(
           source: mod.status === 'compatible' ? 'kept' : 'updated',
           title: mod.project.title,
           projectId: mod.project.id,
+          ...(mod.project.projectType ? { projectType: mod.project.projectType } : {}),
           version: mod.targetVersion,
           replaces: mod.fileName,
           ...(mod.identification === 'mod-id' ? { unverified: true } : {}),
@@ -266,6 +272,7 @@ export function buildMigrationPlan(
         source: 'dependency',
         title: dep.project.title,
         projectId: dep.project.id,
+        ...(dep.project.projectType ? { projectType: dep.project.projectType } : {}),
         version: dep.version,
         requiredBy: dep.requiredBy,
         ...(dep.fallback ? { fallbackLoader: dep.fallback.loader } : {}),

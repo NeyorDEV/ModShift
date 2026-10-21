@@ -6,6 +6,7 @@ import type { ModrinthProject, ModrinthVersion } from '../modrinth/types.js';
 import type { Loader, MigrationTarget, ModEntry, ModPack } from '../types.js';
 import { DEFAULT_CONCURRENCY, mapConcurrent } from '../concurrency.js';
 import { findAlternatives } from './alternatives.js';
+import { CONTENT_LABELS, contentTypeOf, loadersFor } from './contentTypes.js';
 import { resolveDependencies, type SelectedVersion } from './dependencies.js';
 import {
   acceptedLoaders,
@@ -194,11 +195,14 @@ export async function analyzePack(
   let done = 0;
   tick(0, distinctProjects.length, distinctProjects[0]?.title ?? 'done');
   await mapConcurrent(distinctProjects, concurrency, async (project) => {
+    // Un pack de ressources ou un shader se cherche sous ses propres loaders, pas sous le loader
+    // de mods de la cible.
+    const loaders = loadersFor(contentTypeOf(project.project_type), target);
     const versions = await api.getProjectVersions(project.id, {
-      loaders: acceptedLoaders(target.loader),
+      loaders,
       gameVersions: [target.minecraftVersion],
     });
-    bestByProject.set(project.id, pickBestVersion(versions, target));
+    bestByProject.set(project.id, pickBestVersion(versions, target, loaders));
     done++;
     if (done < distinctProjects.length) tick(done, distinctProjects.length, project.title);
   });
@@ -212,6 +216,8 @@ export async function analyzePack(
       pack.mods.flatMap((entry) => {
         const id = identified.get(entry);
         if (ignoredEntries.has(entry) || mapped.has(entry) || !id) return [];
+        // Alternatives et couches de compatibilité ne concernent que les mods.
+        if (contentTypeOf(id.project.project_type) !== 'mod') return [];
         if (id.currentVersion && versionSupportsTarget(id.currentVersion, target)) return [];
         if (bestByProject.get(id.project.id)) return [];
         return [[id.project.id, id.project] as const];
@@ -302,7 +308,9 @@ export async function analyzePack(
       currentVersion: current ? toVersionRef(current) : undefined,
     };
 
-    if (current && versionSupportsTarget(current, target)) {
+    const contentType = contentTypeOf(id.project.project_type);
+    const contentLoaders = loadersFor(contentType, target);
+    if (current && versionSupportsTarget(current, target, contentLoaders)) {
       const fallback = fallbackCompatibility(current, target);
       mods.push({
         ...common,
@@ -318,7 +326,7 @@ export async function analyzePack(
     const best = bestByProject.get(project.id);
     if (best) {
       const fallback = fallbackCompatibility(best, target);
-      const change = loaderChange(pack.loader, best, target);
+      const change = contentType === 'mod' ? loaderChange(pack.loader, best, target) : undefined;
       mods.push({
         ...common,
         status: 'update-found',
@@ -339,7 +347,10 @@ export async function analyzePack(
     const { alternatives, compatLayer } = found;
     // Une seule fois par projet, même s'il apparaît dans plusieurs fichiers.
     warnings.push(...found.warnings.splice(0));
-    const noVersion = `${idNote}No version for Minecraft ${target.minecraftVersion} / ${target.loader}.`;
+    const noVersion =
+      contentType === 'mod'
+        ? `${idNote}No version for Minecraft ${target.minecraftVersion} / ${target.loader}.`
+        : `${idNote}No version for Minecraft ${target.minecraftVersion} (${CONTENT_LABELS[contentType]}).`;
     const adopted = options.adoptAlternatives
       ? await adoptAlternative(api, alternatives, target, selected)
       : undefined;
