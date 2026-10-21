@@ -5,7 +5,7 @@
 ModShift needs **Node.js 20.17+ or 22.13+**.
 
 ```bash
-# From npm (once published)
+# From npm
 npm install --global modshift
 
 # From source
