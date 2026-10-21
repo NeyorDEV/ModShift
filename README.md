@@ -3,6 +3,9 @@
 > Migrate a Minecraft modpack to another Minecraft version and/or mod loader.
 
 [![CI](https://github.com/NeyorDEV/ModShift/actions/workflows/ci.yml/badge.svg)](https://github.com/NeyorDEV/ModShift/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/modshift)](https://www.npmjs.com/package/modshift)
+[![npm downloads](https://img.shields.io/npm/dm/modshift)](https://www.npmjs.com/package/modshift)
+[![Documentation](https://img.shields.io/badge/docs-neyordev.github.io-blue)](https://neyordev.github.io/ModShift/)
 ![Node.js 20.17+ or 22.13+](https://img.shields.io/badge/node-20.17%2B%20%7C%2022.13%2B-brightgreen)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
