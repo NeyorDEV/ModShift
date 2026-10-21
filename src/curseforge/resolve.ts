@@ -43,7 +43,7 @@ export async function resolveCurseForgeRefs(
     }
     resolved++;
     ref.resolved = true;
-    const path = `mods/${file.fileName}`;
+    const path = `${folderForClass(mod?.classId)}/${file.fileName}`;
     if (!file.fileName.includes('/') && isSpecSafePath(path)) {
       entry.fileName = file.fileName;
       entry.path = path;
@@ -53,6 +53,13 @@ export async function resolveCurseForgeRefs(
     if (typeof file.fileLength === 'number') entry.fileSize = file.fileLength;
   }
   return { resolved, unresolved: refs.length - resolved };
+}
+
+// Dossier d'installation d'un fichier selon sa classe CurseForge (voir CurseForgeMod.classId).
+function folderForClass(classId: number | undefined): string {
+  if (classId === 12) return 'resourcepacks';
+  if (classId === 6552) return 'shaderpacks';
+  return 'mods';
 }
 
 // Avertissement quand des références CurseForge restent non résolues faute de clé.

@@ -1,4 +1,5 @@
 import type { AnalysisResult } from '../core/types.js';
+import { modrinthPageUrl } from '../core/contentTypes.js';
 import { MOD_STATUSES } from '../core/types.js';
 import {
   CONFLICT_LABELS,
@@ -58,7 +59,7 @@ export function renderMarkdown(result: AnalysisResult): string {
       ['Status', 'Mod', 'File', 'Current', 'Target', 'Notes'],
       result.mods.map((m) => [
         `${STATUS_ICONS[m.status]} ${STATUS_LABELS[m.status]}`,
-        m.project ? `[${m.project.title}](https://modrinth.com/mod/${m.project.slug})` : m.fileName,
+        m.project ? `[${m.project.title}](${modrinthPageUrl(m.project)})` : m.fileName,
         m.fileName,
         versionLabel(m.currentVersion),
         versionLabel(m.targetVersion),
