@@ -6,6 +6,11 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- An update that keeps the same version number (a file rebuilt for the target Minecraft
+  version, e.g. `3.3.6 → 3.3.6`) is now explained in the report instead of looking like an error.
+
 ## [0.1.0] - 2026-10-20
 
 First public version.
