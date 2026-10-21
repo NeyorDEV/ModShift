@@ -764,15 +764,40 @@ started. The run found four bugs, each fixed in its own PR:
 - NeyorDEV/ModShift#20 and NeyorDEV/ModShift#21: placeholders (`<version>`, `X.Y.Z`) accepted as
   loader versions; the format is now checked and must contain a digit.
 
+**0.1.0 was published on npm** on 2026-10-20 (NeyorDEV/ModShift#22: CHANGELOG dated, tag
+`v0.1.0`, GitHub release by the `Release` workflow, `npm publish` with 2FA).
+
+On 2026-10-21 a second real run used a **CurseForge export** (SkyBlock Enhanced 5.4.1, 68 files,
+Fabric 26.2 → 26.3) **with a real `CURSEFORGE_API_KEY`**: the 48 CurseForge references were
+resolved. A first try towards NeoForge gave almost only "not found", which is correct (Hypixel
+client mods are Fabric-only). Fixes:
+
+- NeyorDEV/ModShift#23: a README edit made on `main` broke CI (trailing space for Prettier, stale
+  generated `docs/guide/installation.md`);
+- NeyorDEV/ModShift#24: an update keeping the same version number (one file per Minecraft
+  version, e.g. Packet Fixer `3.3.6 → 3.3.6`) is now explained ("Same version number, file built
+  for Minecraft 26.3.");
+- NeyorDEV/ModShift#25: resource packs and shaders listed among the mods (Faithful 32x) were
+  searched under the mod loader. `src/core/contentTypes.ts` now picks Modrinth's loaders for
+  them (`minecraft`; `iris`, `optifine`, `canvas`, `vanilla`, from labrinth's validators), the
+  folder (`resourcepacks/`, `shaderpacks/`, also from the CurseForge `classId` 12 / 6552) and the
+  Modrinth page URL; no mod alternatives for them. Verified on the real pack:
+  Faithful 32x `26.2-june-2026 → 26.3-september-2026`.
+
+**0.1.1** (NeyorDEV/ModShift#26, merged 2026-10-21) ships these fixes: version bumped in
+`package.json`, `package-lock.json` (`npm version`), `src/version.ts`, `docs/cli.md`. Tag and
+`npm publish` are manual (see "Manual actions"). 443 tests.
+
 ## Known limitations
 
-- **Live APIs:** the real Modrinth API was tested by the maintainer on one Fabric pack (see
-  above). CurseForge (with a real key), GitHub Releases, Forge/NeoForge packs and the GitHub
-  Action have still not been run against the real services.
+- **Live APIs:** tested by the maintainer on a Modrinth `.mrpack` (Fabric) and a CurseForge
+  export with a real key (see above). Still not run against the real services: a Forge/NeoForge
+  pack (cross-loader, compatibility layers), the GitHub Releases source, the GitHub Action.
 - `migrate` needs a loader version (`--loader-version` or `target.loaderVersion`), except when the
   source pack already uses the same loader and Minecraft version.
-- Only `mods/*.jar` and plugins are analysed. Resource packs and shaders are copied unchanged
-  (when they still satisfy the `.mrpack` format) but not checked.
+- Resource packs and shaders are analysed only when a CurseForge export (or a folder) lists them
+  with the mods. In a `.mrpack` they sit in the index's non-mod files and are copied unchanged
+  (when they still satisfy the `.mrpack` format), not checked.
 - Alternatives (name or category search) and mod-id/slug matches are heuristics: always check
   them.
 - Unapplied fallbacks for lack of an official source: NeoForge ← Forge (1.20.1), Spigot ← Bukkit.
@@ -797,7 +822,10 @@ started. The run found four bugs, each fixed in its own PR:
 
 - Optional automatic loader versions through the official meta services (Fabric/Quilt meta,
   NeoForge/Forge maven), behind an option, once they can be verified.
-- Resource pack and shader analysis (Modrinth loaders `minecraft`, `iris`, `optifine`).
+- Also check the resource packs and shaders of a `.mrpack` index (the lookup logic exists in
+  `src/core/contentTypes.ts`; today only CurseForge exports benefit from it).
+- Suggestions without a real link are still possible when names share a common word (e.g.
+  "Simple Voice Chat" for "Enhanced Chat"): watch real reports before tightening further.
 - `--upgrade-all` to also update mods that are already compatible; `--fail-on <status>` for CI.
 - "Explain" mode per mod (full decision log), and a report diff between two analyses.
 - UI translations; drag and drop of a whole instance folder (zipped in the browser).
@@ -826,50 +854,65 @@ the previous one, with its own draft PR whose base is the previous branch:
 | `feat/github-action`          | phase 21   | NeyorDEV/ModShift#15 → #14   |
 | `docs/vitepress-site`         | phase 22   | NeyorDEV/ModShift#16 → #15   |
 
+- All of them were merged into `main` on 2026-10-20 (merge commits, in order).
+- Since then, **one branch per fix from `main`, one PR into `main`, merged with a merge commit**
+  once CI is green: NeyorDEV/ModShift#17 to NeyorDEV/ModShift#21 (first real run),
+  NeyorDEV/ModShift#22 (release 0.1.0), NeyorDEV/ModShift#23 to NeyorDEV/ModShift#25 (second real
+  run), NeyorDEV/ModShift#26 (release 0.1.1). Two PRs adding to the CHANGELOG's `Unreleased`
+  conflict once the first is merged: merge `main` into the second and keep both entries.
 - PR NeyorDEV/ModShift#1 (old branch `claude/great-galileo-gi0422`) is closed and superseded by
   #2.
 - Commits are authored as `NeyorDEV <180453958+NeyorDEV@users.noreply.github.com>` (repo-local git
   config, unsigned), with no Claude trailer. All earlier commits were rewritten once to that
   author, at the user's explicit request.
-- Merge order: #2 into `main`, then retarget each next PR to `main` (GitHub does this
-  automatically when the base branch is deleted after a merge) and merge it in turn.
 
 ## Manual actions for the maintainer
 
-- Done by the maintainer: GitHub Pages enabled, merged branches deleted, a real run with a
-  Fabric pack (see "Real-world test and fixes").
+- Done: GitHub Pages enabled, merged branches deleted (including `claude/great-galileo-gi0422`),
+  real runs (Fabric `.mrpack`, CurseForge export with a key), 0.1.0 published on npm.
+- **Publish 0.1.1** if not done yet (NeyorDEV/ModShift#26 is merged):
+  1. `git checkout main && git pull && git tag v0.1.1 && git push origin v0.1.1`: the `Release`
+     workflow re-runs the checks and creates the GitHub release from the CHANGELOG;
+  2. `git checkout v0.1.1 && npm ci && npm publish` (2FA code), then `git checkout main`;
+  3. check from another folder: `npm view modshift version` prints `0.1.1`.
+- **Release procedure** for the next versions: entries go under `Unreleased` in each fix PR; the
+  release PR moves them to `## [x.y.z] - date`, updates the compare links, runs
+  `npm version x.y.z --no-git-tag-version`, updates `src/version.ts`, then `npm run build &&
+npm run docs:cli`. The `Release` workflow checks the tag against `package.json`, and
+  `test/releaseNotes.test.ts` checks that the current version has a CHANGELOG section.
+- `npm publish` runs lint, typecheck and tests first (`prepublishOnly`): dev dependencies must be
+  installed (`npm ci`, not `--omit=dev`), and the npm account needs 2FA.
 - **Try the GitHub Action** on a test pull request (workflow example in `action/README.md`, with
   `permissions: pull-requests: write`). Publishing it on the **Marketplace** is optional and
   manual (it needs `action.yml` at the root of a dedicated public repository, or a release from
   this one: decide first).
-- **Release 0.1.0** (the name `modshift` was free on npm on 2026-10-20):
-  1. merge the release PR (`chore/release-0.1.0`: CHANGELOG dated, `Unreleased` folded into
-     `0.1.0`; `package.json` and `src/version.ts` already at `0.1.0`);
-  2. `git checkout main && git pull && git tag v0.1.0 && git push origin v0.1.0`: the
-     `Release` workflow re-runs the checks and creates the GitHub release from the CHANGELOG;
-  3. `npm login` (account with 2FA), then from the tag: `git checkout v0.1.0 && npm ci &&
-npm publish`;
-  4. check: `npx modshift --version` prints `0.1.0`.
-- Next releases: add entries under `Unreleased`, then move them to a new version heading and bump
-  `package.json` and `src/version.ts` together (the release workflow checks the tag against
-  `package.json`).
-- Optional: try CurseForge resolution with a real key (`CURSEFORGE_API_KEY=… modshift analyze
-export.zip …`), which could not be done from here.
+- Optional: make the repository public (Settings → General → Danger Zone), then enable secret
+  scanning and push protection; GitHub "About" description and topics.
 
 ## Next steps
 
-**All phases (1–22) are merged**, and ModShift passed a real-world run (see above). Next:
+**All phases (1–22) are merged, 0.1.0 is on npm and 0.1.1 is ready to publish.** Next:
 
-1. Release 0.1.0 (manual actions above), then announce it if wanted.
-2. Real runs still missing: a Forge or NeoForge pack (cross-loader, compatibility layers), a
-   CurseForge export with a real key, the GitHub Action on a real pull request.
+1. Publish 0.1.1 (manual actions above).
+2. Real runs still missing: a Forge or NeoForge pack (cross-loader, compatibility layers), the
+   GitHub Action on a real pull request, the GitHub Releases source.
 3. Then pick from "Ideas for later". Natural follow-ups:
+   - check resource packs and shaders of a `.mrpack` index too;
    - `--side` in `interactive` and the web UI; the source registry in the web UI;
    - a `--no-compat-layers` CLI flag if users find the hints noisy;
    - downloading and hashing GitHub release assets on explicit request, so they could enter a
      `.mrpack` (today they are suggestions only);
-   - once on npm, install the action with `npx` instead of building it on each run;
+   - install the action with `npx modshift` instead of building it on each run;
    - move to VitePress 2 stable when it is released.
+
+### Resuming in a local session
+
+Everything is on `main` (no pending branch). On the maintainer's machine:
+`cd ModShift && git checkout main && git pull && npm ci && npm run build`, then start Claude Code
+there (`claude`, or a local session in the desktop app) and ask it to read `README.md`,
+`PROGRESS.md` and `CONTRIBUTING.md`. A cloud session can be pulled locally with
+`claude --teleport`. Locally, ModShift can reach the real Modrinth and CurseForge APIs, which
+the cloud development environment cannot.
 
 Pitfalls:
 
@@ -884,7 +927,18 @@ Pitfalls:
 - The cloud development environment cannot reach Modrinth: real runs are done by the
   maintainer, whose output is the reference for real-world bugs.
 - Placeholders in instructions (`<version>`, `X.Y.Z`) get copied as-is: give concrete values or
-  say how to find them.
+  say how to find them (Fabric loader versions: https://meta.fabricmc.net/v2/versions/loader).
+- The maintainer's terminal is **Nushell** on Windows: Windows paths go in single quotes
+  (`'C:\Users\…'`), environment variables are set with `$env.NAME = "…"`, and commands run from
+  the project folder (`node dist/cli.js` resolves relative to it).
+- Editing `README.md` (even on GitHub): run `npx prettier --write README.md && npm run
+docs:pages` and commit the regenerated `docs/guide/` pages, or CI fails.
+- Test hashes: before adding a version to `catalog.json` or a test catalog, check the hex prefix
+  is unused (`grep -c '"c3c3c3' test/fixtures/modrinth/catalog.json`); collisions silently
+  identify the wrong project.
+- Alternatives need a similar name or two shared keywords; test descriptions ending in
+  "(fixture)" share the word "fixture", so give realistic descriptions to projects a test relies
+  on for (or against) a link.
 - Site pages under `docs/guide/` are generated: edit the README and run `npm run docs:pages`
   (CI fails otherwise). VitePress interprets `{{ }}` in Markdown: the generator wraps such
   pages in `::: v-pre`.
@@ -897,5 +951,4 @@ Pitfalls:
 
 ## Known issues
 
-- The session's git proxy silently ignores deleting `claude/great-galileo-gi0422` (manual action
-  above). Otherwise none blocking.
+None blocking.
