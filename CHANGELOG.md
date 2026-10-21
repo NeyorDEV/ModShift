@@ -8,6 +8,8 @@ All notable changes to ModShift are documented here. The format follows
 
 ### Fixed
 
+- An update that keeps the same version number (a file rebuilt for the target Minecraft
+  version, e.g. `3.3.6 → 3.3.6`) is now explained in the report instead of looking like an error.
 - Resource packs and shaders listed in a pack (e.g. Faithful 32x in a CurseForge export) were
   searched as mods for the target loader and reported as not found. They are now looked up
   under their own Modrinth loaders, installed in `resourcepacks/` or `shaderpacks/`, linked to
