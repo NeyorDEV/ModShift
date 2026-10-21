@@ -6,6 +6,13 @@ All notable changes to ModShift are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Resource packs and shaders listed in a pack (e.g. Faithful 32x in a CurseForge export) were
+  searched as mods for the target loader and reported as not found. They are now looked up
+  under their own Modrinth loaders, installed in `resourcepacks/` or `shaderpacks/`, linked to
+  their right Modrinth page, and never get mod alternatives.
+
 ## [0.1.0] - 2026-10-20
 
 First public version.
